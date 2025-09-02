@@ -4,7 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start-server": "nodemon tu-archivo-principal.js",
+    "watch-css": "npm run watch-css-script",
+    "dev": "vite",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "docs": "jsdoc -c  jsdoc.json"
   },
   "keywords": [],
   "author": "",
