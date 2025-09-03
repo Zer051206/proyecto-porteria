@@ -1,32 +1,44 @@
-import pool from './config/db.config'
-import dotenv from 'dotenv'
-import express from 'express'
-import cors from 'cors'
+import pool from './config/db.config';
+import dotenv from 'dotenv';
+import express from 'express';
+import cors from 'cors';
 
-dotenv.config()
+// ? Importa el enrutador de autenticación 
+import authRoutes from './routes/authRoutes.js';
+
+dotenv.config();
 
 /**
- * @file - This file is the entry point for the backend.
+ * @file - // * This file is the entry point for the backend.
  * @author Miguell
  */
 
 const app = express();
-app.use(express.json);
+
+/**
+ * @function - // * Express middleware for parsing JSON bodies.
+ * @description - // * This middleware allows the server to understand JSON data in incoming requests.
+ */
+app.use(express.json());
+
+/**
+ * @function - // * Express middleware for enabling CORS.
+ * @description - // * This middleware allows requests from the frontend to be processed by the server, preventing cross-origin errors.
+ */
 app.use(cors());
-app.disable('x-powered-by')
+
+/**
+ * @function - // * Express middleware for disabling the 'x-powered-by' header.
+ * @description - // * This middleware removes the 'x-powered-by' header for security reasons.
+ */
+app.disable('x-powered-by');
+
+// * Conecta el enrutador de autenticación a la ruta /auth.
+app.use('/auth', authRoutes);
 
 const PORT = process.env.PORT || 3000;
 
-/**
- * @function - Initialization the express application.
- * @param {number} port - The port number for the server to listen on 
- */
-
-function startServer(port){
+// * Inicia el servidor directamente.
 app.listen(PORT, () => {
-  console.log(`Server is listen in the port: ${PORT}`)
-})
-}
-
-// ? Calls the function to start the server with the configured port
-startServer(PORT)
+  console.log(`Server is listening on port: ${PORT}`);
+});

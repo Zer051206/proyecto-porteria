@@ -1,0 +1,19 @@
+// src/routes/AuthRoutes.jsx
+
+import { lazy, Suspense } from 'react';
+import { Routes, Route } from 'react-router-dom';
+
+// Importación perezosa más corta y limpia
+const RegisterForm = lazy(() => import('../components/auth/RegisterForm.jsx'));
+const LoginForm = lazy(() => import('../components/auth/LoginForm.jsx'));
+
+export function AuthRoutes() {
+  return (
+    <Suspense fallback={<div>Cargando...</div>}>
+      <Routes>
+        <Route path="register" element={<RegisterForm />} />
+        <Route path="login" element={<LoginForm />} />
+      </Routes>
+    </Suspense>
+  );
+}
