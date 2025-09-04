@@ -1,8 +1,7 @@
-import pool from './config/db.config';
 import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
-
+import passport  from 'passport';
 // ? Importa el enrutador de autenticación 
 import authRoutes from './routes/authRoutes.js';
 
@@ -10,7 +9,7 @@ dotenv.config();
 
 /**
  * @file - // * This file is the entry point for the backend.
- * @author Miguell
+ * @author M.M
  */
 
 const app = express();

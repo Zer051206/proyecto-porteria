@@ -26,21 +26,25 @@ export default function RegisterForm() {
             <label className="block">
               <span className="text-gray-700 text-sm">Nombre:</span>
               <input 
+                name="nombre"
                 type="text" 
                 value={name} 
                 onChange={handleClickName} 
                 className="mt-1 block w-full rounded-md border-2 border-gray-400 bg-gray-50 shadow-lg focus:border-blue-700 focus:ring-2 focus:ring-blue-300 transition-all duration-200 ease-in-out hover:border-blue-500"
                 autoComplete="off"
+                required
               />
             </label>
             <label className="block">
               <span className="text-gray-700 text-sm">Apellido:</span>
               <input 
+                name="apellido"
                 type="text" 
                 value={lastName} 
                 onChange={handleClickLastName} 
                 className="mt-1 block w-full rounded-md border-2 border-gray-400 bg-gray-50 shadow-lg focus:border-blue-700 focus:ring-2 focus:ring-blue-300 transition-all duration-200 ease-in-out hover:border-blue-500"
                 autoComplete="off"
+                required
               />
             </label>
           </div>
@@ -52,21 +56,25 @@ export default function RegisterForm() {
             <label className="block">
               <span className="text-gray-700 text-sm">Correo electrónico:</span>
               <input 
+                name="correo"
                 type="email" 
                 value={email} 
                 onChange={handleClickEmail} 
                 className="mt-1 block w-full rounded-md border-2 border-gray-400 bg-gray-50 shadow-lg focus:border-blue-700 focus:ring-2 focus:ring-blue-300 transition-all duration-200 ease-in-out hover:border-blue-500"
                 autoComplete="off"
+                required
               />
             </label>
             <label className="block">
               <span className="text-gray-700 text-sm">Contraseña:</span>
               <input 
+                name="password"
                 type="password" 
                 value={password} 
                 onChange={handleClickPassword} 
                 className="mt-1 block w-full rounded-md border-2 border-gray-400 bg-gray-50 shadow-lg focus:border-blue-700 focus:ring-2 focus:ring-blue-300 transition-all duration-200 ease-in-out hover:border-blue-500"
                 autoComplete="off"
+                required
               />
             </label>
           </div>

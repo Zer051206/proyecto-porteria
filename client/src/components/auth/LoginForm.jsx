@@ -22,6 +22,7 @@ export default function LoginForm() {
             <label className="block">
               <span className="text-gray-700 text-sm">Correo electrónico:</span>
               <input
+                name="correo"
                 type="email"
                 value={email}
                 onChange={handleEmailChange}
@@ -32,6 +33,7 @@ export default function LoginForm() {
             <label className="block">
               <span className="text-gray-700 text-sm">Contraseña:</span>
               <input
+                name="password"
                 type="password"
                 value={password}
                 onChange={handlePasswordChange}
