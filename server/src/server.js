@@ -2,8 +2,8 @@ import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
 import passport  from 'passport';
-// ? Importa el enrutador de autenticación 
 import authRoutes from './routes/authRoutes.js';
+import publicRouter from "./routes/publicRouter.js"
 
 dotenv.config();
 
@@ -34,6 +34,9 @@ app.disable('x-powered-by');
 
 // * Conecta el enrutador de autenticación a la ruta /auth.
 app.use('/auth', authRoutes);
+
+// * Conecta el enrutador de bienvenida a la ruta /.
+app.use('/', publicRouter)
 
 const PORT = process.env.PORT || 3000;
 

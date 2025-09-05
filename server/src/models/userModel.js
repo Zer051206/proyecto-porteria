@@ -18,6 +18,23 @@ export const findByEmail =  async (email) => {
   }
 };
 
+export const findById = async (id) => {
+  let connect;
+  try{
+    connect = await pool.getConnection();
+    const query = `SELECT * FROM usuarios WHERE id_usuario = ?`;
+    const rows = await connect.query(query, [id]);
+    if (rows.length === 0) {
+      return null;
+    }
+    return rows[0];
+  } catch (error) {
+    throw new Error('Error en la consulta a la base de datos: ' + error.message);
+  } finally {
+    if (connect) connect.release();
+  }
+}
+
 export const createUser = async (userData) => {
   let connect;
   try {
