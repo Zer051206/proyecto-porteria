@@ -1,8 +1,11 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import { useRegisterForm } from '../../hooks/useRegisterForm.js';
+import { useGoBack } from '../../hooks/useGoBack.js';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
 
 export default function RegisterForm() {
+  const goBack = useGoBack();
   const { 
     name, 
     email, 
@@ -17,10 +20,25 @@ export default function RegisterForm() {
 
   return (
     <div className="flex flex-col justify-center items-center h-full w-full">
-      <form className="bg-white p-6 rounded-lg shadow-2xl w-full max-w-sm" onSubmit={handleRegister}>
+      <button
+          type="button"
+          onClick={goBack} 
+          className="
+            absolute top-1 right-4 
+            bg-red-600 hover:bg-red-700 
+            text-white font-bold 
+            p-4 rounded-lg 
+            flex flex-col items-center justify-center 
+            transition-colors duration-300
+            text-sm w-16 h-16 sm:w-20 sm:h-20
+          "
+        >
+          <FontAwesomeIcon icon={faSignOutAlt} className="text-xl sm:text-xl" />
+          <span className="text-xs sm:text-sm mt-1">Volver</span>
+        </button>
+      <form className="bg-white p-6 rounded-lg shadow-2xl w-[90%] h-[95%] max-w-sm mt-[75px] sm:w-full sm:mt-0" onSubmit={handleRegister}>
         <h2 className="text-2xl font-bold mb-5 text-center text-blue-900">Registro</h2>
-
-        <fieldset className="p-4 rounded-md mb-3 border border-gray-200">
+        <fieldset className="p-4 rounded-md mb-3 border border-gray-400 shadow-xl">
           <legend className="px-2 text-md font-semibold text-blue-900">Información personal</legend>
           <div className="space-y-4">
             <label className="block">
@@ -50,7 +68,7 @@ export default function RegisterForm() {
           </div>
         </fieldset>
 
-        <fieldset className="p-4 rounded-md mb-3 border border-gray-200">
+        <fieldset className="p-4 rounded-md mb-3 border border-gray-400 shadow-xl">
           <legend className="px-2 text-md font-semibold text-blue-900">Datos de la cuenta</legend>
           <div className="space-y-4">
             <label className="block">

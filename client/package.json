@@ -27,7 +27,12 @@
     "tailwindcss": "^4.1.12"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^7.0.1",
+    "@fortawesome/free-solid-svg-icons": "^7.0.1",
+    "@fortawesome/react-fontawesome": "^3.0.2",
     "@tailwindcss/cli": "^4.1.12",
-    "@tailwindcss/postcss": "^4.1.12"
+    "@tailwindcss/postcss": "^4.1.12",
+    "formik": "^2.4.6",
+    "yup": "^1.7.0"
   }
 }
