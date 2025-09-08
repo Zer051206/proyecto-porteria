@@ -48,6 +48,14 @@ export const visitEntrySchema = z.object({
   })
   .min(1, { message: "El área a visitar debe ser un número positivo" }),
 
+  motivo: z.string({
+    required_error: "El motivo de la visita es obligatorio",
+    invalid_type_error: "El motivo de la visita debe ser una cadena de texto"
+  })
+  .trim()
+  .min(10, { message: "El motivo de la visita debe tener al menos 10 caracteres" })
+  .max(255, { message: "El motivo de la visita no puede tener más de 255 caracteres" }),
+
   observaciones: z.string({
     invalid_type_error: "Las observaciones deben ser una cadena de texto"
   })

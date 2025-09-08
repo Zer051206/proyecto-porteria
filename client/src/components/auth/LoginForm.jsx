@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useLoginForm } from '../../hooks/useLoginForm.js';
-import { useGoBack } from '../../hooks/useGoBack.js';
+import { useGoBack } from '../../hooks/useGoBackHome.js';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
 
@@ -65,7 +65,7 @@ export default function LoginForm() {
 
         <button
           type="submit"
-          className="mt-4 w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors text-sm"
+          className="mt-4 w-full bg-blue-600 text-white border-black py-2 rounded-md hover:bg-blue-700 transition-colors text-sm"
         >
           Entrar
         </button>

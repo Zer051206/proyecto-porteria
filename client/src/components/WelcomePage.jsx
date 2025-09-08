@@ -12,7 +12,7 @@ export function WelcomePage() {
         </div>
 
         <h1 className="text-4xl sm:text-5xl font-extrabold text-blue-800 mb-4">
-          Bienvenido de nuevo
+          Nombre de la aplicacion
         </h1>
         
         <p className="text-lg sm:text-xl text-gray-500 max-w-lg">
@@ -25,7 +25,7 @@ export function WelcomePage() {
         {/* Cajón de Iniciar Sesión */}
         <Link 
           to="/auth/login" 
-          className="flex flex-col items-center justify-center p-8 w-44 h-44 bg-white rounded-lg shadow-xl hover:shadow-2xl transition-all duration-300"
+          className="flex flex-col items-center justify-center p-8 w-44 h-44 bg-gray-100 rounded-lg shadow-xl hover:shadow-2xl transition-all duration-300"
         >
           <div className="text-blue-600 mb-2">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-16 h-16">

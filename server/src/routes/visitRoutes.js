@@ -3,4 +3,5 @@ import { Router } from 'express';
 
 const router = Router();
 
-router.post('/entrada', visitController)
+router.post('/entrada', visitController.createVisit)
+router.patch('/salida/:id', visitController.updateVisitExit)

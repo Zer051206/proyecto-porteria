@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useRegisterForm } from '../../hooks/useRegisterForm.js';
-import { useGoBack } from '../../hooks/useGoBack.js';
+import { useGoBack } from '../../hooks/useGoBackHome.js';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
 

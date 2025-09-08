@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import passport  from 'passport';
 import authRoutes from './routes/authRoutes.js';
+import apiRoutes from './routes/apiRoutes.js';
 import visitRoutes from "./routes/visitRoutes.js"
 
 dotenv.config();
@@ -35,7 +36,10 @@ app.disable('x-powered-by');
 // * Conecta el enrutador de autenticación a la ruta /auth.
 app.use('/auth', authRoutes);
 
+// * Conecta el enrutador de visitas ala ruta /visitas.
 app.use('/visitas', visitRoutes)
+
+app.use('api', apiRoutes);
 
 const PORT = process.env.PORT || 3000;
 
