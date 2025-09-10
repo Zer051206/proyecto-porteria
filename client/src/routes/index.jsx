@@ -2,18 +2,61 @@
 import { Routes, Route } from 'react-router-dom';
 import { WelcomePage } from '../components/WelcomePage.jsx';
 import { AuthRoutes } from './AuthRoutes.jsx';
+import PrivateRoute from '../components/PrivateRoute.jsx';
 import VisitEntryForm from '../components/visits/VisitEntryForm.jsx'
 import Dashboard from '../components/Dashboard.jsx'
 import DashboardPackage from '../components/packages/DashboardPackage.jsx';
+import PackagesRecibirForm from '../components/packages/PackagesRecibirForm.jsx'; 
+import PackagesEnviarForm from '../components/packages/PackagesEnviarForm.jsx';
 
 export function AppRoutes() {
   return (
     <Routes>
+      { /* Rutas Públicas */ }
       <Route path="/" element={<WelcomePage />} />
       <Route path="/auth/*" element={<AuthRoutes />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/visitas/entrada" element={<VisitEntryForm />} />
-      <Route path="/paquetes" element={<DashboardPackage />} />
+
+      { /* Rutas Privadas */ }
+      <Route 
+        path="/dashboard" 
+        element={
+        <PrivateRoute>
+          <Dashboard />
+        </PrivateRoute>
+        } 
+      />
+      <Route 
+        path="/visitas/entrada" 
+        element={
+        <PrivateRoute>
+          <VisitEntryForm />
+        </PrivateRoute>
+        } 
+      />
+      <Route 
+        path="/paquetes" 
+        element={
+        <PrivateRoute>
+          <DashboardPackage />
+        </PrivateRoute> 
+        } 
+      />
+      <Route 
+        path="/paquetes/recibir" 
+        element={
+          <PrivateRoute>
+            <PackagesRecibirForm />
+          </PrivateRoute>
+        } 
+      />
+      <Route 
+        path="/paquetes/enviar" 
+        element={
+          <PrivateRoute>
+            <PackagesEnviarForm />
+          </PrivateRoute>
+        } 
+      />
     </Routes>
   );
-}
+};

@@ -25,9 +25,9 @@ export function WelcomePage() {
         {/* Cajón de Iniciar Sesión */}
         <Link 
           to="/auth/login" 
-          className="flex flex-col items-center justify-center p-8 w-44 h-44 bg-gray-100 rounded-lg shadow-xl hover:shadow-2xl transition-all duration-300"
+          className="flex flex-col items-center justify-center p-8 w-44 h-44 bg-blue-200 hover:bg-blue-400 rounded-lg shadow-black shadow-lg hover:shadow-xl transition-all duration-300"
         >
-          <div className="text-blue-600 mb-2">
+          <div className="text-blue-600 mb-2 ">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-16 h-16">
               <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
             </svg>
@@ -38,7 +38,7 @@ export function WelcomePage() {
         {/* Cajón de Registrarse */}
         <Link 
           to="/auth/register" 
-          className="flex flex-col items-center justify-center p-8 w-44 h-44 bg-white rounded-lg shadow-xl hover:shadow-2xl transition-all duration-300"
+          className="flex flex-col items-center justify-center p-8 w-44 h-44 bg-green-200 hover:bg-green-400 rounded-lg shadow-black shadow-lg hover:shadow-xl transition-all duration-300"
         >
           <div className="text-green-600 mb-2">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-16 h-16">

@@ -1,41 +1,53 @@
 import { useState } from "react"
 import axiosClient from "../axiosClient"
+import { useNavigate } from "react-router-dom";
 
 export function useRegisterForm () {
-  const [ password, setPassword ] = useState();
-  const [ email, setEmail ] = useState();
-  const [ name, setName ] = useState();
-  const [ lastName, setLastName ] = useState();
+  const [nombre, setNombre] = useState("");
+  const [apellido, setApellido] = useState("");
+  const [correo, setCorreo] = useState("");
+  const [password, setPassword] = useState("");
+  const [ error, setError ] = useState("");
+  const [ isLoading, setIsLoading ] = useState("");
+  const navigate = useNavigate();
 
-  const handleClickName = (e) => setName(e.target.value);
-  const handleClickLastName = (e) => setLastName(e.target.value);
-  const handleClickEmail = (e) => setEmail(e.target.value);
+  const handleClickNombre = (e) => setNombre(e.target.value);
+  const handleClickApellido = (e) => setApellido(e.target.value);
+  const handleClickCorreo = (e) => setCorreo(e.target.value);
   const handleClickPassword = (e) => setPassword(e.target.value);
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      const response = axiosClient.post('/register', {
-        name,
-        email,
-        lastName,
+      await axiosClient.post('/auth/register', {
+        nombre,
+        correo,
+        apellido,
         password
       })
-      console.log('Reistro exitoso', response.data)
-    } catch {
-      console.log('Error en el registro', error.response.data)
+      navigate('/auth/login');
+    } catch (err) {
+      if (err.response && err.response.data && err.response.data.message) {
+        setError(err.response.data.message);
+      } else {
+        setError('Error al registrarse. Por favor, inténtalo de nuevo.');
+      } 
+    } finally {
+      setIsLoading(false);
     }
   }
 
   return {
-    name,
-    email,
+    nombre,
+    correo,
     password,
-    lastName,
+    apellido,
     handleRegister,
-    handleClickName,
-    handleClickEmail,
-    handleClickLastName,
+    handleClickNombre,
+    handleClickCorreo,
+    handleClickApellido,
     handleClickPassword,
+    error,
+    isLoading
   }
 }

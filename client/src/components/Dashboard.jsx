@@ -1,7 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useGoBack } from '../hooks/useGoBackHome';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faBox, faHistory, faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faBox, faHistory, faSignOutAlt, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import useDashboard from '../hooks/useDashboard'; 
 
 // Componente de la tabla de visitas activas
@@ -18,15 +19,25 @@ const ActiveVisitsTable = () => {
   } = useDashboard();
 
   if (isLoading) {
-    return <div className="text-center py-4 bg-gray-300">Cargando visitas...</div>;
+    return <div className="text-center text-gray-400 py-4 bg-gray-800">Cargando visitas...</div>;
   }
 
   if (error) {
-    return <div className="text-center py-4 text-red-500 bg-gray-300">{error}</div>;
+    return (
+      <div className="px-4 py-5 bg-gray-800">
+        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 my-4" role="alert">
+          <div className="flex items-center">
+            <FontAwesomeIcon icon={faExclamationTriangle} className="mr-2 text-xl" />
+            <p className="font-bold text-lg">Error de Carga</p>
+          </div>
+          <p className="text-lg mr-[20px]">{error}</p>
+        </div>
+      </div>
+    )
   }
 
   if (activeVisits.length === 0) {
-    return <div className="text-center py-4 text-gray-500 bg-gray300">No hay visitas activas.</div>;
+    return <div className="text-center py-4 text-gray-400 bg-gray-800">No hay visitas activas.</div>;
   }
 
   return (
@@ -115,6 +126,7 @@ const ActiveVisitsTable = () => {
 };
 
 export default function DashboardPage() {
+  const goBack = useGoBack();
   const navigate = useNavigate();
 
   return (
@@ -122,16 +134,21 @@ export default function DashboardPage() {
       
       {/* Botón de Cerrar Sesión */}
       <button
-        onClick={() => {
-          // Lógica para cerrar sesión
-          navigate('/');
-        }}
-        className="absolute top-4 right-4 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-full flex items-center transition-colors"
+        type="button" 
+        onClick={goBack}
+        className="
+          absolute top-1 right-4 
+          bg-red-600 hover:bg-red-700 
+          text-white font-bold 
+          p-4 rounded-lg 
+          flex flex-col items-center justify-center 
+          transition-colors duration-300
+          text-sm w-16 h-16 sm:w-20 sm:h-20
+        "
       >
-        <FontAwesomeIcon icon={faSignOutAlt} className="mr-2" />
-        Salir
+        <FontAwesomeIcon icon={faSignOutAlt} className="text-xl sm:text-xl" />
+        <span className="text-xs sm:text-sm mt-1">Volver</span>
       </button>
-
       {/* Título de la página */}
       <h1 className="text-3xl sm:text-4xl font-extrabold text-blue-700 mb-8 mt-12 text-center">
         Gestión de Visitas y Paquetes
@@ -143,7 +160,7 @@ export default function DashboardPage() {
         {/* Botón Nueva Visita */}
         <button
           onClick={() => navigate('/visitas/entrada')}
-          className="flex flex-col items-center justify-center p-6 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition-colors"
+          className="flex flex-col items-center justify-center p-6 bg-blue-700 text-white rounded-lg shadow-md hover:bg-blue-800 transition-colors"
         >
           <FontAwesomeIcon icon={faPlus} className="text-3xl mb-2" />
           <span className="font-semibold text-lg">Nueva Visita</span>
@@ -152,7 +169,7 @@ export default function DashboardPage() {
         {/* Botón de Paquetes */}
         <button
           onClick={() => navigate('/paquetes')}
-          className="flex flex-col items-center justify-center p-6 bg-green-600 text-white rounded-lg shadow-md hover:bg-green-700 transition-colors"
+          className="flex flex-col items-center justify-center p-6 bg-green-700 text-white rounded-lg shadow-md hover:bg-green-800 transition-colors"
         >
           <FontAwesomeIcon icon={faBox} className="text-3xl mb-2" />
           <span className="font-semibold text-lg">Paquetes</span>
@@ -161,7 +178,7 @@ export default function DashboardPage() {
         {/* Botón de Historial */}
         <button
           onClick={() => navigate('/historial')}
-          className="flex flex-col items-center justify-center p-6 bg-purple-600 text-white rounded-lg shadow-md hover:bg-purple-700 transition-colors"
+          className="flex flex-col items-center justify-center p-6 bg-purple-700 text-white rounded-lg shadow-md hover:bg-purple-800 transition-colors"
         >
           <FontAwesomeIcon icon={faHistory} className="text-3xl mb-2" />
           <span className="font-semibold text-lg">Historial</span>

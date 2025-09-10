@@ -23,7 +23,9 @@ export const createVisit = async (visitData) => {
   return newVisit;
 }
 
-export const updateVisitExit = async (id) => {
+export const updateVisitExit = async (visitData) => {
+
+  const { visitId } = visitData;
   
   const activeVisit = await visitModel.findActiveVisitById(visitId);
   
@@ -31,7 +33,7 @@ export const updateVisitExit = async (id) => {
     return res.status(404).json({ message: 'No se encontró una visita activa con el ID proporcionado.' });
   }
 
-  const updatedVisit = await visitModel.updateVisitExit(id);
+  const updatedVisit = await visitModel.updateVisitExit(visitData);
 
   if (!updatedVisit) {
     throw new Error('No se pudo registrar la salida de la visita.');

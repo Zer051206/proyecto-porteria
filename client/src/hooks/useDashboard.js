@@ -10,7 +10,9 @@ const useDashboard = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedVisit, setSelectedVisit] = useState(null);
 
-  const fetchActiveVisits = async () => {
+  useEffect(() => {
+    const fetchActiveVisits = async () => {
+    
     try {
       const [activeVisitsRes] = await Promise.all([
         axios.get('http://localhost:3000/api/visitas-activas')
@@ -22,9 +24,7 @@ const useDashboard = () => {
       setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchActiveVisits();
+     fetchActiveVisits();
   }, []);
 
   const handleEndVisit = (visit) => {
@@ -37,7 +37,7 @@ const useDashboard = () => {
     try {
       await axios.patch(`http://localhost:3000/visitas/salida/${selectedVisit.id_visita}`);
       // Refresca la lista después de terminar la visita
-      fetchActiveVisits();
+      setActiveVisits([]);
       setShowModal(false);
       setSelectedVisit(null);
       alert('✅ ¡Visita finalizada con éxito!');

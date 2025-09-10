@@ -1,6 +1,6 @@
 import { ZodError } from 'zod';
-import { registerSchema, loginSchema, oauthSchema } from '../schemas/authSchema'
-import * as authService from "../services/authService"
+import { registerSchema, loginSchema, oauthSchema } from '../schemas/authSchema.js'
+import * as authService from "../services/authService.js"
 import passport from 'passport'
 
 export const registerUser = async (req, res, next) => {
@@ -21,7 +21,22 @@ export const loginUser = async (req, res, next) => {
     const validatedData = loginSchema.parse(req.body);
     const token = await authService.loginUser(validatedData);
 
-    res.status(200).json({ token });
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 3600000 // ^ 1 hour
+    });
+
+    res.status(200).json({
+      message: 'Inicio de sesión exitoso',
+      user: {
+        correo: validatedData.correo,
+        nombre: validatedData.nombre,
+        apellido: validatedData.apellido
+      }
+    });
+    
   } catch (error) {
     if (error instanceof ZodError) {
       res.status(400).json({ errors: error.errors });

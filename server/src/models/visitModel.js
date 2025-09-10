@@ -1,4 +1,4 @@
-import pool from "../config/db.config"
+import pool from "../config/db.config.js";
 
 export const findActiveVisitById = async (identificacion) => {
   let connect;
@@ -49,12 +49,13 @@ export const createVisit = async (visitData) => {
       nombre_destinatario,
       id_area,
       motivo,
-      observaciones = null
+      observaciones = null,
+      id_usuario
     } = visitData;
 
     const query = `
     INSERT INTO visitas(nombre_visitante, telefono, identificacion, id_tipo_identificacion, empresa, nombre_destinatario, 
-    id_area, motivo, observaciones, fecha_entrada)  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+    id_area, motivo, observaciones, fecha_entrada, id_usuario_entrada)  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)
     `;
 
     const rows = connect.query(query, [
@@ -66,7 +67,8 @@ export const createVisit = async (visitData) => {
       nombre_destinatario,
       id_area,
       motivo,
-      observaciones
+      observaciones,
+      id_usuario
     ]);
 
     if (rows.length === 0) {
@@ -81,14 +83,15 @@ export const createVisit = async (visitData) => {
   }
 }
 
-export const updateVisitExit = async (visitId) => {
+export const updateVisitExit = async (visitData) => {
+  const { visitId, id_usuario } = visitData;
   let connect;
   try {
     connect = pool.getConnection();
 
-    const query = 'UPDATE visitas SET fecha_salida = NOW(), estado = false WHERE id_visita = ? AND estado = true';
+    const query = 'UPDATE visitas SET fecha_salida = NOW(), estado = false, id_usuario_salida = ?, WHERE id_visita = ? AND estado = true';
 
-    const rows = await connect.query(query, [visitId])
+    const rows = await connect.query(query, [id_usuario, visitId])
 
     if (rows.length === 0) {
       return null;

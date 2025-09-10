@@ -4,7 +4,10 @@ import cors from 'cors';
 import passport  from 'passport';
 import authRoutes from './routes/authRoutes.js';
 import apiRoutes from './routes/apiRoutes.js';
-import visitRoutes from "./routes/visitRoutes.js"
+import visitRoutes from "./routes/visitRoutes.js";
+import packageRoutes from './routes/packageRoutes.js';
+import cookieParser from 'cookie-parser';
+import authMiddleware from './middlewares/authMiddleware.js';
 
 dotenv.config();
 
@@ -20,6 +23,8 @@ const app = express();
  * @description - // * This middleware allows the server to understand JSON data in incoming requests.
  */
 app.use(express.json());
+
+app.use(cookieParser());
 
 /**
  * @function - // * Express middleware for enabling CORS.
@@ -37,9 +42,13 @@ app.disable('x-powered-by');
 app.use('/auth', authRoutes);
 
 // * Conecta el enrutador de visitas ala ruta /visitas.
-app.use('/visitas', visitRoutes)
+app.use('/visitas', authMiddleware, visitRoutes)
 
-app.use('api', apiRoutes);
+// * Conecta el enrutador de la API a la ruta /api.
+app.use('/api', authMiddleware, apiRoutes);
+
+// * Conecta el enrutador de paquetes a la ruta /paquetes.
+app.use('/paquetes', authMiddleware, packageRoutes)
 
 const PORT = process.env.PORT || 3000;
 

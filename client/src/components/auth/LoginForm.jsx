@@ -32,11 +32,10 @@ export default function LoginForm() {
         <FontAwesomeIcon icon={faSignOutAlt} className="text-xl sm:text-xl" />
         <span className="text-xs sm:text-sm mt-1">Volver</span>
       </button>
-      <form className="bg-white p-6 rounded-lg shadow-2xl w-[98%] max-w-sm mt-[75px] mb-[50px]" onSubmit={handleLogin}>
-        <h2 className="text-2xl font-bold mb-5 text-center text-blue-900">Iniciar Sesión</h2>
-
-        <fieldset className="p-4 rounded-md mb-3 border border-gray-200">
-          <legend className="px-2 text-md font-semibold text-blue-900">Datos de la cuenta</legend>
+      <form className="bg-white p-6 rounded-lg shadow-xl shadow-black w-[98%] max-w-sm mt-[75px] mb-[50px]" onSubmit={handleLogin}>
+        <h2 className="text-2xl font-bold mb-[10px] text-center text-blue-900">Iniciar Sesión</h2>
+        <fieldset className="p-4 rounded-md mb-3 border border-gray-300 shadow-lg shadow-black">
+          <legend className="p-2 text-md bg-white font-semibold text-blue-900">Datos de la cuenta</legend>
           <div className="space-y-4">
             <label className="block">
               <span className="text-gray-700 text-sm">Correo electrónico:</span>
@@ -45,7 +44,7 @@ export default function LoginForm() {
                 type="email"
                 value={email}
                 onChange={handleEmailChange}
-                className="mt-1 block w-full rounded-md border-2 border-gray-400 bg-gray-50 shadow-lg focus:border-blue-700 focus:ring-2 focus:ring-blue-300 transition-all duration-200 ease-in-out hover:border-blue-500"
+                className="mt-1 block w-full rounded-md p-[5px] outline-0 border-2 border-gray-400 bg-gray-50 shadow-lg focus:border-blue-700 focus:ring-2 focus:ring-blue-300 transition-all duration-200 ease-in-out hover:border-blue-500"
                 autoComplete="off"
               />
             </label>
@@ -56,7 +55,7 @@ export default function LoginForm() {
                 type="password"
                 value={password}
                 onChange={handlePasswordChange}
-                className="mt-1 block w-full rounded-md border-2 border-gray-400 bg-gray-50 shadow-lg focus:border-blue-700 focus:ring-2 focus:ring-blue-300 transition-all duration-200 ease-in-out hover:border-blue-500"
+                className="mt-1 block w-full rounded-md p-[5px] outline-0 border-2 border-gray-400 bg-gray-50 shadow-lg focus:border-blue-700 focus:ring-2 focus:ring-blue-300 transition-all duration-200 ease-in-out hover:border-blue-500"
                 autoComplete="off"
               />
             </label>
@@ -65,7 +64,7 @@ export default function LoginForm() {
 
         <button
           type="submit"
-          className="mt-4 w-full bg-blue-600 text-white border-black py-2 rounded-md hover:bg-blue-700 transition-colors text-sm"
+          className="mt-[20px] w-full bg-blue-600 text-white border-black py-2 rounded-md hover:bg-blue-700 transition-colors text-sm"
         >
           Entrar
         </button>

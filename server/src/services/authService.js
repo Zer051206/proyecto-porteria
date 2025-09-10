@@ -7,7 +7,6 @@ import * as userModel from '../models/userModel.js';
  * @author M.M
  */
 
-
 /** 
  * @function registerUser: Función que se encarga de llamar al modelo para que realice la función solicitada.
  * @description  se encarga de verificar si el usuario asociado a su correo electronico existe, 

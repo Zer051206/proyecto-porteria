@@ -27,8 +27,8 @@ export default function VisitEntryForm() {
         <FontAwesomeIcon icon={faSignOutAlt} className="text-xl sm:text-xl" />
         <span className="text-xs sm:text-sm mt-1">Volver</span>
       </button>
-      <form onSubmit={formik.handleSubmit} className="bg-white p-6 rounded-lg shadow-2xl w-full max-w-2xl mt-[70px]">
-        <h2 className="text-2xl font-bold mb-6 text-center text-blue-900">Registro de Visita</h2>
+      <form onSubmit={formik.handleSubmit} className="bg-gray-800 p-6 rounded-lg shadow-2xl w-full max-w-2xl mt-[70px]">
+        <h2 className="text-2xl font-bold mb-6 text-center text-blue-500">Registro de Visita</h2>
 
         {isLoading && (
           <div className="text-center text-gray-500 my-4">Cargando opciones...</div>

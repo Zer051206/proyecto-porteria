@@ -7,14 +7,14 @@ import { faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
 export default function RegisterForm() {
   const goBack = useGoBack();
   const { 
-    name, 
-    email, 
+    nombre, 
+    correo, 
     password, 
-    lastName, 
+    apellido, 
     handleRegister, 
-    handleClickName, 
-    handleClickEmail, 
-    handleClickLastName, 
+    handleClickNombre, 
+    handleClickCorreo, 
+    handleClickApellido, 
     handleClickPassword
   } = useRegisterForm();
 
@@ -36,19 +36,19 @@ export default function RegisterForm() {
           <FontAwesomeIcon icon={faSignOutAlt} className="text-xl sm:text-xl" />
           <span className="text-xs sm:text-sm mt-1">Volver</span>
         </button>
-      <form className="bg-white p-6 rounded-lg shadow-2xl w-[90%] h-[95%] max-w-sm mt-[75px] sm:w-full sm:mt-0" onSubmit={handleRegister}>
+      <form className="bg-white p-6 rounded-lg mb-5 shadow-lg w-[90%] h-[95%] max-w-sm mt-[80px] sm:w-full sm:mt-[30px] shadow-black" onSubmit={handleRegister}>
         <h2 className="text-2xl font-bold mb-5 text-center text-blue-900">Registro</h2>
-        <fieldset className="p-4 rounded-md mb-3 border border-gray-400 shadow-xl">
-          <legend className="px-2 text-md font-semibold text-blue-900">Información personal</legend>
+        <fieldset className="p-4 rounded-md mb-[20px] border border-gray-400 shadow-sm shadow-black">
+          <legend className="px-2 text-md font-semibold bg-white text-blue-900">Información personal</legend>
           <div className="space-y-4">
             <label className="block">
               <span className="text-gray-700 text-sm">Nombre:</span>
               <input 
                 name="nombre"
                 type="text" 
-                value={name} 
-                onChange={handleClickName} 
-                className="mt-1 block w-full rounded-md border-2 border-gray-400 bg-gray-50 shadow-lg focus:border-blue-700 focus:ring-2 focus:ring-blue-300 transition-all duration-200 ease-in-out hover:border-blue-500"
+                value={nombre} 
+                onChange={handleClickNombre} 
+                className="mt-1 block w-full rounded-md border-2 p-[5px] outline-0 border-gray-400 bg-gray-50 shadow-lg focus:border-blue-700 transition-all duration-200 hover:border-blue-500"
                 autoComplete="off"
                 required
               />
@@ -58,9 +58,9 @@ export default function RegisterForm() {
               <input 
                 name="apellido"
                 type="text" 
-                value={lastName} 
-                onChange={handleClickLastName} 
-                className="mt-1 block w-full rounded-md border-2 border-gray-400 bg-gray-50 shadow-lg focus:border-blue-700 focus:ring-2 focus:ring-blue-300 transition-all duration-200 ease-in-out hover:border-blue-500"
+                value={apellido} 
+                onChange={handleClickApellido} 
+                className="mt-1 block w-full rounded-md border-2 p-[5px] outline-0 border-gray-400 bg-gray-50 shadow-lg focus:border-blue-700 focus:ring-2 focus:ring-blue-300 transition-all duration-200 ease-in-out hover:border-blue-500"
                 autoComplete="off"
                 required
               />
@@ -68,17 +68,17 @@ export default function RegisterForm() {
           </div>
         </fieldset>
 
-        <fieldset className="p-4 rounded-md mb-3 border border-gray-400 shadow-xl">
-          <legend className="px-2 text-md font-semibold text-blue-900">Datos de la cuenta</legend>
+        <fieldset className="p-4 rounded-md mb-3 border border-gray-400 shadow-sm shadow-black">
+          <legend className="px-2 text-md font-semibold bg-white text-blue-900">Datos de la cuenta</legend>
           <div className="space-y-4">
             <label className="block">
               <span className="text-gray-700 text-sm">Correo electrónico:</span>
               <input 
                 name="correo"
                 type="email" 
-                value={email} 
-                onChange={handleClickEmail} 
-                className="mt-1 block w-full rounded-md border-2 border-gray-400 bg-gray-50 shadow-lg focus:border-blue-700 focus:ring-2 focus:ring-blue-300 transition-all duration-200 ease-in-out hover:border-blue-500"
+                value={correo} 
+                onChange={handleClickCorreo} 
+                className="mt-1 block w-full rounded-md border-2 p-[5px] outline-0 border-gray-400 bg-gray-50 shadow-lg focus:border-blue-700 focus:ring-2 focus:ring-blue-300 transition-all duration-200 ease-in-out hover:border-blue-500"
                 autoComplete="off"
                 required
               />
@@ -90,7 +90,7 @@ export default function RegisterForm() {
                 type="password" 
                 value={password} 
                 onChange={handleClickPassword} 
-                className="mt-1 block w-full rounded-md border-2 border-gray-400 bg-gray-50 shadow-lg focus:border-blue-700 focus:ring-2 focus:ring-blue-300 transition-all duration-200 ease-in-out hover:border-blue-500"
+                className="mt-1 block w-full rounded-md border-2 p-[5px] outline-0 border-gray-400 bg-gray-50 shadow-lg focus:border-blue-700 focus:ring-2 focus:ring-blue-300 transition-all duration-200 ease-in-out hover:border-blue-500"
                 autoComplete="off"
                 required
               />

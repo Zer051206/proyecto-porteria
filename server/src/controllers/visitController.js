@@ -4,6 +4,13 @@ import * as visitService from "../services/visitService.js";
 export const createVisit = async (req, res) => {
   const validateVisitData = visitEntrySchema.safeParse(req.body);
 
+  const userId = req.user.userId;
+
+  const visitData = {
+    ...validateVisitData.data,
+    id_usuario: userId
+  }
+
   if (!validateVisitData.success) {
     const errors = validateVisitData.error.errors.map(err => ({
       field: err.path.join('.'),
@@ -13,7 +20,7 @@ export const createVisit = async (req, res) => {
   }
 
   try {
-    const newVisit = await visitService.createVisit(validateVisitData.data);
+    const newVisit = await visitService.createVisit(visitData);
     return res.status(201).json({ 
       message: 'Visita registrada con éxito.',
       visit: newVisit 
@@ -27,13 +34,19 @@ export const createVisit = async (req, res) => {
 export const updateVisitExit = async (req, res) => {
   const visitId = parseInt(req.params.id, 10);
 
+  const userId = req.user.userId;
+
+  const visitData = {
+    visitId,
+    id_usuario: userId
+  }
+
   if (isNaN(visitId) || visitId <= 0) {
       return res.status(400).json({ message: 'ID de visita inválido.' });
     }
   
-
   try {
-    const updateVisit = await visitService.updateVisitExit(visitId);
+    const updateVisit = await visitService.updateVisitExit(visitData);
     if (!updateVisit) {
       return res.status(404).json({ message: 'Visita no encontrada o ya registrada la salida.' });
     }

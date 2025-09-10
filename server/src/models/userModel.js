@@ -1,11 +1,11 @@
-import pool from "../config/db.config";
+import pool from "../config/db.config.js";
 
 export const findByEmail =  async (email) => {
   let connect;
   try {
     connect = await pool.getConnection();
     const query = 'SELECT * FROM usuarios WHERE correo=?';
-    const rows = await connect.query(query, [email]);
+    const [rows] = await connect.query(query, [email]);
     
     if (rows.length === 0) {
       return null;
@@ -23,7 +23,7 @@ export const findById = async (id) => {
   try{
     connect = await pool.getConnection();
     const query = `SELECT * FROM usuarios WHERE id_usuario = ?`;
-    const rows = await connect.query(query, [id]);
+    const [rows] = await connect.query(query, [id]);
     if (rows.length === 0) {
       return null;
     }
@@ -51,11 +51,11 @@ export const createUser = async (userData) => {
     } = userData;
 
     const query = `
-      INSERT INTO usuarios (nombre, apellido, correo, contrasena_hash, id_oauth, proveedor_oauth, rol) 
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO usuarios (nombre, apellido, correo, contrasena_hash, id_oauth, proveedor_oauth, rol, activo) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, false)
     `;
 
-    const result = await connect.query(query, [
+    const [result] = await connect.query(query, [
       nombre, 
       apellido, 
       correo, 
@@ -114,7 +114,7 @@ export const updateUser = async (userId, updateData) => {
       UPDATE usuarios SET ${setClause}, fecha_actualizacion = CURRENT_TIMESTAMP WHERE id_usuario = ?
     `;
 
-    const result = await connect.query(query, updateValues);
+    const [result] = await connect.query(query, updateValues);
 
     if (result.affectedRows === 1) {
       return { id_usuario: userId, ...updateData };
@@ -124,6 +124,28 @@ export const updateUser = async (userId, updateData) => {
   } catch (error) {
     throw new Error('Error al actualizar la base de datos: ' + error.message);
   } finally {
-    if (connect) connect.realease();
+    if (connect) connect.release();
   }
-} 
+};
+
+export const checkIfUserIsActive = async (userId) => {
+  let connect;
+  try {
+    connect = await pool.getConnection();
+    const query = `
+      SELECT activo FROM usuarios WHERE id_usuario = ?
+    `
+
+    const [rows] = await connect.query(query, [userId]);
+
+    if (rows.length === 0 ) {
+      return false;
+    }
+
+    return rows[0].activo === 1
+  } catch (error) {
+    throw new Error('Error en la consulta a la base de datos: ' + error.message);
+  } finally {
+    if (connect) connect.release();
+  }
+};

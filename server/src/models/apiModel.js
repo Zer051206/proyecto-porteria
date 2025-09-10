@@ -1,4 +1,4 @@
-import pool from "../config/db.config";
+import pool from "../config/db.config.js";
 
 export const fetchAreas = async () => {
   let connect;
@@ -18,7 +18,7 @@ export const fetchAreas = async () => {
   } finally {
     if (connect) connect.release();
   }
-}
+};
 
 export const fetchTiposIdentificacion = async () => {
   let connect;
@@ -51,11 +51,27 @@ export const fetchActiveVisits = async () => {
     if (rows.length === 0) {
       return null;
     }
-    
     return rows;
   } catch (error) {
     throw new Error('Error en la consulta a la base de datos: ' + error.message);
   } finally {
     if (connect) connect.release();
   }
-}
+};
+
+export const fetchTiposPaquetes = async () => {
+  let connect;
+  try {
+    connect = await pool.getConnection();
+    const query = `SELECT * FROM tipos_paquetes`;
+    const rows = await connect.query(query);
+    if (rows.length === 0) {
+      return null;
+    }
+    return rows;
+  } catch (error) {
+    throw new Error('Error en la consulta a la base de datos: ' + error.message);
+  } finally {
+    if (connect) connect.release;  
+  }
+};
