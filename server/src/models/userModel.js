@@ -1,4 +1,6 @@
-import pool from "../config/db.config.js";
+import { getPool } from "../config/db.config.js";
+
+const pool = getPool();
 
 export const findByEmail =  async (email) => {
   let connect;

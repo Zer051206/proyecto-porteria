@@ -31,7 +31,7 @@ export const registerUser = async (validatedData) => {
     contrasena_hash: contrasena_hash,
   };
 
-  const userCreated = await userModel.createUser({userForDB});
+  const userCreated = await userModel.createUser(userForDB);
   return userCreated;
 };
 
@@ -47,7 +47,7 @@ export const registerUser = async (validatedData) => {
 export const loginUser = async (validatedData) => {
   const { correo, password } = validatedData;
 
-  const userDb = await userModel.findBycorreo(correo);
+  const userDb = await userModel.findByEmail(correo);
 
   if (!userDb) {
     throw new Error('Credenciales inválidas');
@@ -77,7 +77,7 @@ export const loginUser = async (validatedData) => {
 export const handleOauthLogin = async (oauthData) => {
   const { nombre, apellido, correo, id_oauth, proveedor_oauth } = oauthData;
 
-  const userDb = await userModel.findBycorreo(correo);
+  const userDb = await userModel.findByEmail(correo);
 
   if (!userDb) {
     const newUser = await userModel.createUser({
@@ -97,8 +97,8 @@ export const handleOauthLogin = async (oauthData) => {
       id_oauth: id_oauth,
       proveedor_oauth: proveedor_oauth
     };
-    await userModel.updateUser(user.id_usuario, updateData);
-    const token = jwt.sign({ userId: user.id_oauth }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    await userModel.updateUser(userDb.id_usuario, updateData);
+    const token = jwt.sign({ userId: userDb.id_usuario }, process.env.JWT_SECRET, { expiresIn: '1h' });
     return token
   }
 
@@ -107,7 +107,7 @@ export const handleOauthLogin = async (oauthData) => {
     throw new Error('Cuenta ya vinculada a otro proveedor.');
   }
 
-  if (user.id_oauth === id_oauth) {
+  if (userDb.id_oauth === id_oauth) {
     const token = jwt.sign({ userId: userDb.id_usuario }, process.env.JWT_SECRET, { expiresIn: '1h' });
     return token;
   }

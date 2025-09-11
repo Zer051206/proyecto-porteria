@@ -1,15 +1,15 @@
 import dotenv from 'dotenv';
+dotenv.config({ path: '../.env' });
+
 import express from 'express';
 import cors from 'cors';
 import passport  from 'passport';
-import authRoutes from './routes/authRoutes.js';
-import apiRoutes from './routes/apiRoutes.js';
-import visitRoutes from "./routes/visitRoutes.js";
-import packageRoutes from './routes/packageRoutes.js';
+import authRoutes from './src/routes/authRoutes.js';
+import apiRoutes from './src/routes/apiRoutes.js';
+import visitRoutes from "./src/routes/visitRoutes.js";
+import packageRoutes from './src/routes/packageRoutes.js';
 import cookieParser from 'cookie-parser';
-import authMiddleware from './middlewares/authMiddleware.js';
-
-dotenv.config();
+import authMiddleware from './src/middlewares/authMiddleware.js';
 
 /**
  * @file - // * This file is the entry point for the backend.
