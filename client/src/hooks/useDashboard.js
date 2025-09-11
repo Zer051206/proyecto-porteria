@@ -1,5 +1,4 @@
 // src/hooks/useDashboard.js
-
 import axios from "axios";
 import { useEffect, useState } from "react";
 
@@ -18,7 +17,7 @@ const useDashboard = () => {
         axios.get('http://localhost:3000/api/visitas-activas')
       ]);
       setActiveVisits(activeVisitsRes.data);
-    } catch (error) {
+    } catch (err) {
       setError('Error al cargar las visitas activas.');
     } finally {
       setIsLoading(false);

@@ -17,4 +17,6 @@ router.get('/visitas-activas', authMiddleware, apiController.getActiveVisits);
 
 router.get('/tipos-paquetes', authMiddleware, apiController.getTiposPaquetes);
 
+router.get('visitas', authMiddleware, apiController.getVisitsHistorial)
+
 export default router;

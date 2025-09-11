@@ -8,6 +8,9 @@ import Dashboard from '../components/Dashboard.jsx'
 import DashboardPackage from '../components/packages/DashboardPackage.jsx';
 import PackagesRecibirForm from '../components/packages/PackagesRecibirForm.jsx'; 
 import PackagesEnviarForm from '../components/packages/PackagesEnviarForm.jsx';
+import DashboardHistorial from '../components/historial/DashboardHistorial.jsx'
+import VisitsHistorial from '../components/historial/VisitsHistorial.jsx'
+import PackagesHistorial from '../components/historial/PackagesHistorial.jsx'
 
 export function AppRoutes() {
   return (
@@ -56,6 +59,31 @@ export function AppRoutes() {
             <PackagesEnviarForm />
           </PrivateRoute>
         } 
+      />
+      <Route 
+        path="/historial"
+        element={
+          <PrivateRoute>
+            <DashboardHistorial />
+          </PrivateRoute>
+        }
+      />
+
+      <Route 
+        path="/historial/visitas"
+        element={
+          <PrivateRoute>
+            <VisitsHistorial />
+          </PrivateRoute>
+        }
+      />
+      <Route 
+        path="/historial/paquetes"
+        element={
+          <PrivateRoute>
+            <PackagesHistorial />
+          </PrivateRoute>
+        }
       />
     </Routes>
   );

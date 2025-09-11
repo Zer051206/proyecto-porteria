@@ -50,6 +50,8 @@ app.use('/api', authMiddleware, apiRoutes);
 // * Conecta el enrutador de paquetes a la ruta /paquetes.
 app.use('/paquetes', authMiddleware, packageRoutes)
 
+app.use('/historial' authMiddleware, apiRoutes);
+
 const PORT = process.env.PORT || 3000;
 
 // * Inicia el servidor directamente.

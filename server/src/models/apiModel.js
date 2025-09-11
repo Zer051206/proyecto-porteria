@@ -77,3 +77,7 @@ export const fetchTiposPaquetes = async () => {
     if (connect) connect.release;  
   }
 };
+
+export const fetchVisitsHistorial = async () => {
+
+}

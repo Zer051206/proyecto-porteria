@@ -44,3 +44,13 @@ export const getTiposPaquetes = async () => {
 
   return tiposPaquetes;
 };
+
+export const getVisitsHistorial = async () => {
+  const visitsHistorial = await apiModel.fetchVisitsHistorial();
+
+  if (!visitsHistorial) {
+    throw new Error('No se pudo obtener el historial de visitas.');
+  };
+
+  return visitsHistorial;
+}

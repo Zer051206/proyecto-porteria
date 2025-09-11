@@ -40,3 +40,12 @@ export const getTiposPaquetes = async (req, res) => {
     throw new Error('Error en la consulta a la base de datos: ' + error.message);
   } 
 };
+
+export const getVisitsHistorial = async (req, res) => {
+  try {
+    const visitsHistorial = await apiService.getVisitsHistorial();
+    return res.status(200).json(visitsHistorial);
+  } catch (error) {
+    throw new Error('Error en la consulta a la base dedatos: ' + error.message);
+  }
+}
