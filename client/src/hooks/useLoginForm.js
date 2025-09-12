@@ -17,11 +17,11 @@ export const useLoginForm = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    seError(null);
+    setError(null);
 
     try{
       await axiosClient.post('http://localhost:3000/auth/login', {
-        email,
+        correo: email,
         password
       }, { withCredentials: true });
 

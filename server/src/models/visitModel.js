@@ -1,10 +1,9 @@
 import { getPool } from "../config/db.config.js";
 
-const pool = getPool();
-
 export const findActiveVisitById = async (identificacion) => {
   let connect;
   try {
+    const pool = getPool();
     connect = await pool.getConnection();
     const query = 'SELECT * FROM visitas WHERE id_visitante = ? AND estado === true';
     const rows = await connect.query(query, [identificacion]);
@@ -24,6 +23,7 @@ export const findActiveVisitById = async (identificacion) => {
 export const findAreaById = async (id_area) => {
   let connect;
   try {
+    const pool = getPool();
     connect = await pool.getConnection();
     const query  = 'SELECT * FROM areas WHERE id_area = ?';
     const rows = connect.query(query, [id_area]);
@@ -41,6 +41,7 @@ export const findAreaById = async (id_area) => {
 export const createVisit = async (visitData) => {
   let connect;
   try {
+    const pool = getPool();
     connect = pool.getConnection();
     const {
       nombre_visitante, 
@@ -89,6 +90,7 @@ export const updateVisitExit = async (visitData) => {
   const { visitId, id_usuario } = visitData;
   let connect;
   try {
+    const pool = getPool();
     connect = pool.getConnection();
 
     const query = 'UPDATE visitas SET fecha_salida = NOW(), estado = false, id_usuario_salida = ?, WHERE id_visita = ? AND estado = true';

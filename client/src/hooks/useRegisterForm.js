@@ -25,6 +25,7 @@ export function useRegisterForm () {
         apellido,
         password
       })
+      alert('Usuario creado exitósamente, será enviado al formulario de inicio de sesión')
       navigate('/auth/login');
     } catch (err) {
       if (err.response && err.response.data && err.response.data.message) {

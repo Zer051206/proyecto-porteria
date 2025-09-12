@@ -1,19 +1,32 @@
 import { getPool } from "../config/db.config.js";
 
-const pool = getPool();
-
-export const findByEmail =  async (email) => {
+export const findByEmail = async (email) => {
   let connect;
+  console.log('--- Iniciando findByEmail para el correo:', email);
   try {
+    const pool = getPool();
     connect = await pool.getConnection();
+
     const query = 'SELECT * FROM usuarios WHERE correo=?';
-    const [rows] = await connect.query(query, [email]);
-    
-    if (rows.length === 0) {
-      return null;
+    const results = await connect.query(query, [email]);
+
+    console.log('Resultados de la consulta:', results);
+
+    if (results && results.length > 0) {
+      const rows = results[0];
+
+      console.log('Filas encontradas:', rows);
+
+      if (rows && rows.length > 0) {
+        console.log('Devolviendo usuario:', rows[0]);
+        return rows[0]; 
+      }
     }
-    return rows[0];
+
+    console.log('No se encontró el usuario. Devolviendo null.');
+    return null;
   } catch (error) {
+    console.error('ERROR EN EL MODELO:', error);
     throw new Error('Error en la consulta a la base de datos: ' + error.message);
   } finally {
     if (connect) connect.release();
@@ -23,6 +36,7 @@ export const findByEmail =  async (email) => {
 export const findById = async (id) => {
   let connect;
   try{
+    const pool = getPool();
     connect = await pool.getConnection();
     const query = `SELECT * FROM usuarios WHERE id_usuario = ?`;
     const [rows] = await connect.query(query, [id]);
@@ -40,6 +54,7 @@ export const findById = async (id) => {
 export const createUser = async (userData) => {
   let connect;
   try {
+    const pool = getPool();
     connect = await pool.getConnection();
 
     const { 
@@ -57,7 +72,7 @@ export const createUser = async (userData) => {
       VALUES (?, ?, ?, ?, ?, ?, ?, false)
     `;
 
-    const [result] = await connect.query(query, [
+    const result = await connect.query(query, [
       nombre, 
       apellido, 
       correo, 
@@ -67,7 +82,7 @@ export const createUser = async (userData) => {
       rol,
     ]);
 
-    return { id_usuario: result.insertId, ...userData };
+    return { id_usuario: result.insertId.toString(), ...userData };
   } catch (error) {
     throw new Error('Error al crear el usuario: ' + error.message)
   } finally {
@@ -86,6 +101,7 @@ export const createUser = async (userData) => {
 export const updateUser = async (userId, updateData) => {
   let connect;
   try {
+    const pool = getPool();
     connect = await pool.getConnection();
 
     const columnMapping = {
@@ -133,6 +149,7 @@ export const updateUser = async (userId, updateData) => {
 export const checkIfUserIsActive = async (userId) => {
   let connect;
   try {
+    const pool = getPool();
     connect = await pool.getConnection();
     const query = `
       SELECT activo FROM usuarios WHERE id_usuario = ?

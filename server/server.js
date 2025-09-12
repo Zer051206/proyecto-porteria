@@ -30,7 +30,10 @@ app.use(cookieParser());
  * @function - // * Express middleware for enabling CORS.
  * @description - // * This middleware allows requests from the frontend to be processed by the server, preventing cross-origin errors.
  */
-app.use(cors());
+app.use(cors({ 
+  origin: 'http://localhost:5173',
+  credentials: true
+}));
 
 /**
  * @function - // * Express middleware for disabling the 'x-powered-by' header.
@@ -50,7 +53,7 @@ app.use('/api', authMiddleware, apiRoutes);
 // * Conecta el enrutador de paquetes a la ruta /paquetes.
 app.use('/paquetes', authMiddleware, packageRoutes)
 
-app.use('/historial' authMiddleware, apiRoutes);
+app.use('/historial', authMiddleware, apiRoutes);
 
 const PORT = process.env.PORT || 3000;
 

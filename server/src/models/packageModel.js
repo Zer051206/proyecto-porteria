@@ -1,19 +1,17 @@
 import { getPool } from "../config/db.config.js";
 
-const pool = getPool();
-
 export const findPackageGuideReceive = async (guia) => {
   let connect;
   try {
+    const pool = getPool();
     connect = await pool.getConnection();
-    const query = 'SELECT * FROM paquetes WHERE guia = ? AND tipo_operacion = "recibir"';
+
+    const query = 'SELECT 1 FROM paquetes WHERE guia = ? AND tipo_operacion = "recibir" LIMIT 1';
     const rows = await connect.query(query, [guia]);
-    if (rows.length === 0) {
-      return null;  
-    }
-    return rows[0];
+
+    return rows.length > 0;
   } catch (error) {
-    throw new Error('Error en la consulta a la base de datos: ' + error.message);
+    throw error;
   } finally {
     if (connect) connect.release();
   }
@@ -22,15 +20,18 @@ export const findPackageGuideReceive = async (guia) => {
 export const findPackageGuideSend = async (guia) => {
   let connect;
   try {
+    const pool = getPool();
     connect = await pool.getConnection();
-    const query = 'SELECT * FROM paquetes WHERE guia = ? AND tipo_operacion = "enviar"';
-    const rows = await connect.query(query, [guia]);
-    if (rows.length === 0) {
-      return null;  
+    
+    if (guia === null || guia === undefined){
+      return false;
     }
-    return rows[0];
+    const query = 'SELECT 1 FROM paquetes WHERE guia = ? AND tipo_operacion = "enviar" LIMIT 1';
+    const rows = await connect.query(query, [guia]);
+
+    return rows.length > 0;
   } catch (error) {
-    throw new Error('Error en la consulta a la base de datos: ' + error.message);
+    throw error;
   } finally {
     if (connect) connect.release();
   }
@@ -39,6 +40,7 @@ export const findPackageGuideSend = async (guia) => {
 export const createReceivedPackage = async (validatePackageData) => {
   let connect;
   try {
+    const pool = getPool();
     connect = await pool.getConnection();
     const {
       id_tipo_paquete,
@@ -49,6 +51,7 @@ export const createReceivedPackage = async (validatePackageData) => {
       mensajero_nombre = null,
       observaciones = null
     } = validatePackageData;
+
     const query = `
       INSERT INTO paquetes (id_tipo_paquete, tipo_operacion, guia, nombre_destinatario, id_area, 
                   empresa_transporte, mensajero_nombre, fecha_entrada, observaciones)
@@ -71,7 +74,7 @@ export const createReceivedPackage = async (validatePackageData) => {
     return rows;
 
   } catch (error) {
-    throw new Error('Error en la consulta a la base de datos: ' + error.message);
+    throw error;
   } finally {
     if (connect) connect.release();
   }
@@ -80,8 +83,9 @@ export const createReceivedPackage = async (validatePackageData) => {
 export const createSentPackage = async (validatePackageData) => {
   let connect;
   try {
+    const pool = getPool();
     connect = await pool.getConnection();
-    
+  
     const {
       id_tipo_paquete,
       guia = null,
@@ -98,7 +102,7 @@ export const createSentPackage = async (validatePackageData) => {
                   destino_salida, empresa_transporte, mensajero_nombre, fecha_salida, observaciones)
       VALUES (?, 'enviar', ?, ?, ?, ?, ?, ?, NOW(), ?)
     `
-    const rows = connect.query(query, [
+    const rows = await connect.query(query, [
       id_tipo_paquete,
       guia,
       nombre_destinatario,
@@ -109,13 +113,13 @@ export const createSentPackage = async (validatePackageData) => {
       observaciones
     ])
 
-    if (rows.affectedRows === 0) {
+    if (!rows || rows.affectedRows === 0) {
       throw new Error('No se pudo registrar el paquete.');
     }
     
     return rows;
   } catch (error) {
-    throw new Error('Error en la consulta a la base de datos: ' + error.message);
+    throw error;
   } finally {
     if (connect) connect.release();
   }

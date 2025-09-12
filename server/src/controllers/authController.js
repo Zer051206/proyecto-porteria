@@ -7,6 +7,7 @@ export const registerUser = async (req, res, next) => {
   try {
     const validatedData = registerSchema.parse(req.body);
     const newUser = await authService.registerUser(validatedData);
+  
     res.status(201).json(newUser);
   } catch (error) {
     if (error instanceof ZodError) {
@@ -39,7 +40,7 @@ export const loginUser = async (req, res, next) => {
     
   } catch (error) {
     if (error instanceof ZodError) {
-      res.status(400).json({ errors: error.errors });
+      return res.status(400).json({ errors: error.errors });
     }
     next(error);
   }

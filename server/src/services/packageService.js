@@ -7,36 +7,55 @@ import * as packageModel from '../models/packageModel.js';
 
 export const receivePackage = async (validatePackageData) => {
   const { guia } = validatePackageData;
-
-  const packageGuide = await packageModel.findPackageGuideReceive(guia);
-
-  if (packageGuide) {
-    throw new Error('Un paquete con la misma guía ya existe en el sistema.');
+  try {
+    if(guia) {
+      const isDuplicate = await packageModel.findPackageGuideReceive(guia);
+      if (isDuplicate) {
+        throw new Error('DUPLICATE_GUIDE');
+      }
+    }
+    const receivedPackage = await packageModel.createReceivedPackage(validatePackageData);
+    if (!receivePackage) {
+      throw new Error('CREATION_FAILED');
+    }
+    return receivedPackage;
+  } catch (error) {
+    if (error.message === 'DUPLICATE_GUIDE') {
+      throw new Error('Un paquete con la misma guía ya existe en el sistema.');
+    }
+    if (error.message === 'CREATION_FAILED') {
+      throw new Error('No se pudo registrar el paquete recibido.');
+    }
+    if (error.message.includes('Error en la consulta')) {
+      throw new Error('Error en la base de datos al procesar el paquete.');
+    }
+    throw error;
   }
-
-  const receivedPackage = await packageModel.createReceivedPackage(validatePackageData);
-
-  if (!receivedPackage) {
-    throw new Error('No se pudo registrar el paquete recibido.');
-  }
-
-  return receivedPackage;
 };
 
 export const sendPackage = async (validatePackageData) => {
   const { guia } = validatePackageData;
+  try {
+    const packageGuide = await packageModel.findPackageGuideSend(guia);
+    if (packageGuide) {
+      throw new Error('DUPLICATE_GUIDE');
+    }
+    const sentPackage = await packageModel.createSentPackage(validatePackageData);
 
-  const packageGuide = await packageModel.findPackageGuideSend(guia);
-
-  if (packageGuide) {
-    throw new Error('Un paquete con la misma guía ya existe en el sistema.');
+    if (!sentPackage) {
+      throw new Error('CREATION_FAILED');
+    }
+    return sentPackage;
+  } catch (error) {
+    if (error.message === 'DUPLICATE_GUIDE') {
+      throw new Error('Un paquete con la misma guía ya existe en el sistema.');
+    }
+    if (error.message === 'CREATION_FAILED') {
+      throw new Error('No se pudo registrar el envío del paquete.');
+    }
+    if (error.message.includes('Error en la consulta')) {
+      throw new Error('Error en la base de datos al procesar el paquete.')
+    }
+    throw error;
   }
-
-  const sentPackage = await packageModel.createSentPackage(validatePackageData);
-
-  if (!sentPackage) {
-    throw new Error('No se pudo registrar el paquete enviado.');
-  }
-
-  return sentPackage;
 };

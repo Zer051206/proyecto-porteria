@@ -2,41 +2,58 @@ import * as packageService from '../services/packageService.js';
 import { packageSchemaReceive, packageSchemaSend } from '../schemas/packageSchema.js';
 
 export const receivePackage = async (req, res) => {
-  const validateData = packageSchemaReceive.safeParse(req.body);
   try {
+    const validateData = packageSchemaReceive.safeParse(req.body);
+    
     if (!validateData.success) {
       const errors = validateData.error.errors.map(err => ({
         field: err.path.join('.'),
         message: err.message
       }));
-      return res.status(400).json({ errors });
+      return res.status(400).json({ 
+        success: false,
+        errors 
+      });
     }
-    const receivePackage = await packageService.receivePackage(validateData.data);
-    return res.status(201).json({ 
+    const receivedPackage = await packageService.receivePackage(validateData.data);
+    
+    return res.status(201).json({
+      success: true, 
       message: 'Paquete recibido con éxito.',
-      package: receivePackage 
+      data: receivedPackage
     });
   } catch (error) {
-    throw new Error('Error en la consulta a la base de datos: ' + error.message);
+    return res.status(500).json({
+      success: false, 
+      message: 'Error interno del servidor al procesar el paquete.'
+    });
   }
 };
 
 export const sendPackage = async (req, res) => {
-  const validateData = packageSchemaSend.safeParse(req.body);
   try {
+    const validateData = packageSchemaSend.safeParse(req.body);
+    
     if (!validateData.success) {
       const errors = validateData.error.errors.map(err => ({
         field: err.path.join('.'),
         message: err.message
       }));
-      return res.status(400).json({ errors });
-    }; 
-    const sendPackage = await packageService.sendPackage(validateData.data);
-    return res.status(201).json({ 
-      message: 'Paquete enviado con éxito.',
-      package: sendPackage 
+      return res.status(400).json({
+        success: false,
+        errors
+      });
+    }
+    const sentPackage = await packageService.sendPackage(validateData.data);
+    
+    return res.status(201).json({
+      success: true,
+      message: 'Paquete enviado con éxito.', sentPackage
     });
   } catch (error) {
-      throw new Error('Error en la consulta a la base de datos: ' + error.message);
-    }
+    return res.status(500).json({
+      success: false, 
+      message: 'Error interno del servidor al procesar el paquete.'
+    });
+  }
 };

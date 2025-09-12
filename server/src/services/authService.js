@@ -1,4 +1,4 @@
-import bcrypt from 'bcryptjs'
+import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import * as userModel from '../models/userModel.js';
 
@@ -50,7 +50,7 @@ export const loginUser = async (validatedData) => {
   const userDb = await userModel.findByEmail(correo);
 
   if (!userDb) {
-    throw new Error('Credenciales inválidas');
+    throw new Error('El correo no existe.');
   } 
 
   if (!userDb.contrasena_hash) {
@@ -59,7 +59,7 @@ export const loginUser = async (validatedData) => {
 
   const isPasswordCorrect = await bcrypt.compare(password, userDb.contrasena_hash);
   if (!isPasswordCorrect) {
-    throw new Error('Credenciales inválidas');
+    throw new Error('La contraseña es incorrecta');
   }
 
   const token = jwt.sign({ userId: userDb.id_usuario }, process.env.JWT_SECRET, { expiresIn: '1h' });

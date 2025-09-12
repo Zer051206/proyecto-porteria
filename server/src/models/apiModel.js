@@ -1,10 +1,9 @@
 import { getPool } from "../config/db.config.js";
 
-const pool = getPool();
-
 export const fetchAreas = async () => {
   let connect;
   try {
+    const pool = getPool();
     connect = await pool.getConnection();
 
     const query = 'SELECT * FROM areas';
@@ -25,6 +24,7 @@ export const fetchAreas = async () => {
 export const fetchTiposIdentificacion = async () => {
   let connect;
   try {
+    const pool = getPool();
     connect = await pool.getConnection();
     const query = 'SELECT * FROM tipos_identificacion';
     const rows = await connect.query(query);
@@ -43,6 +43,7 @@ export const fetchTiposIdentificacion = async () => {
 export const fetchActiveVisits = async () => {
   let connect;
   try {
+    const pool = getPool();
     connect = pool.getConnection();
     const query = `
       SELECT v.id_visita, v.nombre_visitante, v.telefono, v.identificacion,
@@ -64,6 +65,7 @@ export const fetchActiveVisits = async () => {
 export const fetchTiposPaquetes = async () => {
   let connect;
   try {
+    const pool = getPool();
     connect = await pool.getConnection();
     const query = `SELECT * FROM tipos_paquetes`;
     const rows = await connect.query(query);
@@ -74,10 +76,25 @@ export const fetchTiposPaquetes = async () => {
   } catch (error) {
     throw new Error('Error en la consulta a la base de datos: ' + error.message);
   } finally {
-    if (connect) connect.release;  
+    if (connect) connect.release();  
   }
 };
 
 export const fetchVisitsHistorial = async () => {
+  let connect;
+  try {
+    const pool = getPool();
+    connect = pool.getConnection();
+    const query = `SELECT * FROM visitas;`;
+    const rows = connect.query(query);
+    if (rows.length === 0) {
+      return null;
+    };
+    return rows;
+  } catch (error) {
+    throw new Error('Error en la consulta a la base de datos: ' + error.message);
+  } finally {
+    if (connect) connect.release()
+  }
+};
 
-}
