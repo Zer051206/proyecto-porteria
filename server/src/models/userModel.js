@@ -2,7 +2,6 @@ import { getPool } from "../config/db.config.js";
 
 export const findByEmail = async (email) => {
   let connect;
-  console.log('--- Iniciando findByEmail para el correo:', email);
   try {
     const pool = getPool();
     connect = await pool.getConnection();
@@ -10,23 +9,14 @@ export const findByEmail = async (email) => {
     const query = 'SELECT * FROM usuarios WHERE correo=?';
     const results = await connect.query(query, [email]);
 
-    console.log('Resultados de la consulta:', results);
-
-    if (results && results.length > 0) {
-      const rows = results[0];
-
-      console.log('Filas encontradas:', rows);
-
-      if (rows && rows.length > 0) {
-        console.log('Devolviendo usuario:', rows[0]);
-        return rows[0]; 
-      }
+    const rows = results.filter(row => row && typeof row === 'object' && !row.constructor.name.includes('Meta'));
+    
+    if (rows && rows.length > 0) {
+      return rows[0];
+    } else {
+      return null;
     }
-
-    console.log('No se encontró el usuario. Devolviendo null.');
-    return null;
   } catch (error) {
-    console.error('ERROR EN EL MODELO:', error);
     throw new Error('Error en la consulta a la base de datos: ' + error.message);
   } finally {
     if (connect) connect.release();
@@ -155,15 +145,36 @@ export const checkIfUserIsActive = async (userId) => {
       SELECT activo FROM usuarios WHERE id_usuario = ?
     `
 
-    const [rows] = await connect.query(query, [userId]);
+    const results = await connect.query(query, [userId]);
 
-    if (rows.length === 0 ) {
-      return false;
+    const rows = results.filter(row => row && typeof row === 'object' && !row.constructor.name.includes('Meta'));
+    
+    if (rows && rows.length > 0) {
+      return rows[0];
+    } else {
+      return null;
     }
-
-    return rows[0].activo === 1
   } catch (error) {
     throw new Error('Error en la consulta a la base de datos: ' + error.message);
+  } finally {
+    if (connect) connect.release();
+  }
+};
+
+export const updateLastLogin = async (userId) => {
+  let connect; 
+  try {
+    const pool = getPool();
+    connect = pool.getConection();
+    const query = `
+      UPDATE usuarios 
+      SET ultimo_login = NOW() 
+      WHERE id_usuario = ?
+    `
+    const result = connect.query(query, [userId])
+    return result;
+  } catch (error) {
+    throw new Error('Error al actualizar el ultimo login del usuario');
   } finally {
     if (connect) connect.release();
   }

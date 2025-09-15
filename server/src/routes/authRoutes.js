@@ -1,5 +1,8 @@
-import * as authController from '../controllers/authController.js'
-import { Router } from 'express'
+import { ZodError } from 'zod';
+import pkg from 'jsonwebtoken';
+const { JsonWebTokenError, TokenExpiredError } = pkg;
+import { Router } from 'express';
+import * as authController from '../controllers/authController.js';
 
 /**
  * @file - // * This file contains the authentication routes.
@@ -41,8 +44,6 @@ const handleErrors = (err, req, res, next) => {
       message: err.message
     });
   }
-
-  
 
   // 5. Manejar otros errores no esperados
   res.status(500).json({

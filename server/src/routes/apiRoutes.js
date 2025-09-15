@@ -1,7 +1,40 @@
 //src /routes/apiRoutes.js
 import { Router } from "express";
+import pkg from 'jsonwebtoken';
+const { JsonWebTokenError, TokenExpiredError } = pkg;
 import * as apiController from '../controllers/apiController.js';
 import authMiddleware from "../middlewares/authMiddleware.js";
+
+const handleErrors = (err, req, res, next) => {
+
+  console.error('Error en el middleware de autenticación:', err);
+
+  if (err.message.include('No se pudieron obtener')){
+    return res.status(500).json({
+      success: false,
+      message: err.message
+    })
+  }
+
+  if (err instanceof JsonWebTokenError) {
+    return res.status(401).json({
+      success: false,
+      message: 'Token inválido. Acceso no autorizado.'
+    });
+  }
+  
+  if (err instanceof TokenExpiredError) {
+    return res.status(401).json({
+      success: false,
+      message: 'Token expirado. Por favor, vuelve a iniciar sesión.'
+    });
+  }
+
+  res.status(500).json({
+    success: false,
+    message: 'Error interno del servidor. Por favor, inténtalo de nuevo más tarde.'
+  });
+};
 
 const router = Router();
 
@@ -18,5 +51,7 @@ router.get('/visitas-activas', authMiddleware, apiController.getActiveVisits);
 router.get('/tipos-paquetes', authMiddleware, apiController.getTiposPaquetes);
 
 router.get('visitas', authMiddleware, apiController.getVisitsHistorial)
+
+router.use(handleErrors)
 
 export default router;

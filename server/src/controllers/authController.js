@@ -1,4 +1,3 @@
-import { ZodError } from 'zod';
 import { registerSchema, loginSchema, oauthSchema } from '../schemas/authSchema.js'
 import * as authService from "../services/authService.js"
 import passport from 'passport'
@@ -10,9 +9,6 @@ export const registerUser = async (req, res, next) => {
   
     res.status(201).json(newUser);
   } catch (error) {
-    if (error instanceof ZodError) {
-      return res.status(400).json({ errors: error.errors });
-    }
     next(error);
   }
 };
@@ -26,7 +22,8 @@ export const loginUser = async (req, res, next) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 3600000 // ^ 1 hour
+      maxAge: 3600000, // ^ 1 hour
+      path: '/'
     });
 
     res.status(200).json({
@@ -39,9 +36,6 @@ export const loginUser = async (req, res, next) => {
     });
     
   } catch (error) {
-    if (error instanceof ZodError) {
-      return res.status(400).json({ errors: error.errors });
-    }
     next(error);
   }
 };

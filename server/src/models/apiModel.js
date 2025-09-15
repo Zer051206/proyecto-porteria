@@ -44,11 +44,11 @@ export const fetchActiveVisits = async () => {
   let connect;
   try {
     const pool = getPool();
-    connect = pool.getConnection();
+    connect = await pool.getConnection();
     const query = `
       SELECT v.id_visita, v.nombre_visitante, v.telefono, v.identificacion,
-             v.empresa, v.nombre_destinatario, a.nombre_area,v.fecha_entrada,
-      FROM visitas v JOIN areas a ON v.id_area = a.id_area WHERE v.estado = true    
+             v.empresa, v.nombre_destinatario, a.nombre_area, v.fecha_entrada
+      FROM visitas v JOIN areas a ON v.id_area = a.id_area WHERE v.estado = 1  
     `
     const rows = (await connect).query(query);
     if (rows.length === 0) {
@@ -84,7 +84,7 @@ export const fetchVisitsHistorial = async () => {
   let connect;
   try {
     const pool = getPool();
-    connect = pool.getConnection();
+    connect = await pool.getConnection();
     const query = `SELECT * FROM visitas;`;
     const rows = connect.query(query);
     if (rows.length === 0) {

@@ -1,6 +1,8 @@
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
+import * as tokenUtils from '../utils/tokenUtils.js'
 import * as userModel from '../models/userModel.js';
+import * as refreshTokenModel  from '../models/refreshTokenModel.js'
 
 /**
  * @file: Este archivo es el servicio de autenticacion de usuarios.
@@ -16,23 +18,36 @@ import * as userModel from '../models/userModel.js';
  */
 
 export const registerUser = async (validatedData) => {
-  const { nombre, apellido, correo, password } = validatedData;
-  const userDb = await userModel.findByEmail(correo);
+    try {
+    const { nombre, apellido, correo, password } = validatedData;
+    const userDb = await userModel.findByEmail(correo);
 
-  if (userDb) {
-    throw new Error('El correo eletrónico ya está registrado.');
-  }  
+    if (userDb) {
+      throw new Error('El usuario ya existe.');
+    }  
 
-  const contrasena_hash = await bcrypt.hash(password, 10);
-  const userForDB = {
-    nombre,
-    apellido,
-    correo,
-    contrasena_hash: contrasena_hash,
-  };
+    const contrasena_hash = await bcrypt.hash(password, 10);
+    const userForDB = {
+      nombre,
+      apellido,
+      correo,
+      contrasena_hash: contrasena_hash,
+    };
 
-  const userCreated = await userModel.createUser(userForDB);
-  return userCreated;
+    const userCreated = await userModel.createUser(userForDB);
+    return {
+      message: 'Usuario registrado exitosamente',
+      usuario: {
+        id: userCreated.id_usuario,
+        nombre: userCreated.nombre,
+        apellido: userCreated.apellido ,
+        correo: userCreated.correo,
+        rol: userCreated.rol
+      }
+    };
+  } catch (error) {
+    throw error;
+  }
 };
 
 /**
@@ -45,26 +60,85 @@ export const registerUser = async (validatedData) => {
  */
 
 export const loginUser = async (validatedData) => {
-  const { correo, password } = validatedData;
+    try {
+    const { correo, password } = validatedData;
 
-  const userDb = await userModel.findByEmail(correo);
+    const userDb = await userModel.findByEmail(correo);
 
-  if (!userDb) {
-    throw new Error('El correo no existe.');
-  } 
+    if (!userDb) {
+      throw new Error('Credenciales incorrectas.');
+    } 
 
-  if (!userDb.contrasena_hash) {
-    throw new Error('password_not_set');
+    if (!userDb.contrasena_hash) {
+      throw new Error('password_not_set');
+    }
+
+    if (!userDb.activo) {
+      throw new Error('Cuenta desactivada.')
+    }
+
+    const isPasswordCorrect = await bcrypt.compare(password, userDb.contrasena_hash);
+    if (!isPasswordCorrect) {
+      throw new Error('Credenciales incorrectas.');
+    }
+
+    const accessToken = tokenUtils.generateAccessToken(userDb);
+    const refreshToken = tokenUtils.generateRefreshToken();
+    const refreshTokenExpires = tokenUtils.getRefreshtTokenExpiration();
+
+    await refreshTokenModel.saveRefreshToken(
+      userDb.id_usuario,
+      refreshToken,
+      refreshTokenExpires
+    );
+
+    await userModel.updateLastLogin(userDb.id_usuario);
+
+    return {
+      accesToken,
+      refreshToken,
+      user: {
+        id: userDb.id_usuario,
+        nombre: userDb.nombre,
+        apellido: userDb.apellido,
+        correo: userDb.correo,
+        rol: userDb.rol
+      }
+    }
+  } catch (error) {
+    throw error;
   }
+};
 
-  const isPasswordCorrect = await bcrypt.compare(password, userDb.contrasena_hash);
-  if (!isPasswordCorrect) {
-    throw new Error('La contraseña es incorrecta');
+export const refreshAccessToken = async (refreshToken) => {
+  try {
+    if (!refreshToken) {
+      throw new Error('refresh token es requerido');
+    }
+
+    const tokenData = await refreshTokenModel.findValidRefreshToken(refreshToken);
+    if (!tokenData) {
+      throw new Error('refresh token inválido o expirado');
+    }
+
+    const newAccessToken = tokenUtils.generateAccessToken({
+      id_usuario: tokenData.id_usuario,
+      correo: tokenData.correo,
+      rol: tokenData.rol
+    });
+
+    return {
+      accessToken: newAccessToken,
+      user: {
+        id: tokenData.id_usuario,
+        correo: tokenData.correo,
+        rol: tokenData.rol
+      }
+    }
+  } catch (error) {
+    throw error
   }
-
-  const token = jwt.sign({ userId: userDb.id_usuario }, process.env.JWT_SECRET, { expiresIn: '1h' });
-  return token;
-}
+};
 
 /**
  * @function handleOauthLogin Función encargada de llamar al modelo para que realice la función solicitada.
