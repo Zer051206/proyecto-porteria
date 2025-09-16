@@ -30,6 +30,13 @@ const handleErrors = (err, req, res, next) => {
     });
   }
 
+  if (err.message.include('El usuario está')) {
+    return res.status(401).json({
+      succes:false,
+      message: 'El usuario no se encuentra activado.'
+    });
+  }
+
   res.status(500).json({
     success: false,
     message: 'Error interno del servidor. Por favor, inténtalo de nuevo más tarde.'
@@ -50,7 +57,7 @@ router.get('/visitas-activas', authMiddleware, apiController.getActiveVisits);
 
 router.get('/tipos-paquetes', authMiddleware, apiController.getTiposPaquetes);
 
-router.get('visitas', authMiddleware, apiController.getVisitsHistorial)
+router.get('/visitas', authMiddleware, apiController.getVisitsHistorial)
 
 router.use(handleErrors)
 

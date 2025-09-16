@@ -50,4 +50,4 @@ export const getVisitsHistorial = async (req, res, next) => {
   } catch (error) {
     next(error)
   }
-}
+};

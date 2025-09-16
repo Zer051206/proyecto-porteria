@@ -1,4 +1,5 @@
 import * as apiModel from '../models/apiModel.js';
+import * as userModel from '../models/userModel.js'
 
 /**
  * @file - // * This file contains the business logic for API endpoints.
@@ -53,4 +54,4 @@ export const getVisitsHistorial = async () => {
   };
 
   return visitsHistorial;
-}
+};

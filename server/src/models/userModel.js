@@ -165,7 +165,7 @@ export const updateLastLogin = async (userId) => {
   let connect; 
   try {
     const pool = getPool();
-    connect = pool.getConection();
+    connect = await pool.getConnection();
     const query = `
       UPDATE usuarios 
       SET ultimo_login = NOW() 

@@ -2,6 +2,7 @@ import { ZodError } from 'zod';
 import pkg from 'jsonwebtoken';
 const { JsonWebTokenError, TokenExpiredError } = pkg;
 import { Router } from 'express';
+import * as refreshTokenModel from '../models/refreshTokenModel.js';
 import * as authController from '../controllers/authController.js';
 
 /**
@@ -57,6 +58,46 @@ const router = Router()
 router.post('/register', authController.registerUser);
 
 router.post('/login', authController.loginUser);
+
+router.post('/refresh', authController.refreshToken)
+
+router.post('/logout', authController.logoutUser)
+
+router.get('/me', async (req, res) => {
+  try {
+    const refreshToken = req.cookies.refreshToken;
+
+    if (!refreshToken) {
+      return res.status(401).json({
+        authenticated: false,
+        message: 'no autenticado'
+      })
+    }
+
+    const tokenData = await refreshTokenModel.findValidRefreshToken(refreshToken);
+
+    if (!tokenData) {
+      return res.status(401).json({
+        authenticated: false,
+        message: 'sesión expirada'
+      });
+    }
+
+    res.json({
+      authenticated: true,
+      user: {
+        id: tokenData.id_usuario,
+        correo: tokenData.correo,
+        rol: tokenData.rol
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      authenticated:false,
+      message: 'Error del servidor'
+    });
+  }
+});
 
 router.use(handleErrors);
 

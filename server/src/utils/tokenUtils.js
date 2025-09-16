@@ -1,6 +1,5 @@
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
-import { serialize } from 'v8'
 
 export const generateAccessToken = (user) => {
   const payload = {
@@ -9,7 +8,7 @@ export const generateAccessToken = (user) => {
     rol: user.rol
   };
 
-  return jwt.sign(payload. process.env.JWT_SECRET, {
+  return jwt.sign(payload, process.env.JWT_SECRET, {
     expiresIn: '15m'
   });
 };
@@ -26,7 +25,7 @@ export const verifyAccessToken = (token) => {
   }
 };
 
-export const getRefreshtTokenExpiration = () => {
+export const getRefreshTokenExpiration = () => {
   const expiration = new Date();
   expiration.setDate(expiration.getDate() + 7)
   return expiration; 

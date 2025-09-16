@@ -97,4 +97,3 @@ export const fetchVisitsHistorial = async () => {
     if (connect) connect.release()
   }
 };
-

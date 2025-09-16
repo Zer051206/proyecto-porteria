@@ -4,7 +4,7 @@ export const saveRefreshToken = async (userId, refreshToken, expiredAt) => {
   let connect;
   try {
     const pool = getPool();
-    connect = await pool.getConection();
+    connect = await pool.getConnection();
     const query = `
       INSERT INTO refresh_tokens (id_usuario, token, expira_en) 
       VALUES (?, ?, ?)
@@ -25,8 +25,8 @@ export const findValidRefreshToken = async (refreshToken) => {
     const pool = getPool();
     connect = await pool.getConnection();
     const query = `
-      SELECT rt.*, u.id_usuario, u.correo, u.rol, u.activo
-      FROM refresh_token rt 
+      SELECT u.id_usuario, u.correo, u.rol, u.activo
+      FROM refresh_tokens rt 
       JOIN usuarios u ON rt.id_usuario = u.id_usuario
       WHERE rt.token = ?
       AND rt.expira_en > NOW()
@@ -34,11 +34,12 @@ export const findValidRefreshToken = async (refreshToken) => {
       AND u.activo = 1
     `;
     const rows = await connect.query(query, [refreshToken]);
-
-    if (rows && rows.length > 0 && rows[0].id_usuario) {
-      rows[0]
+    
+    if (rows.length > 0) {
+      return rows[0];
+    } else {
+      return null;
     }
-    return null
   } catch (error) {
     throw new Error('Error al buscar el refresh token: ' + error.message);
   } finally {
@@ -50,12 +51,12 @@ export const revokeRefreshToken = async (refreshToken) => {
   let connect;
   try {
     const pool = getPool();
-    connect = pool.getConection();
+    connect = pool.getConnection();
     const query = `
       UPDATE refresh_token SET revocado = 1
       WHERE token = ? 
     `;
-    const result = connect.query(query, [refreshToken]);
+    const result = await connect.query(query, [refreshToken]);
     return result;
   } catch (error) {
     throw new Error('Error al revocer el refresh token: ' + error.message);
@@ -73,7 +74,7 @@ export const revokeAllUserTokens = async (userId) => {
       UPDATE refresh_token SET revocado = 1
       WHERE id_usuario = ?
     `
-    const result = connect.query(query, [userId]);
+    const result = await connect.query(query, [userId]);
     return result
   } catch (error) {
     throw new Error('Error al revocar los refresh tokens del usuario: ' + error.message);

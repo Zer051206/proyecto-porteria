@@ -84,7 +84,7 @@ export const loginUser = async (validatedData) => {
 
     const accessToken = tokenUtils.generateAccessToken(userDb);
     const refreshToken = tokenUtils.generateRefreshToken();
-    const refreshTokenExpires = tokenUtils.getRefreshtTokenExpiration();
+    const refreshTokenExpires = tokenUtils.getRefreshTokenExpiration();
 
     await refreshTokenModel.saveRefreshToken(
       userDb.id_usuario,
@@ -95,7 +95,7 @@ export const loginUser = async (validatedData) => {
     await userModel.updateLastLogin(userDb.id_usuario);
 
     return {
-      accesToken,
+      accessToken,
       refreshToken,
       user: {
         id: userDb.id_usuario,
@@ -117,6 +117,7 @@ export const refreshAccessToken = async (refreshToken) => {
     }
 
     const tokenData = await refreshTokenModel.findValidRefreshToken(refreshToken);
+    
     if (!tokenData) {
       throw new Error('refresh token inválido o expirado');
     }
@@ -137,6 +138,17 @@ export const refreshAccessToken = async (refreshToken) => {
     }
   } catch (error) {
     throw error
+  }
+};
+
+export const logoutUser = async (refreshToken) => {
+  try {
+    if (refreshToken) {
+      await refreshTokenModel.revokeRefreshToken(refreshToken);
+    }
+    return { message: 'Logout exitoso' }
+  } catch (error) {
+    throw error;
   }
 };
 

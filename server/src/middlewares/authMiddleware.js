@@ -1,49 +1,116 @@
-import jwt from 'jsonwebtoken';
-import * as userModel from '../models/userModel.js'
+import { verifyAccessToken, generateAccessToken } from '../utils/tokenUtils.js';
+import * as userModel from '../models/userModel.js';
+import * as refreshTokenModel from '../models/refreshTokenModel.js';
 
 const authMiddleware = async (req, res, next) => {
-  let token = req.cookies.accessToken || req.cookies.token;
-  const refreshToken = req.cookies.refreshToken;
-
-  if (!token) {
-    return res.status(401).json({ 
-      message: 'Acceso no autorizado. Token no proporcionado.', 
-      needsLogin: !refreshToken
-    });
-  }
-
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    let accessToken = req.cookies.accessToken;
+    const refreshToken = req.cookies.refreshToken;
+    console.log(accessToken);
+    console.log(refreshToken);
+    // Si no hay access token, intentar con refresh token
+    if (!accessToken && refreshToken) {
+      
+      try {
+        // Buscar refresh token válido
+        const tokenData = await refreshTokenModel.findValidRefreshToken(refreshToken);
+        
+        if (tokenData) {
+          // Generar nuevo access token
+          const newAccessToken = generateAccessToken({
+            id_usuario: tokenData.id_usuario,
+            correo: tokenData.correo,
+            rol: tokenData.rol
+          });
 
-    const userId = decoded.userId
+          // Establecer nueva cookie
+          res.cookie('accessToken', newAccessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 15 * 60 * 1000, // ^ 15 minutos
+            path: '/'
+          });
 
-    const isActive = await userModel.checkIfUserIsActive(userId); 
-    
-    if (!isActive) {
-      return res.status(403).json({ 
-        message: 'Acceso denegado. la cuenta no está activada', 
+          accessToken = newAccessToken;
+        }
+      } catch (refreshError) {
+        console.error('Error al renovar token:', refreshError.message);
+      }
+    }
+
+    // Si aún no hay access token
+    if (!accessToken) {
+      return res.status(401).json({ 
+        message: 'Acceso no autorizado. Token no proporcionado.',
         needsLogin: true
       });
     }
 
-    req.user = { 
-      userId: decoded.userId,
-      correo: decoded.correo,
-      rol: decoded.rol
-    };
+    // Verificar access token
+    let decoded;
+    try {
+      decoded = verifyAccessToken(accessToken);
+    } catch (tokenError) {
+      console.log('Access token inválido:', tokenError.message);
+      
+      // Si el token es inválido y tenemos refresh token, intentar renovar
+      if (refreshToken) {
+        try {
+          const tokenData = await refreshTokenModel.findValidRefreshToken(refreshToken);
+          
+          if (tokenData) {
+            const newAccessToken = generateAccessToken({
+              id_usuario: tokenData.id_usuario,
+              correo: tokenData.correo,
+              rol: tokenData.rol
+            });
 
-    next();
-  } catch (error) {
-    if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({
-        message: 'Token expirado.',
-        expired: true,
-        needsRefresh: !!refreshToken
-      })
+            res.cookie('accessToken', newAccessToken, {
+              httpOnly: true,
+              secure: process.env.NODE_ENV === 'production',
+              sameSite: 'lax',
+              maxAge: 15 * 60 * 1000,
+              path: '/'
+            });
+
+            decoded = verifyAccessToken(newAccessToken);
+          } else {
+            throw new Error('Refresh token inválido');
+          }
+        } catch (refreshError) {
+          return res.status(401).json({ 
+            message: 'Sesión expirada. Por favor, inicia sesión nuevamente.',
+            needsLogin: true
+          });
+        }
+      } else {
+        return res.status(401).json({ 
+          message: 'Token inválido. Por favor, inicia sesión nuevamente.',
+          needsLogin: true
+        });
+      }
     }
 
-    return res.status(401).json({
-      message: 'Acceso denegado. Token inválido',
+    // Verificar que el usuario siga activo
+    const isActive = await userModel.checkIfUserIsActive(decoded.userId);
+    if (!isActive) {
+      return res.status(403).json({ 
+        message: 'Acceso denegado. La cuenta no está activada',
+        needsLogin: true
+      });
+    }
+
+    // Usuario autenticado correctamente
+    req.user = { 
+      userId: decoded.userId,
+      email: decoded.email,
+      rol: decoded.rol
+    };
+    next();
+  } catch (error) {
+    return res.status(500).json({ 
+      message: 'Error interno del servidor',
       needsLogin: true
     });
   }
