@@ -1,6 +1,6 @@
 // src/hooks/useAuthStatus.js
 import { useState, useEffect } from 'react';
-import api from '../config/axios.js'; // <-- Importa tu instancia de Axios configurada
+import api from '../config/axios.js'; // <-- Importa la instancia de Axios configurada
 
 const useAuthStatus = () => {
   const [ isAuthenticated, setIsAuthenticated ] = useState(false);

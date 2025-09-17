@@ -1,7 +1,18 @@
 // src/controllers/authController.js
 import { registerSchema, loginSchema, oauthSchema } from '../schemas/authSchema.js'
 import * as authService from "../services/authService.js"
-import passport from 'passport'
+import passport from 'passport';
+
+export const registerUser = async (req, res, next) => {
+  try {
+    const validatedData = registerSchema.parse(req.body);
+    const newUser = await authService.registerUser(validatedData);
+  
+    res.status(201).json(newUser);
+  } catch (error) {
+    next(error);
+  }
+};
 
 export const loginUser = async (req, res, next) => {
   try {

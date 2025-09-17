@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
+import api from "../config/axios";
 
 const useVisitsHistorial = async () => {
   const [ visitsHistorial, setVisitsHistorial ] = useState([]);
@@ -12,7 +13,7 @@ const useVisitsHistorial = async () => {
     const fetchVisitsHistorial = async () => { 
       try {
         const [visitsHistorialRes] = await Promise.all([
-          axios.get('http://localhost:3000/historial/visitas')
+          api.get('http://localhost:3000/historial/visitas')
         ]);
         setVisitsHistorial(visitsHistorialRes.data)
       } catch (err) {
@@ -28,7 +29,7 @@ const useVisitsHistorial = async () => {
     if (!selectedVisit) return;
 
     try {
-      await axios.get(`http://localhost:3000/historial/paquetes/${selectedPackage.id_paquete}`);
+      await api.get(`http://localhost:3000/historial/paquetes/${selectedPackage.id_paquete}`);
       setShowModal(true);
       setSelectedVisit(visit);
     } catch (err) {

@@ -15,7 +15,18 @@ export const receivePackage = async (req, res) => {
         errors 
       });
     }
-    const receivedPackage = await packageService.receivePackage(validateData.data);
+
+    const userId = req.user.userId;
+
+    const userIp = req.ip
+
+    const packageData = {
+      ...validateData,
+      id_usuario: userId,
+      ip_usuario: userIp
+    }
+
+    const receivedPackage = await packageService.receivePackage(packageData);
     
     return res.status(201).json({
       success: true, 
@@ -44,7 +55,18 @@ export const sendPackage = async (req, res) => {
         errors
       });
     }
-    const sentPackage = await packageService.sendPackage(validateData.data);
+
+    const userId = req.user.userId;
+
+    const userIp = req.ip;
+
+    const packageData = {
+      ...validateData,
+      id_usuario: userId,
+      ip_usuario: userIp
+    }
+
+    const sentPackage = await packageService.sendPackage(packageData);
     
     return res.status(201).json({
       success: true,

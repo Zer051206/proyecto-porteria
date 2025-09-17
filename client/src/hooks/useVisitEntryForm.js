@@ -5,6 +5,7 @@ import { useFormik } from 'formik';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import VisitSchema from '../schemas/visitSchema.js';
+import api from '../config/axios.js';
 
 const useVisitEntryForm = () => {
     const navigate = useNavigate();
@@ -21,8 +22,8 @@ const useVisitEntryForm = () => {
             try {
                 // Peticiones concurrentes para optimizar el tiempo de carga
                 const [areasRes, tiposIdRes] = await Promise.all([
-                    axios.get('http://localhost:3000/api/areas'),
-                    axios.get('http://localhost:3000/api/tipos-identificacion')
+                    api.get('http://localhost:3000/api/areas'),
+                    api.get('http://localhost:3000/api/tipos-identificacion')
                 ]);
                 
                 setAreas(areasRes.data);
@@ -56,7 +57,7 @@ const useVisitEntryForm = () => {
         validationSchema: VisitSchema,
         onSubmit: async (values, { setSubmitting }) => {
             try {
-                const response = await axios.post('http://localhost:3001/visitas/entrada', values);
+                 await api.post('http://localhost:3000/visitas/entrada', values);
                 alert('✅ ¡Visita registrada con éxito!');
                 navigate('/dashboard');
             } catch (error) {

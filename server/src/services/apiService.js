@@ -1,5 +1,4 @@
 import * as apiModel from '../models/apiModel.js';
-import * as userModel from '../models/userModel.js'
 
 /**
  * @file - // * This file contains the business logic for API endpoints.
@@ -55,3 +54,13 @@ export const getVisitsHistorial = async () => {
 
   return visitsHistorial;
 };
+
+export const getPackagesHistorial = async () => {
+  const packagesHistorial = await apiModel.fetchPackagesHistorial();
+
+  if (!packagesHistorial) {
+    throw new Error('No se pudo obtener el historial de paquetes.');
+  };
+
+  return packagesHistorial;
+}

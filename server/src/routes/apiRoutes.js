@@ -6,14 +6,19 @@ import * as apiController from '../controllers/apiController.js';
 import authMiddleware from "../middlewares/authMiddleware.js";
 
 const handleErrors = (err, req, res, next) => {
-
-  console.error('Error en el middleware de autenticación:', err);
-
-  if (err.message.include('No se pudieron obtener')){
+  
+  if (err.message.includes('No se pudieron obtener')){
     return res.status(500).json({
       success: false,
       message: err.message
-    })
+    });
+  }
+
+  if (err.message.includes('No hay')) {
+    return res.status(204).json({
+      success: false,
+      message: err.message
+    });
   }
 
   if (err instanceof JsonWebTokenError) {
@@ -30,7 +35,7 @@ const handleErrors = (err, req, res, next) => {
     });
   }
 
-  if (err.message.include('El usuario está')) {
+  if (err.message.includes('El usuario está')) {
     return res.status(401).json({
       succes:false,
       message: 'El usuario no se encuentra activado.'
@@ -58,6 +63,8 @@ router.get('/visitas-activas', authMiddleware, apiController.getActiveVisits);
 router.get('/tipos-paquetes', authMiddleware, apiController.getTiposPaquetes);
 
 router.get('/visitas', authMiddleware, apiController.getVisitsHistorial)
+
+router.get('/paquetes', authMiddleware, apiController.getPackagesHistorial)
 
 router.use(handleErrors)
 

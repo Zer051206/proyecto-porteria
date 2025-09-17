@@ -5,8 +5,8 @@ import * as packageModel from '../models/packageModel.js';
  * @author M.M
  */
 
-export const receivePackage = async (validatePackageData) => {
-  const { guia } = validatePackageData;
+export const receivePackage = async (packageData) => {
+  const { guia } = packageData;
   try {
     if(guia) {
       const isDuplicate = await packageModel.findPackageGuideReceive(guia);
@@ -14,7 +14,8 @@ export const receivePackage = async (validatePackageData) => {
         throw new Error('DUPLICATE_GUIDE');
       }
     }
-    const receivedPackage = await packageModel.createReceivedPackage(validatePackageData);
+    const receivedPackage = await packageModel.createReceivedPackage(packageData);
+
     if (!receivePackage) {
       throw new Error('CREATION_FAILED');
     }
@@ -33,14 +34,14 @@ export const receivePackage = async (validatePackageData) => {
   }
 };
 
-export const sendPackage = async (validatePackageData) => {
-  const { guia } = validatePackageData;
+export const sendPackage = async (packageData) => {
+  const { guia } = packageData;
   try {
     const packageGuide = await packageModel.findPackageGuideSend(guia);
     if (packageGuide) {
       throw new Error('DUPLICATE_GUIDE');
     }
-    const sentPackage = await packageModel.createSentPackage(validatePackageData);
+    const sentPackage = await packageModel.createSentPackage(packageData);
 
     if (!sentPackage) {
       throw new Error('CREATION_FAILED');

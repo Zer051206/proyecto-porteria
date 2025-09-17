@@ -51,3 +51,12 @@ export const getVisitsHistorial = async (req, res, next) => {
     next(error)
   }
 };
+
+export const getPackagesHistorial = async (req, res, next) => {
+  try {
+    const packagesHistorial = await apiService.getPackagesHistorial();
+    return res.status(200).json(packagesHistorial);
+  } catch (error) {
+    next(error);
+  }
+}

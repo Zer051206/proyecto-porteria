@@ -8,12 +8,13 @@ import * as visitModel from '../models/visitModel.js';
 export const createVisit = async (visitData) => {
   const {  identificacion, id_area } = visitData;
 
-  const activeVisite = visitModel.findActiveVisitById(identificacion);
+  const activeVisite = await visitModel.findActiveVisitById(identificacion);
   if (activeVisite) {
     throw new Error('La visita ya existe');
   }
 
   const areaExists = await visitModel.findAreaById(id_area);
+  
   if (!areaExists) {
       throw new Error('El área de destino no es válida.');
   }
@@ -30,7 +31,7 @@ export const updateVisitExit = async (visitData) => {
   const activeVisit = await visitModel.findActiveVisitById(visitId);
   
   if (!activeVisit) {
-    return res.status(404).json({ message: 'No se encontró una visita activa con el ID proporcionado.' });
+    throw new Error('NO_VISIT_ACTIVE_BY_ID');
   }
 
   const updatedVisit = await visitModel.updateVisitExit(visitData);

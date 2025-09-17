@@ -6,8 +6,7 @@ const authMiddleware = async (req, res, next) => {
   try {
     let accessToken = req.cookies.accessToken;
     const refreshToken = req.cookies.refreshToken;
-    console.log(accessToken);
-    console.log(refreshToken);
+
     // Si no hay access token, intentar con refresh token
     if (!accessToken && refreshToken) {
       

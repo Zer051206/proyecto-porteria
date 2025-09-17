@@ -1,6 +1,7 @@
 // src/hooks/useDashboard.js
 import axios from "axios";
 import { useEffect, useState } from "react";
+import api from "../config/axios";
 
 const useDashboard = () => {
   const [activeVisits, setActiveVisits] = useState([]);
@@ -14,7 +15,7 @@ const useDashboard = () => {
     
     try {
       const [activeVisitsRes] = await Promise.all([
-        axios.get('http://localhost:3000/api/visitas-activas')
+        api.get('http://localhost:3000/api/visitas-activas')
       ]);
       setActiveVisits(activeVisitsRes.data);
     } catch (err) {
@@ -34,7 +35,7 @@ const useDashboard = () => {
   const handleConfirmEndVisit = async () => {
     if (!selectedVisit) return;
     try {
-      await axios.patch(`http://localhost:3000/visitas/salida/${selectedVisit.id_visita}`);
+      await api.patch(`http://localhost:3000/visitas/salida/${selectedVisit.id_visita}`);
       // Refresca la lista después de terminar la visita
       setActiveVisits([]);
       setShowModal(false);

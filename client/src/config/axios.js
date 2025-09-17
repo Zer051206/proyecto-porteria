@@ -1,56 +1,45 @@
 import axios from 'axios';
 
-// Crear instancia de axios
+// Crear una instancia de Axios con la URL base del backend
 const api = axios.create({
-  baseURL: 'http://localhost:3000',
-  withCredentials: true, // Importante para cookies
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
+  withCredentials: true,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
-  }
+  },
 });
 
-// Interceptor de respuesta para manejar refresh token automático
+// Interceptor para manejar respuestas de la API
 api.interceptors.response.use(
-  // Respuesta exitosa, pasarla tal como está
-  (response) => response,
-  
-  // Error en la respuesta
+  (response) => {
+    return response;
+  },
   async (error) => {
     const originalRequest = error.config;
 
-    // Si es error 401 y no hemos intentado renovar el token
-    if (error.response?.status === 401 && !originalRequest._retry && !originalRequest._noRetry) {
+    // Verificar si la petición es para el endpoint de refresco de token
+    const isRefreshRequest = originalRequest.url.includes('/auth/refresh');
+
+    // Si la respuesta es un 401 y no es la petición de refresco
+    if (error.response?.status === 401 && !originalRequest._retry && !isRefreshRequest) {
       originalRequest._retry = true;
 
       try {
-        // Intentar renovar el token
-        await api.post('/auth/refresh', null, { _noRetry: true });
-        
-        // Reintentar la petición original
+        // Intentar renovar el token de acceso
+        await api.post('/auth/refresh');
+
+        // Reintentar la petición original con el nuevo token
         return api(originalRequest);
-        
       } catch (refreshError) {
-        // Si no se puede renovar, redirigir al login
-         return Promise.reject({
-          status: 401,
-          needsLogin: true 
-        });
+        // Si la renovación falla, redirigir a la página de inicio de sesión
+        window.location.href = '/auth-denegado';
+        return Promise.reject(error);
       }
     }
 
-    // Si es otro tipo de error, o ya intentamos renovar, rechazar
     return Promise.reject(error);
   }
-);
-
-// Interceptor de petición para debugging
-api.interceptors.request.use(
-  (config) => {
-    console.log(`Haciendo petición ${config.method?.toUpperCase()} a ${config.url}`);
-    return config;
-  },
-  (error) => Promise.reject(error)
 );
 
 export default api;

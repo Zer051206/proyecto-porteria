@@ -13,7 +13,7 @@ export default function PackagesEnviarForm() {
   const { formik, tiposPaquetes, areas, isLoading, errorCarga } = usePackageEnviarForm(navigate);
 
   return (
-    <div className="flex flex-col items-center h-screen w-screen p-4 bg-gray-100 dark:bg-gray-900">
+    <div className="flex flex-col items-center h-screen w-screen p-4 ">
       <button
         type="button" 
         onClick={goBack}
@@ -30,8 +30,8 @@ export default function PackagesEnviarForm() {
         <FontAwesomeIcon icon={faSignOutAlt} className="text-xl sm:text-xl" />
         <span className="text-xs sm:text-sm mt-1">Volver</span>
       </button>
-      <form onSubmit={formik.handleSubmit} className="bg-white mt-[80px] dark:bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-2xl">
-        <h2 className="text-2xl font-bold mb-6 text-center text-green-800 dark:text-green-400">
+      <form onSubmit={formik.handleSubmit} className="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-2xl mt-[70px]">
+        <h2 className="text-2xl font-bold mb-6 text-center text-blue-500">
           <FontAwesomeIcon icon={faUpload} className="mr-3" />
           Envío de Paquete
         </h2>
@@ -202,7 +202,7 @@ export default function PackagesEnviarForm() {
           </button>
           <button
             type="submit"
-            className="flex items-center px-6 py-2 bg-green-600 text-white font-bold rounded-md hover:bg-green-700 transition-colors duration-200"
+            className="flex items-center px-6 py-2 bg-blue-600 text-white font-bold rounded-md hover:bg-green-700 transition-colors duration-200"
             disabled={formik.isSubmitting || isLoading || !!errorCarga}
           >
             {formik.isSubmitting ? 'Guardando...' : <><FontAwesomeIcon icon={faCheckCircle} className="mr-2" />Registrar</>}

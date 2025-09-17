@@ -1,3 +1,4 @@
+// app.js o server.js
 import dotenv from 'dotenv';
 dotenv.config({ path: '../.env' });
 
@@ -11,34 +12,23 @@ import packageRoutes from './src/routes/packageRoutes.js';
 import cookieParser from 'cookie-parser';
 import authMiddleware from './src/middlewares/authMiddleware.js';
 
-/**
- * @file - // * This file is the entry point for the backend.
- * @author M.M
- */
-
 const app = express();
 
-/**
- * @function - // * Express middleware for parsing JSON bodies.
- * @description - // * This middleware allows the server to understand JSON data in incoming requests.
- */
+// MIDDLEWARE PARA PARSEAR LA PETICIÓN (cuerpo y cookies)
 app.use(express.json());
-
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-/**
- * @function - // * Express middleware for enabling CORS.
- * @description - // * This middleware allows requests from the frontend to be processed by the server, preventing cross-origin errors.
- */
-app.use(cors({ 
-  origin: 'http://localhost:5173',
-  credentials: true
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'], // URLs del frontend
+  credentials: true, // Permite cookies
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['set-cookie']
 }));
 
-/**
- * @function - // * Express middleware for disabling the 'x-powered-by' header.
- * @description - // * This middleware removes the 'x-powered-by' header for security reasons.
- */
+app.set('trust proxy', true);
+
 app.disable('x-powered-by');
 
 // * Conecta el enrutador de autenticación a la ruta /auth.

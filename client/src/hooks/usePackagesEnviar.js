@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
+import api from '../config/axios';
 
 const usePackagesEnviar = (navigate) => {
   const [tiposPaquetes, setTiposPaquetes] = useState([]);
@@ -15,8 +16,8 @@ const usePackagesEnviar = (navigate) => {
     const fetchFormData = async () => {
       try {
         const [tiposRes, areasRes] = await Promise.all([
-          axios.get('http://localhost:3000/api/tipos-paquetes'),
-          axios.get('http://localhost:3000/api/areas')
+          api.get('http://localhost:3000/api/tipos-paquetes'),
+          api.get('http://localhost:3000/api/areas')
         ]);
         setTiposPaquetes(tiposRes.data);
         setAreas(areasRes.data);
@@ -60,7 +61,7 @@ const usePackagesEnviar = (navigate) => {
     validationSchema,
     onSubmit: async (values) => {
       try {
-        await axios.post('http://localhost:3000/paquetes/enviar', {
+        await api.post('http://localhost:3000/paquetes/enviar', {
           ...values,
           guia: values.conGuia ? values.guia : null,
           destino_salida: values.destino_salida || null,

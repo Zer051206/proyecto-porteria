@@ -4,20 +4,24 @@ import * as visitService from "../services/visitService.js";
 export const createVisit = async (req, res) => {
   const validateVisitData = visitEntrySchema.safeParse(req.body);
 
-  const userId = req.user.userId;
-
-  const visitData = {
-    ...validateVisitData.data,
-    id_usuario: userId
-  }
-
-  if (!validateVisitData.success) {
+  if (validateVisitData.success === false) {
     const errors = validateVisitData.error.errors.map(err => ({
       field: err.path.join('.'),
       message: err.message
     }));
     return res.status(400).json({ errors });
   }
+
+  const userId = req.user.userId;
+
+  const userIp = req.ip
+
+  const visitData = {
+    ...validateVisitData.data,
+    id_usuario: userId,
+    ip_usuario: userIp
+  }
+
 
   try {
     const newVisit = await visitService.createVisit(visitData);
@@ -36,9 +40,12 @@ export const updateVisitExit = async (req, res) => {
 
   const userId = req.user.userId;
 
+  const userIp = req.ip;
+
   const visitData = {
     visitId,
-    id_usuario: userId
+    id_usuario: userId,
+    ip_usuario: userIp
   }
 
   if (isNaN(visitId) || visitId <= 0) {

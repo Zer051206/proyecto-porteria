@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
+import api from "../config/axios";
 
 const usePackagesHistorial = async () => {
   const [ packagesHistorial, setPackagesHistorial ] = useState([]);
@@ -12,7 +13,7 @@ const usePackagesHistorial = async () => {
     const fetchPackageHistorial = async () => { 
       try {
         const [packagesHistorialRes] = await Promise.all([
-          axios.get('http://localhost:3000/historial/paquetes')
+          api.get('http://localhost:3000/historial/paquetes')
         ]);
         setPackagesHistorial(packagesHistorialRes.data)
       } catch (err) {
@@ -28,7 +29,7 @@ const usePackagesHistorial = async () => {
     if (!selectedPackage) return;
 
     try {
-      await axios.get(`http://localhost:3000/historial/paquetes/${selectedPackage.id_paquete}`);
+      await api.get(`http://localhost:3000/historial/paquetes/${selectedPackage.id_paquete}`);
       setShowModal(true);
       setSelectedPackage(pkg);
     } catch (err) {

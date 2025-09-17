@@ -8,7 +8,7 @@ export const saveRefreshToken = async (userId, refreshToken, expiredAt) => {
     const query = `
       INSERT INTO refresh_tokens (id_usuario, token, expira_en) 
       VALUES (?, ?, ?)
-    `;
+    `; 
 
     const result = await connect.query(query, [userId, refreshToken, expiredAt]);
     return result;
@@ -51,9 +51,9 @@ export const revokeRefreshToken = async (refreshToken) => {
   let connect;
   try {
     const pool = getPool();
-    connect = pool.getConnection();
+    connect = await pool.getConnection();
     const query = `
-      UPDATE refresh_token SET revocado = 1
+      UPDATE refresh_tokens SET revocado = 1
       WHERE token = ? 
     `;
     const result = await connect.query(query, [refreshToken]);
@@ -61,7 +61,7 @@ export const revokeRefreshToken = async (refreshToken) => {
   } catch (error) {
     throw new Error('Error al revocer el refresh token: ' + error.message);
   } finally {
-    if (connect) connect.release()
+    if (connect) connect.release();
   }
 };
 
@@ -69,9 +69,9 @@ export const revokeAllUserTokens = async (userId) => {
   let connect; 
   try {
     const pool = getPool();
-    connect = pool.getConnection();
+    connect = await pool.getConnection();
     const query = `
-      UPDATE refresh_token SET revocado = 1
+      UPDATE refresh_tokens SET revocado = 1
       WHERE id_usuario = ?
     `
     const result = await connect.query(query, [userId]);
@@ -87,9 +87,9 @@ export const cleanExpiresTokens = async () => {
   let connect;
   try {
     const pool = getPool();
-    connect = pool.getConnection();
+    connect = await pool.getConnection();
     const query = `
-      DELETE from refresh_token 
+      DELETE from refresh_tokens 
       WHERE exprira_en < NOW() OR revocado = 1
     `;
     const result = connect.query(query);

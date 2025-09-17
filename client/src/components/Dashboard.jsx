@@ -1,9 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useGoBack } from '../hooks/useGoBackHome';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faBox, faHistory, faSignOutAlt, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
-import useDashboard from '../hooks/useDashboard'; 
+import useDashboard from '../hooks/useDashboard.js'; 
+import useAuthLogout from '../hooks/useAuthLogout.js';
 
 // Componente de la tabla de visitas activas
 const ActiveVisitsTable = () => {
@@ -126,8 +126,9 @@ const ActiveVisitsTable = () => {
 };
 
 export default function DashboardPage() {
-  const goBack = useGoBack();
   const navigate = useNavigate();
+
+  const { logout } = useAuthLogout();
 
   return (
     <div className="flex flex-col items-center min-h-screen w-full p-4">
@@ -135,7 +136,7 @@ export default function DashboardPage() {
       {/* Botón de Cerrar Sesión */}
       <button
         type="button" 
-        onClick={goBack}
+        onClick={logout}
         className="
           absolute top-1 right-4 
           bg-red-600 hover:bg-red-700 
@@ -147,7 +148,7 @@ export default function DashboardPage() {
         "
       >
         <FontAwesomeIcon icon={faSignOutAlt} className="text-xl sm:text-xl" />
-        <span className="text-xs sm:text-sm mt-1">Volver</span>
+        <span className="text-xs sm:text-sm mt-1">Cerrar Sesión</span>
       </button>
       {/* Título de la página */}
       <h1 className="text-3xl sm:text-4xl font-extrabold text-blue-700 mb-8 mt-12 text-center">

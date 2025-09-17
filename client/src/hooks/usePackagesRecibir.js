@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
+import api from '../config/axios';
 
 const usePackagesRecibir = (navigate) => {
   const [tiposPaquetes, setTiposPaquetes] = useState([]);
@@ -15,8 +16,8 @@ const usePackagesRecibir = (navigate) => {
     const fetchFormData = async () => {
       try {
         const [tiposRes, areasRes] = await Promise.all([
-          axios.get('http://localhost:3000/api/tipos-paquetes'),
-          axios.get('http://localhost:3000/api/areas')
+          api.get('http://localhost:3000/api/tipos-paquetes'),
+          api.get('http://localhost:3000/api/areas')
         ]);
         setTiposPaquetes(tiposRes.data);
         setAreas(areasRes.data);
@@ -58,7 +59,7 @@ const usePackagesRecibir = (navigate) => {
     validationSchema,
     onSubmit: async (values) => {
       try {
-        await axios.post('http://localhost:3000/paquetes/recibir', {
+        await api.post('http://localhost:3000/paquetes/recibir', {
           ...values,
           // Envía null si el checkbox no está marcado
           guia: values.conGuia ? values.guia : null,
