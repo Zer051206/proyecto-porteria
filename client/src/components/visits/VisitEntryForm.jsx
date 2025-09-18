@@ -131,14 +131,14 @@ export default function VisitEntryForm() {
                       onBlur={formik.handleBlur}
                       className="mt-1 block w-full rounded-md border-2 p-1 border-gray-400 bg-gray-50 shadow-lg"
                     >
-                      <option value="" disabled hidden>Seleccione un tipo</option>
+                      <option value="" hidden>Seleccione un tipo</option>
                       {tiposIdentificacion.map(tipo => (
                         <option key={tipo.id_tipo_identificacion} value={tipo.id_tipo_identificacion}>
                           {tipo.descripcion}
                         </option>
                       ))}
                     </select>
-                    {formik.touched.id_tipo_identificacion && formik.errors.id_tipo_identificacion && (
+                    {formik.errors.id_tipo_identificacion && (
                       <div className="text-red-500 font-semibold text-[15px] mt-1">{formik.errors.id_tipo_identificacion}</div>
                     )}
                   </label>
@@ -181,7 +181,7 @@ export default function VisitEntryForm() {
                       onBlur={formik.handleBlur}
                       className="mt-1 block w-full rounded-md p-1 border-2 border-gray-600 bg-gray-50 shadow-lg"
                     >
-                      <option value="" disabled hidden>Seleccione un área</option>
+                      <option value="" hidden>Seleccione un área</option>
                       {areas.map(area => (
                         <option key={area.id_area} value={area.id_area}>
                           {area.nombre_area}

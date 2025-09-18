@@ -9,19 +9,20 @@ export const createVisit = async (visitData) => {
   const {  identificacion, id_area } = visitData;
 
   const activeVisite = await visitModel.findActiveVisitById(identificacion);
+
   if (activeVisite) {
-    throw new Error('La visita ya existe');
+    throw new Error('VISIT_EXIST');
   }
 
   const areaExists = await visitModel.findAreaById(id_area);
   
   if (!areaExists) {
-      throw new Error('El área de destino no es válida.');
+    throw new Error('AREA_DONT_EXISTS');
   }
 
-  const newVisit = await Visita.createVisit(visitData);
+  const result = await visitModel.createVisit(visitData);
 
-  return newVisit;
+  return { id_visita: result.insertId.toString, ...visitData  };
 }
 
 export const updateVisitExit = async (visitData) => {
@@ -37,7 +38,7 @@ export const updateVisitExit = async (visitData) => {
   const updatedVisit = await visitModel.updateVisitExit(visitData);
 
   if (!updatedVisit) {
-    throw new Error('No se pudo registrar la salida de la visita.');
+    throw new Error('UPDATE_VISIT_ERROR');
   }
 
   return updatedVisit;

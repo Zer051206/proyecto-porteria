@@ -5,7 +5,7 @@ export const findActiveVisitById = async (identificacion) => {
   try {
     const pool = getPool();
     connect = await pool.getConnection();
-    const query = 'SELECT * FROM visitas WHERE id_visitante = ? AND estado = true';
+    const query = 'SELECT * FROM visitas WHERE identificacion = ? AND estado = true';
     const rows = await connect.query(query, [identificacion]);
     
     if (rows.length === 0) {
@@ -62,8 +62,8 @@ export const createVisit = async (visitData) => {
     } = visitData;
 
     const query = `
-    INSERT INTO visitas(nombre_visitante, telefono, identificacion, id_tipo_identificacion, empresa, nombre_destinatario, 
-    id_area, motivo, observaciones, fecha_entrada, id_usuario_entrada)  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)
+      INSERT INTO visitas(nombre_visitante, telefono, identificacion, id_tipo_identificacion, empresa, nombre_destinatario, 
+      id_area, motivo, observaciones, fecha_entrada, id_usuario_entrada)  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)
     `;
 
     const rows = await connect.query(query, [

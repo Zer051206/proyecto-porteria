@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faBox, faHistory, faSignOutAlt, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faBox, faHistory, faSignOutAlt, faExclamationTriangle, faExternalLinkAlt } from '@fortawesome/free-solid-svg-icons';
 import useDashboard from '../hooks/useDashboard.js'; 
 import useAuthLogout from '../hooks/useAuthLogout.js';
 
@@ -43,67 +43,69 @@ const ActiveVisitsTable = () => {
   return (
     <>
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="min-w-full leading-normal">
-          <thead>
-            <tr>
-              <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Nombre Completo del Visitante
-              </th>
-              <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Empresa
-              </th>
-              <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Destinatario
-              </th>
-              <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Área
-              </th>
-              <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Hora De Entrada
-              </th>
-              <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Acciones
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {activeVisits.map((visit) => (
-              <tr key={visit.id_visita}>
-                <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                  <p className="text-gray-900 whitespace-no-wrap">{visit.nombre_visitante}</p>
-                </td>
-                <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                  <p className="text-gray-900 whitespace-no-wrap">{visit.empresa}</p>
-                </td>
-                <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                  <p className="text-gray-900 whitespace-no-wrap">{visit.nombre_destinatario}</p>
-                </td>
-                <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                  <p className="text-gray-900 whitespace-no-wrap">{visit.nombre_area}</p>
-                </td>
-                <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                  <p className="text-gray-900 whitespace-no-wrap">{new Date(visit.fecha_entrada).toLocaleTimeString()}</p>
-                </td>
-                <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                  <button
-                    onClick={() => handleEndVisit(visit)}
-                    className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-                  >
-                    <FontAwesomeIcon icon={faExternalLinkAlt} className="mr-2" />
-                    Terminar Visita
-                  </button>
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr>
+                <th className="px-3 py-[8px] md:px-5 md:py-3 border-2 border-gray-300 bg-gray-50 text-center text-xs font-bold text-black uppercase tracking-wider">
+                  Nombre del Visitante
+                </th>
+                <th className="px-4 py-[8px] md:px-5 md:py-3 border-2 border-gray-300 bg-gray-50 text-center text-xs font-bold text-black uppercase tracking-wider">
+                  Empresa
+                </th>
+                <th className="px-4 py-[8px] md:px-5 md:py-3 border-2 border-gray-300 bg-gray-50 text-center text-xs font-bold text-black uppercase tracking-wider">
+                  Destinatario
+                </th>
+                <th className="px-4 py-[8px] md:px-5 md:py-3 border-2 border-gray-300 bg-gray-50 text-center text-xs font-bold text-black uppercase tracking-wider">
+                  Área de destino
+                </th>
+                <th className="px-4 py-[8px] md:px-5 md:py-3 border-2 border-gray-300 bg-gray-50 text-center text-xs font-bold text-black uppercase tracking-wider">
+                  Hora De Entrada
+                </th>
+                <th className="px-4 py-[8px] md:px-5 md:py-3 border-2 border-gray-300 bg-gray-50 text-center text-xs font-bold text-black uppercase tracking-wider">
+                  Acciones
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {activeVisits.map((visit) => (
+                <tr key={visit.id_visita}>
+                  <td className="md:px-3 md:py-1 font-semibold border border-gray-300 bg-white text-sm">
+                    <p className="text-gray-900 whitespace-no-wrap">{visit.nombre_visitante}</p>
+                  </td>
+                  <td className="md:px-3 md:py-1 font-semibold border border-gray-300 bg-white text-sm">
+                    <p className="text-gray-900 whitespace-no-wrap">{visit.empresa}</p>
+                  </td>
+                  <td className="md:px-3 md:py-1 font-semibold border border-gray-300 bg-white text-sm">
+                    <p className="text-gray-900 whitespace-no-wrap">{visit.nombre_destinatario}</p>
+                  </td>
+                  <td className="md:px-3 md:py-1 font-semibold border border-gray-300 bg-white text-sm">
+                    <p className="text-gray-900 whitespace-no-wrap">{visit.nombre_area}</p>
+                  </td>
+                  <td className="md:px-3 md:py-1 font-semibold border border-gray-300 bg-white text-sm">
+                    <p className="text-gray-900 whitespace-no-wrap">{new Date(visit.fecha_entrada).toLocaleTimeString()}</p>
+                  </td>
+                  <td className="px-3 py-1 font-semibold border border-gray-300 bg-white text-sm">
+                    <button
+                      onClick={() => handleEndVisit(visit)}
+                      className="bg-red-500 hover:bg-red-700 text-xs text-white font-bold rounded"
+                    >
+                      <FontAwesomeIcon icon={faExternalLinkAlt} className="" />
+                      Terminar Visita
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {showModal && (
         <div className="fixed inset-0 z-50 overflow-auto bg-gray-800 bg-opacity-50 flex items-center justify-center">
           <div className="bg-white rounded-lg p-8 w-1/3 shadow-xl">
             <h2 className="text-xl font-bold mb-4">Confirmar Finalización</h2>
-            <p className="mb-6">¿Estás seguro de que deseas finalizar la visita de **{selectedVisit?.nombre_visitante}**?</p>
+            <p className="mb-6">¿Estás seguro de que deseas finalizar la visita de {selectedVisit?.nombre_visitante}?</p>
             <div className="flex justify-end space-x-4">
               <button
                 onClick={handleCloseModal}
@@ -113,7 +115,7 @@ const ActiveVisitsTable = () => {
               </button>
               <button
                 onClick={handleConfirmEndVisit}
-                className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                className="bg-red-600 hover:bg-red-100 text-white font-bold py-2 px-4 rounded"
               >
                 Finalizar
               </button>
@@ -131,7 +133,7 @@ export default function DashboardPage() {
   const { logout } = useAuthLogout();
 
   return (
-    <div className="flex flex-col items-center min-h-screen w-full p-4">
+    <div className="flex flex-col items-center min-h-screen w-full p-4 mt-[30px]">
       
       {/* Botón de Cerrar Sesión */}
       <button

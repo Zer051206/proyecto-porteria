@@ -6,23 +6,23 @@ export const visitEntrySchema = z.object({
     invalid_type_error: "El nombre completo debe ser una cadena de texto"
   })
   .trim()
-  .min(5, { message: "El nombre completo debe tener al menos 5 caracteres" })
+  .min(3, { message: "El nombre completo debe tener al menos 3 caracteres" })
   .max(100, { message: "El nombre completo no puede tener más de 100 caracteres" }),
 
-  telefono: z.string({
+  telefono: z.coerce.string({
     required_error: "El teléfono es obligatorio",
     invalid_type_error: "El teléfono debe ser una cadena de texto"
   }).trim()
   .min(7, { message: "El teléfono debe tener al menos 7 caracteres" })
   .max(15, { message: "El teléfono no puede tener más de 15 caracteres" }),
   
-  identificacion: z.number({
+  identificacion: z.coerce.string({
     required_error: "La identificación es obligatoria",
-    invalid_type_error: "La identificación debe ser un número"
+    invalid_type_error: "La identificación debe ser una cadena de texto"
   })
   .min(1, { message: "La identificación debe ser un número positivo" }),
 
-  id_tipo_identificacion: z.number({
+  id_tipo_identificacion: z.coerce.number({
     required_error: "El tipo de identificación es obligatorio",
     invalid_type_error: "El tipo de identificación debe ser un número"
   })
@@ -42,7 +42,7 @@ export const visitEntrySchema = z.object({
   .min(5, { message: "El nombre de la persona a visitar debe tener al menos 5 caracteres" })
   .max(100, { message: "El nombre de la persona a visitar no puede tener más de 100 caracteres" }),
 
-  id_area: z.number({
+  id_area: z.coerce.number({
     required_error: "El área a visitar es obligatoria",
     invalid_type_error: "El área a visitar debe ser un número"
   })
@@ -58,5 +58,8 @@ export const visitEntrySchema = z.object({
 
   observaciones: z.string({
     invalid_type_error: "Las observaciones deben ser una cadena de texto"
-  })
+  }).transform((data) => ({
+    ...data,
+    nombre_visitante: `${data.nombre_visitante} ${data.apellido}`
+  }))
 });

@@ -90,7 +90,10 @@ export const fetchVisitsHistorial = async () => {
     if (rows.length === 0) {
       return null;
     };
-    return rows;
+    console.log(rows)
+    console.log('---------------')
+    console.log(rows[0])
+    return rows[0];
   } catch (error) {
     throw new Error('Error en la consulta a la base de datos: ' + error.message);
   } finally {
