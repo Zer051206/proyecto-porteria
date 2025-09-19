@@ -1,59 +1,18 @@
-import * as packageService from '../services/packageService.js';
-import { packageSchemaReceive, packageSchemaSend } from '../schemas/packageSchema.js';
+import * as packageService from "../services/packageService.js";
+import {
+  packageSchemaReceive,
+  packageSchemaSend,
+} from "../schemas/packageSchema.js";
 
-export const receivePackage = async (req, res) => {
+export const receivePackage = async (req, res, next) => {
   try {
     const validateData = packageSchemaReceive.safeParse(req.body);
-    
+
     if (!validateData.success) {
-      const errors = validateData.error.errors.map(err => ({
-        field: err.path.join('.'),
-        message: err.message
-      }));
-      return res.status(400).json({ 
-        success: false,
-        errors 
-      });
-    }
-
-    const userId = req.user.userId;
-
-    const userIp = req.ip
-
-    const packageData = {
-      ...validateData,
-      id_usuario: userId,
-      ip_usuario: userIp
-    }
-
-    const receivedPackage = await packageService.receivePackage(packageData);
-    
-    return res.status(201).json({
-      success: true, 
-      message: 'Paquete recibido con éxito.',
-      data: receivedPackage
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false, 
-      message: 'Error interno del servidor al procesar el paquete.'
-    });
-  }
-};
-
-export const sendPackage = async (req, res) => {
-  try {
-    const validateData = packageSchemaSend.safeParse(req.body);
-    
-    if (!validateData.success) {
-      const errors = validateData.error.errors.map(err => ({
-        field: err.path.join('.'),
-        message: err.message
-      }));
-      return res.status(400).json({
-        success: false,
-        errors
-      });
+      const error = new Error("Error de validación de datos.");
+      error.errors = validateData.error.errors;
+      error.status = 400; // Código 400 para errores de validación
+      return next(error);
     }
 
     const userId = req.user.userId;
@@ -61,21 +20,52 @@ export const sendPackage = async (req, res) => {
     const userIp = req.ip;
 
     const packageData = {
-      ...validateData,
+      ...validateData.data,
       id_usuario: userId,
-      ip_usuario: userIp
-    }
+      ip_usuario: userIp,
+    };
 
-    const sentPackage = await packageService.sendPackage(packageData);
-    
+    const receivedPackage = await packageService.receivePackage(packageData);
+
     return res.status(201).json({
       success: true,
-      message: 'Paquete enviado con éxito.', sentPackage
+      message: "Paquete recibido con éxito.",
+      receivedPackage,
     });
   } catch (error) {
-    return res.status(500).json({
-      success: false, 
-      message: 'Error interno del servidor al procesar el paquete.'
+    next(error);
+  }
+};
+
+export const sendPackage = async (req, res) => {
+  try {
+    const validateData = packageSchemaSend.safeParse(req.body);
+
+    if (!validateData.success) {
+      const error = new Error("Error de validación de datos.");
+      error.errors = validateData.error.errors;
+      error.status = 400; // Código 400 para errores de validación
+      return next(error);
+    }
+
+    const userId = req.user.userId;
+
+    const userIp = req.ip;
+
+    const packageData = {
+      ...validateData.data,
+      id_usuario: userId,
+      ip_usuario: userIp,
+    };
+
+    const sentPackage = await packageService.sendPackage(packageData);
+
+    return res.status(201).json({
+      success: true,
+      message: "Paquete enviado con éxito.",
+      sentPackage,
     });
+  } catch (error) {
+    next(error);
   }
 };

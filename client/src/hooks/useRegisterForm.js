@@ -3,10 +3,10 @@ import axiosClient from "../axiosClient"
 import { useNavigate } from "react-router-dom";
 
 export function useRegisterForm () {
-  const [nombre, setNombre] = useState("");
-  const [apellido, setApellido] = useState("");
-  const [correo, setCorreo] = useState("");
-  const [password, setPassword] = useState("");
+  const [ nombre, setNombre ] = useState("");
+  const [ apellido, setApellido ] = useState("");
+  const [ correo, setCorreo ] = useState("");
+  const [ password, setPassword ] = useState("");
   const [ error, setError ] = useState("");
   const [ isLoading, setIsLoading ] = useState("");
   const navigate = useNavigate();

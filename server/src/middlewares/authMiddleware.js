@@ -1,117 +1,91 @@
-import { verifyAccessToken, generateAccessToken } from '../utils/tokenUtils.js';
-import * as userModel from '../models/userModel.js';
-import * as refreshTokenModel from '../models/refreshTokenModel.js';
+import { verifyAccessToken, generateAccessToken } from "../utils/tokenUtils.js";
+import * as userModel from "../models/userModel.js";
+import * as refreshTokenModel from "../models/refreshTokenModel.js";
 
 const authMiddleware = async (req, res, next) => {
-  try {
-    let accessToken = req.cookies.accessToken;
-    const refreshToken = req.cookies.refreshToken;
+  let accessToken = req.cookies.accessToken;
+  const refreshToken = req.cookies.refreshToken;
+  let decoded = null;
 
-    // Si no hay access token, intentar con refresh token
-    if (!accessToken && refreshToken) {
-      
+  try {
+    // Verificar el access token
+    if (accessToken) {
+      decoded = verifyAccessToken(accessToken);
+    }
+  } catch (tokenError) {
+    // Si el access token es inválido o expiró, procedemos a intentar renovarlo.
+    console.log(
+      "Access token inválido, intentando renovar:",
+      tokenError.message
+    );
+
+    if (refreshToken) {
       try {
-        // Buscar refresh token válido
-        const tokenData = await refreshTokenModel.findValidRefreshToken(refreshToken);
-        
+        // Buscar el refresh token válido en la base de datos
+        const tokenData = await refreshTokenModel.findValidRefreshToken(
+          refreshToken
+        );
+
         if (tokenData) {
-          // Generar nuevo access token
+          // Generar un nuevo access token
           const newAccessToken = generateAccessToken({
             id_usuario: tokenData.id_usuario,
             correo: tokenData.correo,
-            rol: tokenData.rol
+            rol: tokenData.rol,
           });
 
-          // Establecer nueva cookie
-          res.cookie('accessToken', newAccessToken, {
+          // Establecer la nueva cookie
+          res.cookie("accessToken", newAccessToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            maxAge: 15 * 60 * 1000, // ^ 15 minutos
-            path: '/'
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            maxAge: 15 * 60 * 1000,
+            path: "/",
           });
 
-          accessToken = newAccessToken;
+          // Decodificar el nuevo token
+          decoded = verifyAccessToken(newAccessToken);
+        } else {
+          // Si el refresh token no es válido, lanzar un error para que la sesión termine
+          throw new Error("Refresh token inválido o expirado.");
         }
       } catch (refreshError) {
-        console.error('Error al renovar token:', refreshError.message);
-      }
-    }
-
-    // Si aún no hay access token
-    if (!accessToken) {
-      return res.status(401).json({ 
-        message: 'Acceso no autorizado. Token no proporcionado.',
-        needsLogin: true
-      });
-    }
-
-    // Verificar access token
-    let decoded;
-    try {
-      decoded = verifyAccessToken(accessToken);
-    } catch (tokenError) {
-      console.log('Access token inválido:', tokenError.message);
-      
-      // Si el token es inválido y tenemos refresh token, intentar renovar
-      if (refreshToken) {
-        try {
-          const tokenData = await refreshTokenModel.findValidRefreshToken(refreshToken);
-          
-          if (tokenData) {
-            const newAccessToken = generateAccessToken({
-              id_usuario: tokenData.id_usuario,
-              correo: tokenData.correo,
-              rol: tokenData.rol
-            });
-
-            res.cookie('accessToken', newAccessToken, {
-              httpOnly: true,
-              secure: process.env.NODE_ENV === 'production',
-              sameSite: 'lax',
-              maxAge: 15 * 60 * 1000,
-              path: '/'
-            });
-
-            decoded = verifyAccessToken(newAccessToken);
-          } else {
-            throw new Error('Refresh token inválido');
-          }
-        } catch (refreshError) {
-          return res.status(401).json({ 
-            message: 'Sesión expirada. Por favor, inicia sesión nuevamente.',
-            needsLogin: true
-          });
-        }
-      } else {
-        return res.status(401).json({ 
-          message: 'Token inválido. Por favor, inicia sesión nuevamente.',
-          needsLogin: true
+        // Capturar errores del proceso de renovación
+        return res.status(401).json({
+          message: "Sesión expirada. Por favor, inicia sesión nuevamente.",
+          needsLogin: true,
         });
       }
     }
+  }
 
-    // Verificar que el usuario siga activo
-    const isActive = await userModel.checkIfUserIsActive(decoded.userId);
+  // Si después de ambos intentos (access y refresh) no tenemos un token decodificado
+  if (!decoded) {
+    return res.status(401).json({
+      message: "Acceso no autorizado. Token no proporcionado o inválido.",
+      needsLogin: true,
+    });
+  }
+
+  try {
+    // Verificar que el usuario está activo en la base de datos
+    const isActive = await userModel.checkIfUserIsActive(decoded.id_usuario);
     if (!isActive) {
-      return res.status(403).json({ 
-        message: 'Acceso denegado. La cuenta no está activada',
-        needsLogin: true
-      });
+      const error = new Error("Acceso denegado. La cuenta no está activada");
+      error.needsLogin = true;
+      throw error;
     }
 
-    // Usuario autenticado correctamente
-    req.user = { 
-      userId: decoded.userId,
-      email: decoded.email,
-      rol: decoded.rol
+    // Si todo es correcto, adjuntar la información del usuario a la solicitud y continuar
+    req.user = {
+      userId: decoded.id_usuario,
+      email: decoded.correo,
+      rol: decoded.rol,
     };
     next();
   } catch (error) {
-    return res.status(500).json({ 
-      message: 'Error interno del servidor',
-      needsLogin: true
-    });
+    // Capturar cualquier otro error y enviarlo al siguiente middleware de errores
+    return next(error);
   }
 };
 
