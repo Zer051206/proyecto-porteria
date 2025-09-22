@@ -1,16 +1,14 @@
+//src/controllers/visitController.js
 import { visitEntrySchema } from "../schemas/visitSchema.js";
 import * as visitService from "../services/visitService.js";
-import {
-  UpdateVisitError,
-  VisitIdInvalidError,
-} from "../utils/customErrors.js";
+import { VisitIdInvalidError } from "../utils/customErrors.js";
 
 export const createVisit = async (req, res, next) => {
   const validateVisitData = visitEntrySchema.safeParse(req.body);
 
-  if (!validateData.success) {
+  if (!validateVisitData.success) {
     const error = new Error("Error de validación de datos.");
-    error.errors = validateData.error.errors;
+    error.errors = validateVisitData.error.errors;
     error.status = 400; // Código 400 para errores de validación
     return next(error);
   }
@@ -38,23 +36,23 @@ export const createVisit = async (req, res, next) => {
 };
 
 export const updateVisitExit = async (req, res, next) => {
-  const visitId = parseInt(req.params.id, 10);
-
-  const userId = req.user.userId;
-
-  const userIp = req.ip;
-
-  if (isNaN(visitId) || visitId <= 0) {
-    throw new VisitIdInvalidError();
-  }
-
-  const visitData = {
-    visitId,
-    id_usuario: userId,
-    ip_usuario: userIp,
-  };
-
   try {
+    const visitId = parseInt(req.params.id, 10);
+
+    const userId = req.user.userId;
+
+    const userIp = req.ip;
+
+    if (isNaN(visitId) || visitId <= 0) {
+      throw new VisitIdInvalidError();
+    }
+
+    const visitData = {
+      visitId,
+      id_usuario: userId,
+      ip_usuario: userIp,
+    };
+
     const updateVisit = await visitService.updateVisitExit(visitData);
 
     return res.status(200).json({

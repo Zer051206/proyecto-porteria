@@ -1,7 +1,6 @@
 import * as visitController from "../controllers/visitController.js";
 import { Router } from "express";
 import authMiddleware from "../middlewares/authMiddleware.js";
-import { success } from "zod";
 import { VisitError } from "../utils/customErrors.js";
 
 /**

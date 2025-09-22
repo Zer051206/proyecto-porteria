@@ -1,3 +1,4 @@
+//src/services/visitService.js
 import * as visitModel from "../models/visitModel.js";
 import {
   VisitExistsError,
@@ -14,7 +15,9 @@ import {
 export const createVisit = async (visitData) => {
   const { identificacion, id_area } = visitData;
 
-  const activeVisite = await visitModel.findActiveVisitById(identificacion);
+  const activeVisite = await visitModel.findActiveVisitByIdentificacion(
+    identificacion
+  );
 
   if (activeVisite) {
     throw new VisitExistsError();
@@ -28,13 +31,13 @@ export const createVisit = async (visitData) => {
 
   const result = await visitModel.createVisit(visitData);
 
-  return { id_visita: result.insertId.toString, ...visitData };
+  return { id_visita: result.insertId.toString(), ...visitData };
 };
 
 export const updateVisitExit = async (visitData) => {
   const { visitId } = visitData;
 
-  const activeVisit = await visitModel.findActiveVisitById(visitId);
+  const activeVisit = await visitModel.findActiveVisitByVisitId(visitId);
 
   if (!activeVisit) {
     throw new ActiveVisitDontExists();

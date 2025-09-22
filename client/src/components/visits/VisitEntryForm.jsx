@@ -1,18 +1,33 @@
-// src/pages/VisitEntryForm.jsx 
-import React from 'react';
-import useVisitEntryForm from '../../hooks/useVisitEntryForm';
-import { useGoBack } from '../../hooks/useGoBackDashboard.js';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTimes, faCheckCircle, faSignOutAlt, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
+// src/pages/VisitEntryForm.jsx
+import React from "react";
+import useVisitEntryForm from "../../hooks/useVisitEntryForm";
+import { useGoBack } from "../../hooks/useGoBackDashboard.js";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faBroom,
+  faCheckCircle,
+  faSignOutAlt,
+  faExclamationTriangle,
+} from "@fortawesome/free-solid-svg-icons";
 
 export default function VisitEntryForm() {
-  const { formik, areas, tiposIdentificacion, isLoading, errorCarga } = useVisitEntryForm();
   const goBack = useGoBack();
+
+  const {
+    formik,
+    areas,
+    tiposIdentificacion,
+    isLoading,
+    errorCarga,
+    handleClickClear,
+    handleKeyNumberDown,
+    handleKeyTextDown,
+  } = useVisitEntryForm();
 
   return (
     <div className="flex flex-col items-center min-h-screen w-full p-4">
       <button
-        type="button" 
+        type="button"
         onClick={goBack}
         className="
           absolute top-1 right-4 
@@ -27,17 +42,30 @@ export default function VisitEntryForm() {
         <FontAwesomeIcon icon={faSignOutAlt} className="text-xl sm:text-xl" />
         <span className="text-xs sm:text-sm mt-1">Volver</span>
       </button>
-      <form onSubmit={formik.handleSubmit} className="bg-gray-900 font-semibold text-black p-6 rounded-lg shadow-2xl w-full max-w-2xl mt-[70px]">
-        <h2 className="text-2xl font-bold mb-6 text-center text-blue-600">Registro de Visita</h2>
+      <form
+        onSubmit={formik.handleSubmit}
+        className="bg-gray-800 font-semibold text-black p-6 rounded-lg shadow-2xl w-full max-w-2xl mt-[70px]"
+      >
+        <h2 className="text-2xl font-bold mb-6 text-center text-blue-600">
+          Registro de Visita
+        </h2>
 
         {isLoading && (
-          <div className="text-center text-gray-500 my-4">Cargando opciones...</div>
+          <div className="text-center text-gray-500 my-4">
+            Cargando opciones...
+          </div>
         )}
 
         {errorCarga && (
-          <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 my-4" role="alert">
+          <div
+            className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 my-4"
+            role="alert"
+          >
             <div className="flex items-center">
-              <FontAwesomeIcon icon={faExclamationTriangle} className="mr-2 text-xl" />
+              <FontAwesomeIcon
+                icon={faExclamationTriangle}
+                className="mr-2 text-xl"
+              />
               <p className="font-bold">Error de Carga</p>
             </div>
             <p className="mt-1">{errorCarga}</p>
@@ -46,71 +74,95 @@ export default function VisitEntryForm() {
 
         {!isLoading && !errorCarga && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-
             {/* Sección de Datos del Visitante */}
             <div className="col-span-1">
               <fieldset className="p-4 rounded-md border border-gray-400 shadow-lg shadow-black h-full">
-                <legend className="px-2 font-semibold text-blue-500">Información del Visitante</legend>
+                <legend className="px-2 font-semibold text-blue-500">
+                  Información del Visitante
+                </legend>
                 <div className="space-y-4 pt-2">
                   <label className="block">
-                    <span className="text-gray-400 text-sm font-medium">Nombre:</span>
+                    <span className="text-gray-400 text-sm font-medium">
+                      Nombre:
+                    </span>
                     <input
                       type="text"
-                      autoComplete='off'
+                      autoComplete="off"
+                      placeholder="Pepito..."
+                      onKeyDown={handleKeyTextDown}
                       name="nombre_visitante"
                       value={formik.values.nombre_visitante}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className="mt-1 block w-full rounded-md p-1 border-2 border-gray-400 bg-gray-50 shadow-lg"
+                      className="mt-1 block w-full rounded-md p-1 placeholder-gray-800 placeholder:italic border-2 border-gray-400 bg-gray-50 shadow-lg"
                     />
-                    {formik.touched.nombre_visitante && formik.errors.nombre_visitante && (
-                      <div className="text-red-500 font-semibold text-[15px] mt-1">{formik.errors.nombre_visitante}</div>
-                    )}
+                    {formik.touched.nombre_visitante &&
+                      formik.errors.nombre_visitante && (
+                        <div className="text-red-500 font-semibold text-[15px] mt-1">
+                          {formik.errors.nombre_visitante}
+                        </div>
+                      )}
                   </label>
                   <label className="block">
-                    <span className="text-gray-400 text-sm font-medium">Apellido:</span>
+                    <span className="text-gray-400 text-sm font-medium">
+                      Apellido:
+                    </span>
                     <input
                       type="text"
-                      autoComplete='off'
+                      autoComplete="off"
+                      placeholder="Perez..."
+                      onKeyDown={handleKeyTextDown}
                       name="apellido"
                       value={formik.values.apellido}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className="mt-1 block w-full rounded-md p-1 border-2 border-gray-400 bg-gray-50 shadow-lg"
+                      className="mt-1 block w-full rounded-md p-1 border-2 placeholder-gray-800 placeholder:italic border-gray-400 bg-gray-50 shadow-lg"
                     />
                     {formik.touched.apellido && formik.errors.apellido && (
-                      <div className="text-red-500 font-semibold text-[15px] mt-1">{formik.errors.apellido}</div>
+                      <div className="text-red-500 font-semibold text-[15px] mt-1">
+                        {formik.errors.apellido}
+                      </div>
                     )}
                   </label>
                   <label className="block">
-                    <span className="text-gray-400 text-sm font-medium">Teléfono:</span>
+                    <span className="text-gray-400 text-sm font-medium">
+                      Teléfono:
+                    </span>
                     <input
                       type="number"
-                      autoComplete='off'
+                      autoComplete="off"
+                      onKeyDown={handleKeyNumberDown}
+                      placeholder="Número de telefono del visitante"
                       name="telefono"
                       value={formik.values.telefono}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className="mt-1 block w-full rounded-md border-2 p-1 border-gray-400 bg-gray-50 shadow-lg"
+                      className="mt-1 block w-full rounded-md border-2 placeholder:text-sm p-1 placeholder-gray-800 placeholder:italic border-gray-400 bg-gray-50 shadow-lg"
                     />
                     {formik.touched.telefono && formik.errors.telefono && (
-                      <div className="text-red-500 font-semibold text-[15px] mt-1">{formik.errors.telefono}</div>
+                      <div className="text-red-500 font-semibold text-[15px] mt-1">
+                        {formik.errors.telefono}
+                      </div>
                     )}
                   </label>
                   <label className="block">
-                    <span className="text-gray-400 text-sm font-medium">Empresa: </span>
+                    <span className="text-gray-400 text-sm font-medium">
+                      Empresa (Opcional):
+                    </span>
                     <input
                       type="text"
-                      autoComplete='off'
+                      autoComplete="off"
                       name="empresa"
                       placeholder="En caso de ser necesario"
                       value={formik.values.empresa}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className="mt-1 block w-full rounded-md border-2 p-1 placeholder-gray-700 placeholder:italic border-gray-400 bg-gray-50 shadow-lg"
+                      className="mt-1 block w-full rounded-md border-2 p-1 placeholder-gray-800 placeholder:italic border-gray-400 bg-gray-50 shadow-lg"
                     />
                     {formik.touched.empresa && formik.errors.empresa && (
-                      <div className="text-red-500 font-semibold text-[15px] mt-1">{formik.errors.empresa}</div>
+                      <div className="text-red-500 font-semibold text-[15px] mt-1">
+                        {formik.errors.empresa}
+                      </div>
                     )}
                   </label>
                 </div>
@@ -120,10 +172,14 @@ export default function VisitEntryForm() {
             {/* Sección de Datos de la Visita */}
             <div className="col-span-1">
               <fieldset className="p-4 rounded-md border border-gray-400 shadow-lg shadow-black h-full">
-                <legend className="px-2 font-semibold text-blue-500">Datos de la Visita</legend>
+                <legend className="px-2 font-semibold text-blue-500">
+                  Datos de la Visita
+                </legend>
                 <div className="space-y-4 pt-2">
                   <label className="block">
-                    <span className="text-gray-400 text-sm font-medium">Tipo de Identificación:</span>
+                    <span className="text-gray-400 text-sm font-medium">
+                      Tipo de Identificación:
+                    </span>
                     <select
                       name="id_tipo_identificacion"
                       value={formik.values.id_tipo_identificacion}
@@ -131,65 +187,92 @@ export default function VisitEntryForm() {
                       onBlur={formik.handleBlur}
                       className="mt-1 block w-full rounded-md border-2 p-1 border-gray-400 bg-gray-50 shadow-lg"
                     >
-                      <option value="" hidden>Seleccione un tipo</option>
-                      {tiposIdentificacion.map(tipo => (
-                        <option key={tipo.id_tipo_identificacion} value={tipo.id_tipo_identificacion}>
+                      <option value="" hidden>
+                        Seleccione un tipo
+                      </option>
+                      {tiposIdentificacion.map((tipo) => (
+                        <option
+                          key={tipo.id_tipo_identificacion}
+                          value={tipo.id_tipo_identificacion}
+                        >
                           {tipo.descripcion}
                         </option>
                       ))}
                     </select>
                     {formik.errors.id_tipo_identificacion && (
-                      <div className="text-red-500 font-semibold text-[15px] mt-1">{formik.errors.id_tipo_identificacion}</div>
+                      <div className="text-red-500 font-semibold text-[15px] mt-1">
+                        {formik.errors.id_tipo_identificacion}
+                      </div>
                     )}
                   </label>
                   <label className="block">
-                    <span className="text-gray-400 text-sm font-medium">Identificación:</span>
+                    <span className="text-gray-400 text-sm font-medium">
+                      Identificación:
+                    </span>
                     <input
                       type="number"
-                      autoComplete='off'
+                      autoComplete="off"
+                      onKeyDown={handleKeyNumberDown}
+                      placeholder="Numero del documento de identidad"
                       name="identificacion"
                       value={formik.values.identificacion}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className="mt-1 block w-full rounded-md border-2 p-1 border-gray-400 bg-gray-50 shadow-lg"
+                      className="mt-1 block w-full rounded-md border-2 p-1 placeholder:text-sm placeholder-gray-800 placeholder:italic border-gray-400 bg-gray-50 shadow-lg"
                     />
-                    {formik.touched.identificacion && formik.errors.identificacion && (
-                      <div className="text-red-500 font-semibold text-[15px] mt-1">{formik.errors.identificacion}</div>
-                    )}
+                    {formik.touched.identificacion &&
+                      formik.errors.identificacion && (
+                        <div className="text-red-500 font-semibold text-[15px] mt-1">
+                          {formik.errors.identificacion}
+                        </div>
+                      )}
                   </label>
                   <label className="block">
-                    <span className="text-gray-400 text-sm font-medium">Destinatario:</span>
+                    <span className="text-gray-400 text-sm font-medium">
+                      Destinatario:
+                    </span>
                     <input
                       type="text"
-                      autoComplete='off'
+                      autoComplete="off"
+                      placeholder="Nombre del destinatario"
+                      onKeyDown={handleKeyTextDown}
                       name="nombre_destinatario"
                       value={formik.values.nombre_destinatario}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className="mt-1 block w-full rounded-md p-1 border-2 border-gray-400 bg-gray-50 shadow-lg"
+                      className="mt-1 block w-full rounded-md p-1 placeholder-gray-800 placeholder:italic border-2 border-gray-400 bg-gray-50 shadow-lg"
                     />
-                    {formik.touched.nombre_destinatario && formik.errors.nombre_destinatario && (
-                      <div className="text-red-500 font-semibold text-[15px] mt-1">{formik.errors.nombre_destinatario}</div>
-                    )}
+                    {formik.touched.nombre_destinatario &&
+                      formik.errors.nombre_destinatario && (
+                        <div className="text-red-500 font-semibold text-[15px] mt-1">
+                          {formik.errors.nombre_destinatario}
+                        </div>
+                      )}
                   </label>
                   <label className="block">
-                    <span className="text-gray-400 text-sm font-medium">Área:</span>
+                    <span className="text-gray-400 text-sm font-medium">
+                      Área:
+                    </span>
                     <select
                       name="id_area"
                       value={formik.values.id_area}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className="mt-1 block w-full rounded-md p-1 border-2 border-gray-600 bg-gray-50 shadow-lg"
+                      className="mt-1 block w-full rounded-md p-1 border-2  border-gray-600 bg-gray-50 shadow-lg"
                     >
-                      <option value="" hidden>Seleccione un área</option>
-                      {areas.map(area => (
+                      <option value="" hidden>
+                        Seleccione un área
+                      </option>
+                      {areas.map((area) => (
                         <option key={area.id_area} value={area.id_area}>
                           {area.nombre_area}
                         </option>
                       ))}
                     </select>
                     {formik.touched.id_area && formik.errors.id_area && (
-                      <div className="text-red-500 font-semibold text-[15px] mt-1">{formik.errors.id_area}</div>
+                      <div className="text-red-500 font-semibold text-[15px] mt-1">
+                        {formik.errors.id_area}
+                      </div>
                     )}
                   </label>
                 </div>
@@ -199,36 +282,49 @@ export default function VisitEntryForm() {
             {/* Sección de Motivo y Observaciones */}
             <div className="col-span-1 md:col-span-2">
               <fieldset className="p-4 rounded-md border border-gray-400 shadow-lg shadow-black">
-                <legend className="px-2 font-semibold text-blue-500">Detalles Adicionales</legend>
+                <legend className="px-2 font-semibold text-blue-500">
+                  Detalles Adicionales
+                </legend>
                 <div className="space-y-4 pt-2">
                   <label className="block">
-                    <span className="text-gray-400 text-sm font-medium">Motivo:</span>
+                    <span className="text-gray-400 text-sm font-medium">
+                      Motivo:
+                    </span>
                     <textarea
                       name="motivo"
-                      autoComplete='off'
+                      autoComplete="off"
+                      placeholder="Cambio de operador internet en la empresa..."
                       value={formik.values.motivo}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className="mt-1 block w-full rounded-md border-2 p-[3px] border-gray-400 bg-gray-50 shadow-lg"
+                      className="mt-1 block w-full rounded-md border-2 p-[3px] placeholder:italic border-gray-400 bg-gray-50 shadow-lg"
                       rows="3"
                     />
                     {formik.touched.motivo && formik.errors.motivo && (
-                      <div className="text-red-500 font-semibold text-[15px] mt-1">{formik.errors.motivo}</div>
+                      <div className="text-red-500 font-semibold text-[15px] mt-1">
+                        {formik.errors.motivo}
+                      </div>
                     )}
                   </label>
                   <label className="block">
-                    <span className="text-gray-400 text-sm font-medium">Observaciones:</span>
+                    <span className="text-gray-400 text-sm font-medium">
+                      Observaciones (Opcional):
+                    </span>
                     <textarea
                       name="observaciones"
-                      autoComplete='off'
+                      autoComplete="off"
+                      placeholder="El visitante ingresa con su mochila y casco..."
                       value={formik.values.observaciones}
                       onChange={formik.handleChange}
-                      className="mt-1 block w-full rounded-md border-2 p-[3px] border-gray-400 bg-gray-50 shadow-lg"
+                      className="mt-1 block w-full rounded-md border-2 p-[3px] placeholder-gray-700 placeholder:italic border-gray-400 bg-gray-50 shadow-lg"
                       rows="3"
                     />
-                    {formik.touched.observaciones && formik.errors.observaciones && (
-                      <div className="text-red-500 font-semibold text-[15px] mt-1">{formik.errors.observaciones}</div>
-                    )}
+                    {formik.touched.observaciones &&
+                      formik.errors.observaciones && (
+                        <div className="text-red-500 font-semibold text-[15px] mt-1">
+                          {formik.errors.observaciones}
+                        </div>
+                      )}
                   </label>
                 </div>
               </fieldset>
@@ -240,11 +336,11 @@ export default function VisitEntryForm() {
         <div className="mt-6 flex justify-center space-x-4 w-full">
           <button
             type="button"
-            onClick={() => navigate('/dashboard')}
-            className="flex items-center bg-red-600 text-white font-bold py-2 px-4 sm:px-6 rounded-md hover:bg-red-700 sm: transition-colors"
+            onClick={handleClickClear}
+            className="flex items-center bg-gray-500 text-white font-bold py-2 px-4 sm:px-6 rounded-md hover:bg-gray-700 sm: transition-colors"
           >
-            <FontAwesomeIcon icon={faTimes} className="mr-2 text-xl" />
-            Cancelar
+            <FontAwesomeIcon icon={faBroom} className="mr-2 text-xl" />
+            Limpiar
           </button>
           <button
             type="submit"
@@ -252,10 +348,13 @@ export default function VisitEntryForm() {
             disabled={formik.isSubmitting || isLoading || !!errorCarga}
           >
             {formik.isSubmitting ? (
-              'Registrando...'
+              "Registrando..."
             ) : (
               <>
-                <FontAwesomeIcon icon={faCheckCircle} className="mr-2 text-xl" />
+                <FontAwesomeIcon
+                  icon={faCheckCircle}
+                  className="mr-2 text-xl"
+                />
                 Realizar Visita
               </>
             )}

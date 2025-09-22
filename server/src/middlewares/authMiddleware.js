@@ -69,7 +69,7 @@ const authMiddleware = async (req, res, next) => {
 
   try {
     // Verificar que el usuario está activo en la base de datos
-    const isActive = await userModel.checkIfUserIsActive(decoded.id_usuario);
+    const isActive = await userModel.checkIfUserIsActive(decoded.userId);
     if (!isActive) {
       const error = new Error("Acceso denegado. La cuenta no está activada");
       error.needsLogin = true;
@@ -78,7 +78,7 @@ const authMiddleware = async (req, res, next) => {
 
     // Si todo es correcto, adjuntar la información del usuario a la solicitud y continuar
     req.user = {
-      userId: decoded.id_usuario,
+      userId: decoded.userId,
       email: decoded.correo,
       rol: decoded.rol,
     };

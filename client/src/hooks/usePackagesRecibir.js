@@ -1,10 +1,10 @@
 // src/hooks/useRecibirPaqueteForm.js
 
-import { useState, useEffect } from 'react';
-import { useFormik } from 'formik';
-import * as Yup from 'yup';
-import axios from 'axios';
-import api from '../config/axios';
+import { useState, useEffect } from "react";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import { handleKeyTextDown } from "../utils/inputUtilities";
+import api from "../config/axios";
 
 const usePackagesRecibir = (navigate) => {
   const [tiposPaquetes, setTiposPaquetes] = useState([]);
@@ -12,18 +12,24 @@ const usePackagesRecibir = (navigate) => {
   const [isLoading, setIsLoading] = useState(true);
   const [errorCarga, setErrorCarga] = useState(null);
 
+  const handleClickClear = () => {
+    formik.resetForm();
+  };
+
   useEffect(() => {
     const fetchFormData = async () => {
       try {
         const [tiposRes, areasRes] = await Promise.all([
-          api.get('http://localhost:3000/api/tipos-paquetes'),
-          api.get('http://localhost:3000/api/areas')
+          api.get("http://localhost:3000/api/tipos-paquetes"),
+          api.get("http://localhost:3000/api/areas"),
         ]);
         setTiposPaquetes(tiposRes.data);
         setAreas(areasRes.data);
       } catch (error) {
-        console.error('Error al cargar datos del formulario:', error);
-        setErrorCarga('No se pudieron cargar las opciones. intente recargar la página.');
+        console.error("Error al cargar datos del formulario:", error);
+        setErrorCarga(
+          "No se pudieron cargar las opciones. intente recargar la página."
+        );
       } finally {
         setIsLoading(false);
       }
@@ -32,49 +38,67 @@ const usePackagesRecibir = (navigate) => {
   }, []);
 
   const validationSchema = Yup.object({
-    id_tipo_paquete: Yup.number().required('El tipo de paquete es obligatorio.'),
-    nombre_destinatario: Yup.string().required('El nombre del destinatario es obligatorio.'),
-    id_area: Yup.number().required('El área es obligatoria.'),
-    guia: Yup.string().when('conGuia', {
+    id_tipo_paquete: Yup.number().required(
+      "El tipo de paquete es obligatorio."
+    ),
+    nombre_destinatario: Yup.string().required(
+      "El nombre del destinatario es obligatorio."
+    ),
+    id_area: Yup.number().required("El área es obligatoria."),
+    guia: Yup.string().when("conGuia", {
       is: true,
-      then: (schema) => schema.required('El número de guía es obligatorio.')
+      then: (schema) => schema.required("El número de guía es obligatorio."),
     }),
-    empresa_transporte: Yup.string().nullable().max(100, 'La empresa no puede exceder los 100 caracteres.'),
-    mensajero_nombre: Yup.string().nullable().max(255, 'El nombre no puede exceder los 255 caracteres.'),
-    observaciones: Yup.string().nullable().max(500, 'Las observaciones no pueden exceder los 500 caracteres.')
+    empresa_transporte: Yup.string()
+      .nullable()
+      .max(100, "La empresa no puede exceder los 100 caracteres."),
+    mensajero_nombre: Yup.string()
+      .nullable()
+      .max(255, "El nombre no puede exceder los 255 caracteres."),
+    observaciones: Yup.string()
+      .nullable()
+      .max(500, "Las observaciones no pueden exceder los 500 caracteres."),
   });
 
   const formik = useFormik({
     initialValues: {
-      id_tipo_paquete: '',
-      tipo_operacion: 'recibir',
-      guia: '',
-      nombre_residente: '',
-      id_area: '',
-      empresa_transporte: '',
-      mensajero_nombre: '',
-      observaciones: '',
-      conGuia: false, 
+      id_tipo_paquete: "",
+      tipo_operacion: "recibir",
+      guia: "",
+      nombre_destinatario: "",
+      id_area: "",
+      empresa_transporte: "",
+      mensajero_nombre: "",
+      observaciones: "",
+      conGuia: false,
     },
     validationSchema,
     onSubmit: async (values) => {
       try {
-        await api.post('http://localhost:3000/paquetes/recibir', {
+        await api.post("http://localhost:3000/paquetes/recibir", {
           ...values,
           // Envía null si el checkbox no está marcado
           guia: values.conGuia ? values.guia : null,
           empresa_transporte: values.empresa_transporte || null,
           mensajero_nombre: values.mensajero_nombre || null,
         });
-        alert('✅ ¡Paquete recibido con éxito!');
-        navigate('/dashboard');
+        alert("✅ ¡Paquete recibido con éxito!");
+        navigate("/dashboard");
       } catch (err) {
-        alert('❌ Error al regitrar el paquete.');
+        alert("❌ Error al regitrar el paquete.");
       }
-    }
+    },
   });
 
-  return { formik, tiposPaquetes, areas, isLoading, errorCarga };
+  return {
+    formik,
+    tiposPaquetes,
+    areas,
+    isLoading,
+    errorCarga,
+    handleClickClear,
+    handleKeyTextDown,
+  };
 };
 
 export default usePackagesRecibir;

@@ -19,7 +19,7 @@ export const receivePackage = async (packageData) => {
         throw new DuplicateGuideError();
       }
     }
-    const receivedPackage = await packageModel.createReceivedPackage(
+    const receivedPackage = await packageModel.createReceivePackage(
       packageData
     );
 
@@ -52,6 +52,6 @@ export const sendPackage = async (packageData) => {
     if (error instanceof PackageError) {
       throw error;
     }
-    throw new PackageError("Error en la base de datos al procesar el paquete.");
+    throw error;
   }
 };

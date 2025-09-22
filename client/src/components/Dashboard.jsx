@@ -102,20 +102,20 @@ const ActiveVisitsTable = () => {
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 z-50 overflow-auto bg-gray-800 bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg p-8 w-1/3 shadow-xl">
+        <div className="fixed inset-0 z-50 overflow-auto bg-gray-800/80 flex items-center justify-center">
+          <div className="text-white bg-gray-800 rounded-lg p-8 w-screen md:w-1/3 shadow-xl">
             <h2 className="text-xl font-bold mb-4">Confirmar Finalización</h2>
             <p className="mb-6">¿Estás seguro de que deseas finalizar la visita de {selectedVisit?.nombre_visitante}?</p>
             <div className="flex justify-end space-x-4">
               <button
                 onClick={handleCloseModal}
-                className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded"
+                className="bg-gray-400 hover:bg-gray-600 text-gray-800 font-bold py-2 px-4 rounded"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleConfirmEndVisit}
-                className="bg-red-600 hover:bg-red-100 text-white font-bold py-2 px-4 rounded"
+                className="bg-red-600 hover:bg-red-800 text-white font-bold py-2 px-4 rounded"
               >
                 Finalizar
               </button>

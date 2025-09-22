@@ -10,7 +10,7 @@ export const receivePackage = async (req, res, next) => {
 
     if (!validateData.success) {
       const error = new Error("Error de validación de datos.");
-      error.errors = validateData.error.errors;
+      error.errors = validateData.error;
       error.status = 400; // Código 400 para errores de validación
       return next(error);
     }
@@ -30,20 +30,19 @@ export const receivePackage = async (req, res, next) => {
     return res.status(201).json({
       success: true,
       message: "Paquete recibido con éxito.",
-      receivedPackage,
     });
   } catch (error) {
     next(error);
   }
 };
 
-export const sendPackage = async (req, res) => {
+export const sendPackage = async (req, res, next) => {
   try {
     const validateData = packageSchemaSend.safeParse(req.body);
 
     if (!validateData.success) {
       const error = new Error("Error de validación de datos.");
-      error.errors = validateData.error.errors;
+      error.errors = validateData.error;
       error.status = 400; // Código 400 para errores de validación
       return next(error);
     }
@@ -63,7 +62,6 @@ export const sendPackage = async (req, res) => {
     return res.status(201).json({
       success: true,
       message: "Paquete enviado con éxito.",
-      sentPackage,
     });
   } catch (error) {
     next(error);

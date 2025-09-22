@@ -19,6 +19,7 @@ export default function RegisterForm() {
     handleClickApellido,
     handleClickPassword,
     error,
+    handleKeyTextDown,
   } = useRegisterForm();
 
   return (
@@ -56,6 +57,7 @@ export default function RegisterForm() {
               <input
                 name="nombre"
                 type="text"
+                onKeyDown={handleKeyTextDown}
                 value={nombre}
                 onChange={handleClickNombre}
                 className="mt-1 block w-full rounded-md font-semibold border-2 p-[5px] outline-0 border-gray-400 bg-gray-50 shadow-lg focus:border-blue-700 transition-all duration-200 hover:border-blue-500"
@@ -68,6 +70,7 @@ export default function RegisterForm() {
               <input
                 name="apellido"
                 type="text"
+                onKeyDown={handleKeyTextDown}
                 value={apellido}
                 onChange={handleClickApellido}
                 className="mt-1 block w-full rounded-md font-semibold border-2 p-[5px] outline-0 border-gray-400 bg-gray-50 shadow-lg focus:border-blue-700 focus:ring-2 focus:ring-blue-300 transition-all duration-200 ease-in-out hover:border-blue-500"
