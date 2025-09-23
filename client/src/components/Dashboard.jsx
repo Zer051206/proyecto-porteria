@@ -1,9 +1,16 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faBox, faHistory, faSignOutAlt, faExclamationTriangle, faExternalLinkAlt } from '@fortawesome/free-solid-svg-icons';
-import useDashboard from '../hooks/useDashboard.js'; 
-import useAuthLogout from '../hooks/useAuthLogout.js';
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faPlus,
+  faBox,
+  faHistory,
+  faSignOutAlt,
+  faExclamationTriangle,
+  faExternalLinkAlt,
+} from "@fortawesome/free-solid-svg-icons";
+import useDashboard from "../hooks/useDashboard.js";
+import useAuthLogout from "../hooks/useAuthLogout.js";
 
 // Componente de la tabla de visitas activas
 const ActiveVisitsTable = () => {
@@ -15,29 +22,32 @@ const ActiveVisitsTable = () => {
     selectedVisit,
     handleEndVisit,
     handleConfirmEndVisit,
-    handleCloseModal
+    handleCloseModal,
   } = useDashboard();
 
   if (isLoading) {
-    return <div className="text-center text-gray-400 py-4 bg-gray-800">Cargando visitas...</div>;
+    return (
+      <div className="text-center text-gray-400 py-4 bg-gray-800">
+        Cargando visitas...
+      </div>
+    );
   }
 
   if (error) {
     return (
       <div className="px-4 py-5 bg-gray-800">
-        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 my-4" role="alert">
+        <div className="bg-red-100 border-l-4 font-semibold border-red-500 text-red-700 p-4 my-4">
           <div className="flex items-center">
-            <FontAwesomeIcon icon={faExclamationTriangle} className="mr-2 text-xl" />
+            <FontAwesomeIcon
+              icon={faExclamationTriangle}
+              className="mr-2 text-xl"
+            />
             <p className="font-bold text-lg">Error de Carga</p>
           </div>
           <p className="text-lg mr-[20px]">{error}</p>
         </div>
       </div>
-    )
-  }
-
-  if (activeVisits.length === 0) {
-    return <div className="text-center py-4 text-gray-400 bg-gray-800">No hay visitas activas.</div>;
+    );
   }
 
   return (
@@ -71,19 +81,29 @@ const ActiveVisitsTable = () => {
               {activeVisits.map((visit) => (
                 <tr key={visit.id_visita}>
                   <td className="md:px-3 md:py-1 font-semibold border border-gray-300 bg-white text-sm">
-                    <p className="text-gray-900 whitespace-no-wrap">{visit.nombre_visitante}</p>
+                    <p className="text-gray-900 whitespace-no-wrap">
+                      {visit.nombre_visitante}
+                    </p>
                   </td>
                   <td className="md:px-3 md:py-1 font-semibold border border-gray-300 bg-white text-sm">
-                    <p className="text-gray-900 whitespace-no-wrap">{visit.empresa}</p>
+                    <p className="text-gray-900 whitespace-no-wrap">
+                      {visit.empresa}
+                    </p>
                   </td>
                   <td className="md:px-3 md:py-1 font-semibold border border-gray-300 bg-white text-sm">
-                    <p className="text-gray-900 whitespace-no-wrap">{visit.nombre_destinatario}</p>
+                    <p className="text-gray-900 whitespace-no-wrap">
+                      {visit.nombre_destinatario}
+                    </p>
                   </td>
                   <td className="md:px-3 md:py-1 font-semibold border border-gray-300 bg-white text-sm">
-                    <p className="text-gray-900 whitespace-no-wrap">{visit.nombre_area}</p>
+                    <p className="text-gray-900 whitespace-no-wrap">
+                      {visit.nombre_area}
+                    </p>
                   </td>
                   <td className="md:px-3 md:py-1 font-semibold border border-gray-300 bg-white text-sm">
-                    <p className="text-gray-900 whitespace-no-wrap">{new Date(visit.fecha_entrada).toLocaleTimeString()}</p>
+                    <p className="text-gray-900 whitespace-no-wrap">
+                      {new Date(visit.fecha_entrada).toLocaleTimeString()}
+                    </p>
                   </td>
                   <td className="px-3 py-1 font-semibold border border-gray-300 bg-white text-sm">
                     <button
@@ -105,7 +125,10 @@ const ActiveVisitsTable = () => {
         <div className="fixed inset-0 z-50 overflow-auto bg-gray-800/80 flex items-center justify-center">
           <div className="text-white bg-gray-800 rounded-lg p-8 w-screen md:w-1/3 shadow-xl">
             <h2 className="text-xl font-bold mb-4">Confirmar Finalización</h2>
-            <p className="mb-6">¿Estás seguro de que deseas finalizar la visita de {selectedVisit?.nombre_visitante}?</p>
+            <p className="mb-6">
+              ¿Estás seguro de que deseas finalizar la visita de{" "}
+              {selectedVisit?.nombre_visitante}?
+            </p>
             <div className="flex justify-end space-x-4">
               <button
                 onClick={handleCloseModal}
@@ -134,10 +157,9 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col items-center min-h-screen w-full p-4 mt-[30px]">
-      
       {/* Botón de Cerrar Sesión */}
       <button
-        type="button" 
+        type="button"
         onClick={logout}
         className="
           absolute top-1 right-4 
@@ -159,10 +181,9 @@ export default function DashboardPage() {
 
       {/* Botones de acción */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 w-full max-w-4xl mb-8">
-        
         {/* Botón Nueva Visita */}
         <button
-          onClick={() => navigate('/visitas/entrada')}
+          onClick={() => navigate("/visitas/entrada")}
           className="flex flex-col items-center justify-center p-6 bg-blue-700 text-white rounded-lg shadow-md hover:bg-blue-800 transition-colors"
         >
           <FontAwesomeIcon icon={faPlus} className="text-3xl mb-2" />
@@ -171,16 +192,16 @@ export default function DashboardPage() {
 
         {/* Botón de Paquetes */}
         <button
-          onClick={() => navigate('/paquetes')}
+          onClick={() => navigate("/paquetes")}
           className="flex flex-col items-center justify-center p-6 bg-green-700 text-white rounded-lg shadow-md hover:bg-green-800 transition-colors"
         >
           <FontAwesomeIcon icon={faBox} className="text-3xl mb-2" />
           <span className="font-semibold text-lg">Paquetes</span>
         </button>
-        
+
         {/* Botón de Historial */}
         <button
-          onClick={() => navigate('/historial')}
+          onClick={() => navigate("/historial")}
           className="flex flex-col items-center justify-center p-6 bg-purple-700 text-white rounded-lg shadow-md hover:bg-purple-800 transition-colors"
         >
           <FontAwesomeIcon icon={faHistory} className="text-3xl mb-2" />
@@ -192,7 +213,6 @@ export default function DashboardPage() {
       <div className="w-full max-w-4xl">
         <ActiveVisitsTable />
       </div>
-
     </div>
   );
 }

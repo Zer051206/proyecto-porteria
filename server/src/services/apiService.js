@@ -1,66 +1,91 @@
-import * as apiModel from '../models/apiModel.js';
+import * as apiModel from "../models/apiModel.js";
+import { ApiFetchError, ApiNoActiveVisitError } from "../utils/customErrors.js";
 
 /**
- * @file - // * This file contains the business logic for API endpoints.
+ * @file - // This file contains the business logic for API endpoints.
  * @author M.M
  */
 
 export const getAreas = async () => {
-  const areas = await apiModel.fetchAreas();
+  try {
+    const areas = await apiModel.fetchAreas();
 
-  if (!areas) {
-    throw new Error('No se pudieron obtener las áreas.');
+    if (!areas) {
+      throw new ApiFetchError();
+    }
+
+    return areas;
+  } catch (error) {
+    throw error;
   }
-
-  return areas;
 };
 
 export const getTiposIdentificacion = async () => {
-  const tiposIdentificacion = await apiModel.fetchTiposIdentificacion();
+  try {
+    const tiposIdentificacion = await apiModel.fetchTiposIdentificacion();
 
-  if (!tiposIdentificacion) {
-    throw new Error('No se pudieron obtener los tipos de identificación.');
+    if (!tiposIdentificacion) {
+      throw new ApiFetchError();
+    }
+
+    return tiposIdentificacion;
+  } catch (error) {
+    throw error;
   }
-
-  return tiposIdentificacion;
 };
 
 export const getActiveVisits = async () => {
-  const activeVisits = await apiModel.fetchActiveVisits();
+  try {
+    const activeVisits = await apiModel.fetchActiveVisits();
 
-  if(!activeVisits) {
-    throw new Error('No se pudieron obtener las visitas activas.');
+    if (!activeVisits) {
+      throw new ApiNoActiveVisitError();
+    }
+
+    return activeVisits;
+  } catch (error) {
+    throw error;
   }
-
-  return activeVisits;
 };
 
 export const getTiposPaquetes = async () => {
-  const tiposPaquetes = await apiModel.fetchTiposPaquetes();
+  try {
+    const tiposPaquetes = await apiModel.fetchTiposPaquetes();
 
-  if (!tiposPaquetes) {
-    throw new Error('No se pudieron obtener los tipos de paquetes.');
+    if (!tiposPaquetes) {
+      throw new ApiFetchError();
+    }
+
+    return tiposPaquetes;
+  } catch (error) {
+    throw error;
   }
-
-  return tiposPaquetes;
 };
 
 export const getVisitsHistorial = async () => {
-  const visitsHistorial = await apiModel.fetchVisitsHistorial();
+  try {
+    const visitsHistorial = await apiModel.fetchVisitsHistorial();
 
-  if (!visitsHistorial) {
-    throw new Error('No se pudo obtener el historial de visitas.');
-  };
+    if (!visitsHistorial) {
+      throw new ApiFetchError();
+    }
 
-  return visitsHistorial;
+    return visitsHistorial;
+  } catch (error) {
+    throw error;
+  }
 };
 
 export const getPackagesHistorial = async () => {
-  const packagesHistorial = await apiModel.fetchPackagesHistorial();
+  try {
+    const packagesHistorial = await apiModel.fetchPackagesHistorial();
 
-  if (!packagesHistorial) {
-    throw new Error('No se pudo obtener el historial de paquetes.');
-  };
+    if (!packagesHistorial) {
+      throw new ApiFetchError();
+    }
 
-  return packagesHistorial;
-}
+    return packagesHistorial;
+  } catch (error) {
+    throw error;
+  }
+};

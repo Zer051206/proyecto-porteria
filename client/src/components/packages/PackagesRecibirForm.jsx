@@ -1,5 +1,4 @@
 // src/pages/RecibirPaqueteForm.jsx
-
 import React from "react";
 import { useGoBack } from "../../hooks/useGoBackDashboard.js";
 import { useNavigate } from "react-router-dom";
@@ -27,7 +26,7 @@ export default function RecibirPaqueteForm() {
   } = usePackagesRecibir(navigate);
 
   return (
-    <div className="flex flex-col items-center h-full p-2 mt-[40px] w-full">
+    <div className="flex flex-col items-center h-screen w-screen p-4">
       <button
         type="button"
         onClick={goBack}
@@ -46,7 +45,7 @@ export default function RecibirPaqueteForm() {
       </button>
       <form
         onSubmit={formik.handleSubmit}
-        className="bg-gray-800 p-6 rounded-lg font-semibold text-black shadow-xl shadow-black w-screen md:w-1/2 mt-[70px] mb-[60px]"
+        className="bg-gray-800 p-6 rounded-lg shadow-xl w-full font-semibold max-w-2xl mt-[70px]"
       >
         <h2 className="text-2xl font-bold mb-6 text-center text-blue-500">
           <FontAwesomeIcon icon={faDownload} className="mr-3" />

@@ -11,6 +11,7 @@ import visitRoutes from "./src/routes/visitRoutes.js";
 import packageRoutes from "./src/routes/packageRoutes.js";
 import cookieParser from "cookie-parser";
 import authMiddleware from "./src/middlewares/authMiddleware.js";
+import errorHandler from "./src/middlewares/errorMiddleware.js";
 
 const app = express();
 
@@ -48,6 +49,8 @@ app.use("/paquetes", authMiddleware, packageRoutes);
 app.use("/historial", authMiddleware, apiRoutes);
 
 const PORT = process.env.PORT || 3000;
+
+app.use(errorHandler);
 
 // * Inicia el servidor directamente.
 app.listen(PORT, () => {

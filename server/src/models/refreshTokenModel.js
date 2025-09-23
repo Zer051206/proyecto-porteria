@@ -1,4 +1,5 @@
-import { getPool } from '../config/db.config.js';
+import { getPool } from "../config/db.config.js";
+import { DatabaseConnectionError } from "../utils/customErrors.js";
 
 export const saveRefreshToken = async (userId, refreshToken, expiredAt) => {
   let connect;
@@ -8,12 +9,18 @@ export const saveRefreshToken = async (userId, refreshToken, expiredAt) => {
     const query = `
       INSERT INTO refresh_tokens (id_usuario, token, expira_en) 
       VALUES (?, ?, ?)
-    `; 
+    `;
 
-    const result = await connect.query(query, [userId, refreshToken, expiredAt]);
+    const result = await connect.query(query, [
+      userId,
+      refreshToken,
+      expiredAt,
+    ]);
     return result;
   } catch (error) {
-    throw new Error('Error al guardar el refresh token: ' + error.message);
+    throw new DatabaseConnectionError(
+      `Error en la base de datos al intentar guardar el refresh token: ${error.message}`
+    );
   } finally {
     if (connect) connect.release();
   }
@@ -34,14 +41,16 @@ export const findValidRefreshToken = async (refreshToken) => {
       AND u.activo = 1
     `;
     const rows = await connect.query(query, [refreshToken]);
-    
+
     if (rows.length > 0) {
       return rows[0];
     } else {
       return null;
     }
   } catch (error) {
-    throw new Error('Error al buscar el refresh token: ' + error.message);
+    throw new DatabaseConnectionError(
+      `Error en la base de datos al buscar un refresh token válido: ${error.message}`
+    );
   } finally {
     if (connect) connect.release();
   }
@@ -59,25 +68,29 @@ export const revokeRefreshToken = async (refreshToken) => {
     const result = await connect.query(query, [refreshToken]);
     return result;
   } catch (error) {
-    throw new Error('Error al revocer el refresh token: ' + error.message);
+    throw new DatabaseConnectionError(
+      `Error en la base de datos al intentar revocar la refresh token: ${error.message}`
+    );
   } finally {
     if (connect) connect.release();
   }
 };
 
 export const revokeAllUserTokens = async (userId) => {
-  let connect; 
+  let connect;
   try {
     const pool = getPool();
     connect = await pool.getConnection();
     const query = `
       UPDATE refresh_tokens SET revocado = 1
       WHERE id_usuario = ?
-    `
+    `;
     const result = await connect.query(query, [userId]);
-    return result
+    return result;
   } catch (error) {
-    throw new Error('Error al revocar los refresh tokens del usuario: ' + error.message);
+    throw new DatabaseConnectionError(
+      `Error en la base de datos al intentar revocar todos los token del usuario: ${error.message}`
+    );
   } finally {
     if (connect) connect.release();
   }
@@ -95,8 +108,10 @@ export const cleanExpiresTokens = async () => {
     const result = connect.query(query);
     return result;
   } catch (error) {
-    throw new Error('Error al limpiar los tokens expirados: ' + error.message);
+    throw new DatabaseConnectionError(
+      `Error en la base de datos al intentar limpiar los tokens expidados: ${error.message}`
+    );
   } finally {
     if (connect) connect.release();
   }
-} 
+};

@@ -22,6 +22,7 @@ export default function VisitEntryForm() {
     handleClickClear,
     handleKeyNumberDown,
     handleKeyTextDown,
+    error,
   } = useVisitEntryForm();
 
   return (
@@ -329,6 +330,12 @@ export default function VisitEntryForm() {
                 </div>
               </fieldset>
             </div>
+          </div>
+        )}
+
+        {error && formik.submitCount > 0 && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md relative text-center mt-[30px] mb-[5px]">
+            <span className="block sm:inline">{error}</span>
           </div>
         )}
 

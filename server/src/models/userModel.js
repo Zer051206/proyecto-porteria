@@ -1,4 +1,5 @@
 import { getPool } from "../config/db.config.js";
+import { DatabaseConnectionError } from "../utils/customErrors.js";
 
 export const findByEmail = async (email) => {
   let connect;
@@ -6,18 +7,14 @@ export const findByEmail = async (email) => {
     const pool = getPool();
     connect = await pool.getConnection();
 
-    const query = 'SELECT * FROM usuarios WHERE correo=?';
-    const results = await connect.query(query, [email]);
+    const query = "SELECT * FROM usuarios WHERE correo=?";
+    const rows = await connect.query(query, [email]);
 
-    const rows = results.filter(row => row && typeof row === 'object' && !row.constructor.name.includes('Meta'));
-    
-    if (rows && rows.length > 0) {
-      return rows[0];
-    } else {
-      return null;
-    }
+    return rows.length > 0 ? rows[0] : null;
   } catch (error) {
-    throw new Error('Error en la consulta a la base de datos: ' + error.message);
+    throw new DatabaseConnectionError(
+      `Error al buscar al usuario por correo: ${error.message}`
+    );
   } finally {
     if (connect) connect.release();
   }
@@ -25,21 +22,21 @@ export const findByEmail = async (email) => {
 
 export const findById = async (id) => {
   let connect;
-  try{
+  try {
     const pool = getPool();
     connect = await pool.getConnection();
     const query = `SELECT * FROM usuarios WHERE id_usuario = ?`;
-    const [rows] = await connect.query(query, [id]);
-    if (rows.length === 0) {
-      return null;
-    }
-    return rows[0];
+    const rows = await connect.query(query, [id]);
+
+    return rows.length > 0 ? rows[0] : null;
   } catch (error) {
-    throw new Error('Error en la consulta a la base de datos: ' + error.message);
+    throw new DatabaseConnectionError(
+      `Error al buscar al usuario por ID: ${error.message}`
+    );
   } finally {
     if (connect) connect.release();
   }
-}
+};
 
 export const createUser = async (userData) => {
   let connect;
@@ -47,14 +44,14 @@ export const createUser = async (userData) => {
     const pool = getPool();
     connect = await pool.getConnection();
 
-    const { 
-      nombre, 
-      apellido, 
-      correo, 
-      contrasena_hash = null, 
+    const {
+      nombre,
+      apellido,
+      correo,
+      contrasena_hash = null,
       id_oauth = null,
       proveedor_oauth = null,
-      rol = 'portero',
+      rol = "portero",
     } = userData;
 
     const query = `
@@ -63,29 +60,35 @@ export const createUser = async (userData) => {
     `;
 
     const result = await connect.query(query, [
-      nombre, 
-      apellido, 
-      correo, 
-      contrasena_hash, 
-      id_oauth, 
-      proveedor_oauth, 
+      nombre,
+      apellido,
+      correo,
+      contrasena_hash,
+      id_oauth,
+      proveedor_oauth,
       rol,
     ]);
 
+    if (result.affectedRows === 0) {
+      throw new DatabaseConnectionError("No se pudo registrar el usuario.");
+    }
+
     return { id_usuario: result.insertId.toString(), ...userData };
   } catch (error) {
-    throw new Error('Error al crear el usuario: ' + error.message)
+    throw new DatabaseConnectionError(
+      `Error en la base de datos al crear el usuario ${error.message}`
+    );
   } finally {
     if (connect) connect.release();
   }
 };
 
 /**
- * @function upadateUser: 
- * @description 
- * @param {String} userId 
- * @param {Object} updateData 
- * @returns 
+ * @function upadateUser:
+ * @description
+ * @param {String} userId
+ * @param {Object} updateData
+ * @returns
  */
 
 export const updateUser = async (userId, updateData) => {
@@ -95,26 +98,30 @@ export const updateUser = async (userId, updateData) => {
     connect = await pool.getConnection();
 
     const columnMapping = {
-      nombre: 'nombre',
-      apellido: 'apellido',
-      correo: 'correo',
-      contrasena_hash: 'contrasena_hash',
-      id_oauth: 'id_oauth',
-      proveedor_oauth: 'proveedor_oauth',
-      rol: 'rol',
-      activo: 'activo',
-      ultimo_login: 'ultimo_login'
+      nombre: "nombre",
+      apellido: "apellido",
+      correo: "correo",
+      contrasena_hash: "contrasena_hash",
+      id_oauth: "id_oauth",
+      proveedor_oauth: "proveedor_oauth",
+      rol: "rol",
+      activo: "activo",
+      ultimo_login: "ultimo_login",
     };
 
-    const keysToUpdate = Object.keys(updateData).filter(key => columnMapping[key]);
+    const keysToUpdate = Object.keys(updateData).filter(
+      (key) => columnMapping[key]
+    );
 
     if (keysToUpdate.length === 0) {
-      throw new Error('No hay datos válidos para actualizar.');
+      throw new Error("No hay datos válidos para actualizar.");
     }
 
-    const setClause = keysToUpdate.map(key => `${columnMapping[key]} = ?`).join(', ');
+    const setClause = keysToUpdate
+      .map((key) => `${columnMapping[key]} = ?`)
+      .join(", ");
 
-    const updateValues = keysToUpdate.map(key => updateData[key]);
+    const updateValues = keysToUpdate.map((key) => updateData[key]);
 
     updateValues.push(userId);
 
@@ -122,15 +129,19 @@ export const updateUser = async (userId, updateData) => {
       UPDATE usuarios SET ${setClause}, fecha_actualizacion = CURRENT_TIMESTAMP WHERE id_usuario = ?
     `;
 
-    const [result] = await connect.query(query, updateValues);
+    const result = await connect.query(query, updateValues);
 
     if (result.affectedRows === 1) {
       return { id_usuario: userId, ...updateData };
     } else {
-      throw new Error('No se pudo actualizar el usuario.');
+      throw new DatabaseConnectionError(
+        "No se pudo actualizar el usuario. El usuario no existe o los datos son los mismos"
+      );
     }
   } catch (error) {
-    throw new Error('Error al actualizar la base de datos: ' + error.message);
+    throw new DatabaseConnectionError(
+      `Error en la base de datos al actualizar el usuario ${error.message}`
+    );
   } finally {
     if (connect) connect.release();
   }
@@ -143,26 +154,22 @@ export const checkIfUserIsActive = async (userId) => {
     connect = await pool.getConnection();
     const query = `
       SELECT activo FROM usuarios WHERE id_usuario = ?
-    `
+    `;
 
-    const results = await connect.query(query, [userId]);
+    const rows = await connect.query(query, [userId]);
 
-    const rows = results.filter(row => row && typeof row === 'object' && !row.constructor.name.includes('Meta'));
-    
-    if (rows && rows.length > 0) {
-      return rows[0];
-    } else {
-      return null;
-    }
+    return rows.length > 0 ? rows[0] : null;
   } catch (error) {
-    throw new Error('Error en la consulta a la base de datos: ' + error.message);
+    throw new DatabaseConnectionError(
+      `Error en la base de datos al verificar el estado del usuario: ${error.message}`
+    );
   } finally {
     if (connect) connect.release();
   }
 };
 
 export const updateLastLogin = async (userId) => {
-  let connect; 
+  let connect;
   try {
     const pool = getPool();
     connect = await pool.getConnection();
@@ -170,11 +177,19 @@ export const updateLastLogin = async (userId) => {
       UPDATE usuarios 
       SET ultimo_login = NOW() 
       WHERE id_usuario = ?
-    `
-    const result = connect.query(query, [userId])
-    return result;
+    `;
+    const result = await connect.query(query, [userId]);
+
+    if (result.affectedRows === 0) {
+      throw new DatabaseConnectionError(
+        "No se pudo registrar la fecha del último login."
+      );
+    }
+    return true;
   } catch (error) {
-    throw new Error('Error al actualizar el ultimo login del usuario');
+    throw new DatabaseConnectionError(
+      `Error en la base de datos al actualizar el ultimo login del usuario: ${error.message}`
+    );
   } finally {
     if (connect) connect.release();
   }

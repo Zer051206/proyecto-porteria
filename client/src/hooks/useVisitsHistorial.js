@@ -1,27 +1,26 @@
-import axios from "axios";
 import { useEffect, useState } from "react";
 import api from "../config/axios";
 
-const useVisitsHistorial = async () => {
-  const [ visitsHistorial, setVisitsHistorial ] = useState([]);
-  const [ isLoading, setIsLoading ] = useState(true);
-  const [ error, setError ] = useState(null);
-  const [ showModal, setShowModal ] = useState(false);
-  const [ selectedVisit, setSelectedVisit ] = useState(null);
+const useVisitsHistorial = () => {
+  const [visitsHistorial, setVisitsHistorial] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedVisit, setSelectedVisit] = useState(null);
 
   useEffect(() => {
-    const fetchVisitsHistorial = async () => { 
+    const fetchVisitsHistorial = async () => {
       try {
         const [visitsHistorialRes] = await Promise.all([
-          api.get('http://localhost:3000/historial/visitas')
+          api.get("http://localhost:3000/historial/visitas"),
         ]);
-        setVisitsHistorial(visitsHistorialRes.data)
+        setVisitsHistorial(visitsHistorialRes.data);
       } catch (err) {
-        setError('Error al cargar el registro de visitas.')
+        setError(err.response.data.message);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
     fetchVisitsHistorial();
   }, []);
 
@@ -29,11 +28,13 @@ const useVisitsHistorial = async () => {
     if (!selectedVisit) return;
 
     try {
-      await api.get(`http://localhost:3000/historial/paquetes/${selectedPackage.id_paquete}`);
+      await api.get(
+        `http://localhost:3000/historial/paquetes/${selectedPackage.id_paquete}`
+      );
       setShowModal(true);
       setSelectedVisit(visit);
     } catch (err) {
-      alert('❌ Hubo un error al intentar mostrar la información del paquete');
+      alert("❌ Hubo un error al intentar mostrar la información del paquete");
     }
   };
 
@@ -51,7 +52,6 @@ const useVisitsHistorial = async () => {
     handleSelectVisit,
     handleCloseModal,
   };
-
 };
 
 export default useVisitsHistorial;

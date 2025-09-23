@@ -1,4 +1,5 @@
 import { getPool } from "../config/db.config.js";
+import { DatabaseConnectionError } from "../utils/customErrors.js";
 
 export const findPackageGuideReceive = async (guia) => {
   let connect;
@@ -12,7 +13,9 @@ export const findPackageGuideReceive = async (guia) => {
 
     return rows.length > 0;
   } catch (error) {
-    throw error;
+    throw new DatabaseConnectionError(
+      `Error en la base de datos al buscar el paquete por la guia: ${error.message}`
+    );
   } finally {
     if (connect) connect.release();
   }
@@ -25,15 +28,18 @@ export const findPackageGuideSend = async (guia) => {
     connect = await pool.getConnection();
 
     if (guia === null || guia === undefined) {
-      return false;
+      return null;
     }
+
     const query =
       'SELECT 1 FROM paquetes WHERE guia = ? AND tipo_operacion = "enviar" LIMIT 1';
     const rows = await connect.query(query, [guia]);
 
     return rows.length > 0;
   } catch (error) {
-    throw error;
+    throw new DatabaseConnectionError(
+      `Error en la base de datos al buscar el paquete por la guia: ${error.message}`
+    );
   } finally {
     if (connect) connect.release();
   }
@@ -77,7 +83,9 @@ export const createReceivePackage = async (packageData) => {
     ]);
 
     if (!rows || rows.affectedRows === 0) {
-      throw new Error("No se pudo registrar el paquete.");
+      throw new DatabaseConnectionError(
+        "Error al intentar registrar el apquete recibido"
+      );
     }
 
     const queryLogs = `
@@ -93,7 +101,9 @@ export const createReceivePackage = async (packageData) => {
     ]);
 
     if (!logs || logs.affectedRows === 0) {
-      return null;
+      return new DatabaseConnectionError(
+        "Error al intentar registrar la accion del usuario."
+      );
     }
 
     await connect.commit();
@@ -103,8 +113,8 @@ export const createReceivePackage = async (packageData) => {
     if (connect) {
       await connect.rollback();
     }
-    throw new Error(
-      "Error en la consulta a la base de datos: " + error.message
+    throw new DatabaseConnectionError(
+      `Error en la base de datos al intentar registrar el paquete recibido: ${error.message}`
     );
   } finally {
     if (connect) connect.release();
@@ -151,7 +161,9 @@ export const createSentPackage = async (packageData) => {
     ]);
 
     if (!rows || rows.affectedRows === 0) {
-      throw new Error("No se pudo registrar el paquete.");
+      throw new DatabaseConnectionError(
+        "Error al intentar registrar el envío del paquete"
+      );
     }
 
     const queryLogs = `
@@ -167,7 +179,9 @@ export const createSentPackage = async (packageData) => {
     ]);
 
     if (!logs || logs.affectedRows === 0) {
-      return null;
+      return new DatabaseConnectionError(
+        "Error al intentar registrar la acción del usuario"
+      );
     }
 
     await connect.commit();
@@ -177,8 +191,8 @@ export const createSentPackage = async (packageData) => {
     if (connect) {
       await connect.rollback;
     }
-    throw new Error(
-      "Error en la consulta a la base de datos: " + error.message
+    throw new DatabaseConnectionError(
+      `Error en la base de datos al intentar registrar el envío del paquete: ${error.message}`
     );
   } finally {
     if (connect) connect.release();

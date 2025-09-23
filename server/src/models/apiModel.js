@@ -1,4 +1,5 @@
 import { getPool } from "../config/db.config.js";
+import { DatabaseConnectionError } from "../utils/customErrors.js";
 
 export const fetchAreas = async () => {
   let connect;
@@ -6,16 +7,14 @@ export const fetchAreas = async () => {
     const pool = getPool();
     connect = await pool.getConnection();
 
-    const query = 'SELECT * FROM areas';
+    const query = "SELECT * FROM areas";
     const rows = await connect.query(query);
 
-    if (rows.length === 0) {
-      return null;
-    }
-
-    return rows;
+    return rows.length > 0 ? rows[0] : null;
   } catch (error) {
-    throw new Error('Error en la consulta a la base de datos: ' + error.message);
+    throw new DatabaseConnectionError(
+      `Error en la base de al intentar obtener las areas: ${error.message}`
+    );
   } finally {
     if (connect) connect.release();
   }
@@ -26,15 +25,14 @@ export const fetchTiposIdentificacion = async () => {
   try {
     const pool = getPool();
     connect = await pool.getConnection();
-    const query = 'SELECT * FROM tipos_identificacion';
+    const query = "SELECT * FROM tipos_identificacion";
     const rows = await connect.query(query);
 
-    if (rows.length === 0) {
-      return null;
-    }
-    return rows;
+    return rows.length > 0 ? rows[0] : null;
   } catch (error) {
-    throw new Error('Error en la consulta a la base de datos: ' + error.message);
+    throw new DatabaseConnectionError(
+      `Error en la base de al intentar obtener los tipos de identificacion: ${error.message}`
+    );
   } finally {
     if (connect) connect.release();
   }
@@ -49,14 +47,14 @@ export const fetchActiveVisits = async () => {
       SELECT v.id_visita, v.nombre_visitante, v.telefono, v.identificacion,
              v.empresa, v.nombre_destinatario, a.nombre_area, v.fecha_entrada
       FROM visitas v JOIN areas a ON v.id_area = a.id_area WHERE v.estado = 1  
-    `
-    const rows = (await connect).query(query);
-    if (rows.length === 0) {
-      return null;
-    }
-    return rows;
+    `;
+    const rows = await connect.query(query);
+
+    return rows.length > 0 ? rows[0] : null;
   } catch (error) {
-    throw new Error('Error en la consulta a la base de datos: ' + error.message);
+    throw new DatabaseConnectionError(
+      `Error en la base de al intentar obtener las visitas activas: ${error.message}`
+    );
   } finally {
     if (connect) connect.release();
   }
@@ -69,14 +67,14 @@ export const fetchTiposPaquetes = async () => {
     connect = await pool.getConnection();
     const query = `SELECT * FROM tipos_paquetes`;
     const rows = await connect.query(query);
-    if (rows.length === 0) {
-      return null;
-    }
-    return rows;
+
+    return rows.length > 0 ? rows[0] : null;
   } catch (error) {
-    throw new Error('Error en la consulta a la base de datos: ' + error.message);
+    throw new DatabaseConnectionError(
+      `Error en la base de al intentar obtener los tipos de paquetes: ${error.message}`
+    );
   } finally {
-    if (connect) connect.release();  
+    if (connect) connect.release();
   }
 };
 
@@ -87,16 +85,13 @@ export const fetchVisitsHistorial = async () => {
     connect = await pool.getConnection();
     const query = `SELECT * FROM visitas;`;
     const rows = connect.query(query);
-    if (rows.length === 0) {
-      return null;
-    };
-    console.log(rows)
-    console.log('---------------')
-    console.log(rows[0])
-    return rows[0];
+
+    return rows.length > 0 ? rows[0] : null;
   } catch (error) {
-    throw new Error('Error en la consulta a la base de datos: ' + error.message);
+    throw new DatabaseConnectionError(
+      `Error en la base de datos al intentas obtener el historial de visitas: ${error.message}`
+    );
   } finally {
-    if (connect) connect.release()
+    if (connect) connect.release();
   }
 };

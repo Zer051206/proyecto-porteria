@@ -1,5 +1,4 @@
 // src/pages/EnviarPaqueteForm.jsx
-
 import React from "react";
 import { useGoBack } from "../../hooks/useGoBackDashboard.js";
 import { useNavigate } from "react-router-dom";
@@ -28,7 +27,7 @@ export default function PackagesEnviarForm() {
   } = usePackageEnviarForm(navigate);
 
   return (
-    <div className="flex flex-col items-center h-screen w-screen p-4 ">
+    <div className="flex flex-col items-center h-screen w-screen p-4">
       <button
         type="button"
         onClick={goBack}
@@ -64,9 +63,14 @@ export default function PackagesEnviarForm() {
             className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 my-4"
             role="alert"
           >
-            <FontAwesomeIcon icon={faExclamationTriangle} className="mr-2" />
-            <p className="font-bold">Error de Carga</p>
-            <p>{errorCarga}</p>
+            <div className="flex items-center">
+              <FontAwesomeIcon
+                icon={faExclamationTriangle}
+                className="mr-2 text-xl"
+              />
+              <p className="font-bold">Error de Carga</p>
+            </div>
+            <p className="mt-1">{errorCarga}</p>
           </div>
         )}
 

@@ -1,6 +1,15 @@
 import { verifyAccessToken, generateAccessToken } from "../utils/tokenUtils.js";
 import * as userModel from "../models/userModel.js";
 import * as refreshTokenModel from "../models/refreshTokenModel.js";
+import {
+  InvalidTokenError,
+  AccountDisabledError,
+} from "../utils/customErrors.js";
+
+/**
+ * @file: Middleware de autenticación de usuarios.
+ * @author M.M
+ */
 
 const authMiddleware = async (req, res, next) => {
   let accessToken = req.cookies.accessToken;
@@ -8,75 +17,52 @@ const authMiddleware = async (req, res, next) => {
   let decoded = null;
 
   try {
-    // Verificar el access token
+    // Intenta verificar el access token
     if (accessToken) {
       decoded = verifyAccessToken(accessToken);
-    }
-  } catch (tokenError) {
-    // Si el access token es inválido o expiró, procedemos a intentar renovarlo.
-    console.log(
-      "Access token inválido, intentando renovar:",
-      tokenError.message
-    );
-
-    if (refreshToken) {
-      try {
-        // Buscar el refresh token válido en la base de datos
-        const tokenData = await refreshTokenModel.findValidRefreshToken(
-          refreshToken
+    } else {
+      // Si no hay access token, intenta usar el refresh token
+      if (!refreshToken) {
+        throw new InvalidTokenError(
+          "Acceso no autorizado. Token no proporcionado."
         );
-
-        if (tokenData) {
-          // Generar un nuevo access token
-          const newAccessToken = generateAccessToken({
-            id_usuario: tokenData.id_usuario,
-            correo: tokenData.correo,
-            rol: tokenData.rol,
-          });
-
-          // Establecer la nueva cookie
-          res.cookie("accessToken", newAccessToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "lax",
-            maxAge: 15 * 60 * 1000,
-            path: "/",
-          });
-
-          // Decodificar el nuevo token
-          decoded = verifyAccessToken(newAccessToken);
-        } else {
-          // Si el refresh token no es válido, lanzar un error para que la sesión termine
-          throw new Error("Refresh token inválido o expirado.");
-        }
-      } catch (refreshError) {
-        // Capturar errores del proceso de renovación
-        return res.status(401).json({
-          message: "Sesión expirada. Por favor, inicia sesión nuevamente.",
-          needsLogin: true,
-        });
       }
+
+      const tokenData = await refreshTokenModel.findValidRefreshToken(
+        refreshToken
+      );
+      if (!tokenData) {
+        throw new InvalidTokenError(
+          "Sesión expirada. Por favor, inicia sesión nuevamente."
+        );
+      }
+
+      const newAccessToken = generateAccessToken({
+        id_usuario: tokenData.id_usuario,
+        correo: tokenData.correo,
+        rol: tokenData.rol,
+      });
+
+      res.cookie("accessToken", newAccessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 15 * 60 * 1000,
+        path: "/",
+      });
+
+      decoded = verifyAccessToken(newAccessToken);
     }
-  }
 
-  // Si después de ambos intentos (access y refresh) no tenemos un token decodificado
-  if (!decoded) {
-    return res.status(401).json({
-      message: "Acceso no autorizado. Token no proporcionado o inválido.",
-      needsLogin: true,
-    });
-  }
-
-  try {
-    // Verificar que el usuario está activo en la base de datos
-    const isActive = await userModel.checkIfUserIsActive(decoded.userId);
-    if (!isActive) {
-      const error = new Error("Acceso denegado. La cuenta no está activada");
-      error.needsLogin = true;
-      throw error;
+    // Si el access token fue válido o renovado, verifica el estado del usuario.
+    const user = await userModel.checkIfUserIsActive(decoded.userId);
+    if (!user) {
+      throw new AccountDisabledError(
+        "Acceso denegado. La cuenta no está activada."
+      );
     }
 
-    // Si todo es correcto, adjuntar la información del usuario a la solicitud y continuar
+    // Si todo es correcto, adjunta la información del usuario a la solicitud.
     req.user = {
       userId: decoded.userId,
       email: decoded.correo,
@@ -84,8 +70,8 @@ const authMiddleware = async (req, res, next) => {
     };
     next();
   } catch (error) {
-    // Capturar cualquier otro error y enviarlo al siguiente middleware de errores
-    return next(error);
+    // Si cualquier error ocurre en el proceso, se lo pasamos al siguiente middleware de errores.
+    next(error);
   }
 };
 

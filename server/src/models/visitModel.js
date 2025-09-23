@@ -1,4 +1,5 @@
 import { getPool } from "../config/db.config.js";
+import { DatabaseConnectionError } from "../utils/customErrors.js";
 
 export const findActiveVisitByIdentificacion = async (identificacion) => {
   let connect;
@@ -11,8 +12,8 @@ export const findActiveVisitByIdentificacion = async (identificacion) => {
 
     return rows.length > 0 ? rows[0] : null;
   } catch (error) {
-    throw new Error(
-      "Error en la consulta a la base de datos: " + error.message
+    throw new DatabaseConnectionError(
+      `Error en la base de datos al intentar encontrar la visita activa: ${error.message}`
     );
   } finally {
     if (connect) connect.release();
@@ -28,12 +29,12 @@ export const findActiveVisitByVisitId = async (visitId) => {
     // Desestructuramos para obtener solo las filas
     const rows = await connect.query(query, [visitId]);
 
-    console.log(rows[0])
+    console.log(rows[0]);
 
     return rows.length > 0 ? rows[0] : null;
   } catch (error) {
-    throw new Error(
-      "Error en la consulta a la base de datos: " + error.message
+    throw new DatabaseConnectionError(
+      `Error en la base de datos al intentar encontrar la visita activa: ${error.message}`
     );
   } finally {
     if (connect) connect.release();
@@ -52,8 +53,8 @@ export const findAreaById = async (id_area) => {
     }
     return rows[0];
   } catch (error) {
-    throw new Error(
-      "Error en la consulta a la base de datos: " + error.message
+    throw new DatabaseConnectionError(
+      `Error en la base de datos al intentar encontrar el area: ${error.message}`
     );
   } finally {
     if (connect) connect.release();
@@ -102,7 +103,9 @@ export const createVisit = async (visitData) => {
     ]);
 
     if (!rows || rows.affectedRows === 0) {
-      return null;
+      throw new DatabaseConnectionError(
+        "Error el intentar crear la nueva visita"
+      );
     }
 
     const queryLogs = `
@@ -118,7 +121,9 @@ export const createVisit = async (visitData) => {
     ]);
 
     if (!logs || logs.affectedRows === 0) {
-      return null;
+      throw new DatabaseConnectionError(
+        `Error en la base de datos al registrar la visita: ${error.message}`
+      );
     }
 
     await connect.commit();
@@ -128,8 +133,8 @@ export const createVisit = async (visitData) => {
     if (connect) {
       await connect.rollback();
     }
-    throw new Error(
-      "Error en la consulta a la base de datos: " + error.message
+    throw new DatabaseConnectionError(
+      "Error en la base de datos al registrar la visita." + error.message
     );
   } finally {
     if (connect) connect.release();
@@ -152,7 +157,9 @@ export const updateVisitExit = async (visitData) => {
     const rows = await connect.query(query, [id_usuario, visitId]);
 
     if (!rows || rows.affectedRows === 0) {
-      return null;
+      throw new DatabaseConnectionError(
+        "Error al intentar actualizar la salida del visitante"
+      );
     }
 
     const queryLogs = `
@@ -168,7 +175,9 @@ export const updateVisitExit = async (visitData) => {
     ]);
 
     if (!logs || logs.affectedRows === 0) {
-      return null;
+      throw new DatabaseConnectionError(
+        "Error al registrar la accion del usuario."
+      );
     }
 
     await connect.commit();
@@ -178,8 +187,8 @@ export const updateVisitExit = async (visitData) => {
     if (connect) {
       await connect.rollback();
     }
-    throw new Error(
-      "Error en la consulta a la base de datos: " + error.message
+    throw new DatabaseConnectionError(
+      `Error en la base de datos al actualizar la salida del visitante: ${error.message}`
     );
   } finally {
     if (connect) connect.release();

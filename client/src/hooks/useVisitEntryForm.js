@@ -4,22 +4,23 @@ import { useFormik } from "formik";
 import { useNavigate } from "react-router-dom";
 import VisitSchema from "../schemas/visitSchema.js";
 import api from "../config/axios.js";
-import { handleKeyNumberDown, handleKeyTextDown } from "../utils/inputUtilities";
+import {
+  handleKeyNumberDown,
+  handleKeyTextDown,
+} from "../utils/inputUtilities";
 
 const useVisitEntryForm = () => {
-  const navigate = useNavigate();
-
-  // Estado para los datos de los selects
+  const navigate = useNavigate(); // Estado para los datos de los selects
   const [areas, setAreas] = useState([]);
+  const [error, setError] = useState(null);
   const [tiposIdentificacion, setTiposIdentificacion] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorCarga, setErrorCarga] = useState(null);
 
   const handleClickClear = () => {
     formik.resetForm();
-  };
+  }; // Lógica para obtener los datos al cargar el componente
 
-  // Lógica para obtener los datos al cargar el componente
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -28,11 +29,9 @@ const useVisitEntryForm = () => {
           api.get("http://localhost:3000/api/areas"),
           api.get("http://localhost:3000/api/tipos-identificacion"),
         ]);
-
         setAreas(areasRes.data);
         setTiposIdentificacion(tiposIdRes.data);
       } catch (err) {
-        console.error("Error al obtener las opciones del formulario:", err);
         setErrorCarga(
           "Hubo un error al cargar las opciones. Por favor, intente recargar la página."
         );
@@ -42,9 +41,8 @@ const useVisitEntryForm = () => {
     };
 
     fetchData();
-  }, []);
+  }, []); // Lógica de Formik y la función de envío
 
-  // Lógica de Formik y la función de envío
   const formik = useFormik({
     initialValues: {
       nombre_visitante: "",
@@ -58,40 +56,24 @@ const useVisitEntryForm = () => {
       apellido: "",
       motivo: "",
     },
+
     validationSchema: VisitSchema,
+
     onSubmit: async (values, { setSubmitting }) => {
       try {
         await api.post("http://localhost:3000/visitas/entrada", values);
         alert("✅ ¡Visita registrada con éxito!");
         navigate("/dashboard");
       } catch (error) {
-        let errorMessage = "¡Ocurrió un error inesperado!";
-        if (error.response) {
-          if (error.response.status === 409) {
-            errorMessage = `⚠️ ${error.response.data.message}`;
-          } else if (error.response.data.errors) {
-            const validationErrors = error.response.data.errors
-              .map((err) => err.message)
-              .join("\n");
-            errorMessage = `❌ Errores en el formulario:\n${validationErrors}`;
-          } else {
-            errorMessage = `❌ Error: ${
-              error.response.data.message || "No se pudo registrar la visita."
-            }`;
-          }
-        } else if (error.request) {
-          errorMessage =
-            "❌ No se pudo conectar con el servidor. Por favor, revise su conexión a internet.";
+        if (err.response && err.response.data && err.response.data.message) {
+          setError(err.response.data.message);
         }
-        alert(errorMessage);
-        console.error("Error de envío:", error);
       } finally {
         setSubmitting(false);
       }
     },
-  });
+  }); // Retorna todos los valores y funciones necesarios para el componente
 
-  // Retorna todos los valores y funciones necesarios para el componente
   return {
     formik,
     areas,
@@ -101,6 +83,7 @@ const useVisitEntryForm = () => {
     handleClickClear,
     handleKeyNumberDown,
     handleKeyTextDown,
+    error,
   };
 };
 

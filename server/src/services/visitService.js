@@ -13,41 +13,49 @@ import {
  */
 
 export const createVisit = async (visitData) => {
-  const { identificacion, id_area } = visitData;
+  try {
+    const { identificacion, id_area } = visitData;
 
-  const activeVisite = await visitModel.findActiveVisitByIdentificacion(
-    identificacion
-  );
+    const activeVisite = await visitModel.findActiveVisitByIdentificacion(
+      identificacion
+    );
 
-  if (activeVisite) {
-    throw new VisitExistsError();
+    if (activeVisite) {
+      throw new VisitExistsError();
+    }
+
+    const areaExists = await visitModel.findAreaById(id_area);
+
+    if (!areaExists) {
+      throw new AreaDontExistsError();
+    }
+
+    const result = await visitModel.createVisit(visitData);
+
+    return { id_visita: result.insertId.toString(), ...visitData };
+  } catch (error) {
+    throw error;
   }
-
-  const areaExists = await visitModel.findAreaById(id_area);
-
-  if (!areaExists) {
-    throw new AreaDontExistsError();
-  }
-
-  const result = await visitModel.createVisit(visitData);
-
-  return { id_visita: result.insertId.toString(), ...visitData };
 };
 
 export const updateVisitExit = async (visitData) => {
-  const { visitId } = visitData;
+  try {
+    const { visitId } = visitData;
 
-  const activeVisit = await visitModel.findActiveVisitByVisitId(visitId);
+    const activeVisit = await visitModel.findActiveVisitByVisitId(visitId);
 
-  if (!activeVisit) {
-    throw new ActiveVisitDontExists();
+    if (!activeVisit) {
+      throw new ActiveVisitDontExists();
+    }
+
+    const updatedVisit = await visitModel.updateVisitExit(visitData);
+
+    if (!updatedVisit) {
+      throw new UpdateVisitError();
+    }
+
+    return updatedVisit;
+  } catch (error) {
+    throw error;
   }
-
-  const updatedVisit = await visitModel.updateVisitExit(visitData);
-
-  if (!updatedVisit) {
-    throw new UpdateVisitError();
-  }
-
-  return updatedVisit;
 };

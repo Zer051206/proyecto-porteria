@@ -28,10 +28,12 @@ export const receivePackage = async (packageData) => {
     }
     return receivedPackage;
   } catch (error) {
-    if (error instanceof PackageError) {
-      throw error;
+    if (error.name === "DatabaseError") {
+      throw new DatabaseConnectionError(
+        "Error en la base de datos al procesar el paquete."
+      );
     }
-    throw new PackageError("Error en la base de datos al procesar el paquete.");
+    throw new error();
   }
 };
 
@@ -49,8 +51,10 @@ export const sendPackage = async (packageData) => {
     }
     return sentPackage;
   } catch (error) {
-    if (error instanceof PackageError) {
-      throw error;
+    if (error.name === "DatabaseError") {
+      throw new DatabaseConnectionError(
+        "Error en la base de datos al procesar el paquete."
+      );
     }
     throw error;
   }

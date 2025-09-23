@@ -7,6 +7,7 @@ import {
   UserAlreadyExistsError,
   UserNotFoundOrInvalidPasswordError,
   AccountDisabledError,
+  InvalidTokenError,
 } from "../utils/customErrors.js";
 
 /**
@@ -121,7 +122,7 @@ export const loginUser = async (validatedData) => {
 export const refreshAccessToken = async (refreshToken) => {
   try {
     if (!refreshToken) {
-      throw new Error("refresh token es requerido");
+      throw new InvalidTokenError("El refresh token es requerido.");
     }
 
     const tokenData = await refreshTokenModel.findValidRefreshToken(
@@ -129,7 +130,7 @@ export const refreshAccessToken = async (refreshToken) => {
     );
 
     if (!tokenData) {
-      throw new Error("refresh token inválido o expirado");
+      throw new InvalidTokenError("Refresh token inválido o expirado.");
     }
 
     const newAccessToken = tokenUtils.generateAccessToken({
@@ -171,52 +172,56 @@ export const logoutUser = async (refreshToken) => {
  */
 
 export const handleOauthLogin = async (oauthData) => {
-  const { nombre, apellido, correo, id_oauth, proveedor_oauth } = oauthData;
+  try {
+    const { nombre, apellido, correo, id_oauth, proveedor_oauth } = oauthData;
 
-  const userDb = await userModel.findByEmail(correo);
+    const userDb = await userModel.findByEmail(correo);
 
-  if (!userDb) {
-    const newUser = await userModel.createUser({
-      nombre,
-      apellido,
-      correo,
-      id_oauth,
-      proveedor_oauth,
-    });
+    if (!userDb) {
+      const newUser = await userModel.createUser({
+        nombre,
+        apellido,
+        correo,
+        id_oauth,
+        proveedor_oauth,
+      });
 
-    const token = jwt.sign(
-      { userId: newUser.id_usuario },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
-    return token;
-  }
+      const token = jwt.sign(
+        { userId: newUser.id_usuario },
+        process.env.JWT_SECRET,
+        { expiresIn: "1h" }
+      );
+      return token;
+    }
 
-  if (!userDb.id_oauth) {
-    const updateData = {
-      id_oauth: id_oauth,
-      proveedor_oauth: proveedor_oauth,
-    };
-    await userModel.updateUser(userDb.id_usuario, updateData);
-    const token = jwt.sign(
-      { userId: userDb.id_usuario },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
-    return token;
-  }
+    if (!userDb.id_oauth) {
+      const updateData = {
+        id_oauth: id_oauth,
+        proveedor_oauth: proveedor_oauth,
+      };
+      await userModel.updateUser(userDb.id_usuario, updateData);
+      const token = jwt.sign(
+        { userId: userDb.id_usuario },
+        process.env.JWT_SECRET,
+        { expiresIn: "1h" }
+      );
+      return token;
+    }
 
-  // ? Validacion si la cuenta está vinculada a otro proveedor
-  if (userDb.id_oauth !== id_oauth) {
-    throw new Error("Cuenta ya vinculada a otro proveedor.");
-  }
+    // Validacion si la cuenta está vinculada a otro proveedor
+    if (userDb.id_oauth !== id_oauth) {
+      throw new UserAlreadyExistsError("Cuenta vinculada a otro proveedor.");
+    }
 
-  if (userDb.id_oauth === id_oauth) {
-    const token = jwt.sign(
-      { userId: userDb.id_usuario },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
-    return token;
+    if (userDb.id_oauth === id_oauth) {
+      const token = jwt.sign(
+        { userId: userDb.id_usuario },
+        process.env.JWT_SECRET,
+        { expiresIn: "1h" }
+      );
+      return token;
+    }
+  } catch (error) {
+    throw error;
   }
 };

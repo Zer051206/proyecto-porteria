@@ -29,7 +29,7 @@ const usePackagesEnviar = (navigate) => {
         setAreas(areasRes.data);
       } catch (error) {
         console.error("Error al cargar datos del formulario:", error);
-        setErrorCarga("No se pudieron cargar las opciones. Intente de nuevo.");
+        setErrorCarga("No se pudieron cargar las opciones. Intente recargar la página");
       } finally {
         setIsLoading(false);
       }

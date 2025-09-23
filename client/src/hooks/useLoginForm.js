@@ -1,15 +1,15 @@
 // src/hooks/useLoginForm.js
-import { useState } from 'react';
-import axiosClient from '../axiosClient';
-import { useNavigate } from 'react-router-dom';
+import { useState } from "react";
+import axiosClient from "../axiosClient";
+import { useNavigate } from "react-router-dom";
 
 export const useLoginForm = () => {
-  const [ email, setEmail ] = useState('');
-  const [ password, setPassword ] = useState('');
-  const [ error, setError ] = useState(null);
-  const [ isLoading, setIsLoading ] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  
+
   const handleEmailChange = (e) => setEmail(e.target.value);
 
   const handlePasswordChange = (e) => setPassword(e.target.value);
@@ -19,19 +19,24 @@ export const useLoginForm = () => {
     setIsLoading(true);
     setError(null);
 
-    try{
-      await axiosClient.post('http://localhost:3000/auth/login', {
-        correo: email,
-        password
-      }, { withCredentials: true });
+    try {
+      await axiosClient.post(
+        "http://localhost:3000/auth/login",
+        {
+          correo: email,
+          password,
+        },
+        { withCredentials: true }
+      );
 
-      navigate('/dashboard');
-
+      navigate("/dashboard");
     } catch (err) {
       if (err.response && err.response.data && err.response.data.message) {
         setError(err.response.data.message);
       } else {
-        setError('Error al iniciar sesión. Por favor, verifica tus credenciales.');
+        setError(
+          "Error al iniciar sesión. Por favor, verifica tus credenciales."
+        );
       }
     } finally {
       setIsLoading(false);
@@ -45,6 +50,6 @@ export const useLoginForm = () => {
     handleEmailChange,
     handlePasswordChange,
     error,
-    isLoading
+    isLoading,
   };
 };
