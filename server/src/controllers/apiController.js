@@ -1,4 +1,8 @@
 import * as apiService from "../services/apiService.js";
+import {
+  InvalidPackageIdError,
+  invalidVisitIdError,
+} from "../utils/customErrors.js";
 
 /**
  * @file - // * This file contains the controller functions for API endpoints.
@@ -54,6 +58,38 @@ export const getPackagesHistorial = async (req, res, next) => {
   try {
     const packagesHistorial = await apiService.getPackagesHistorial();
     return res.status(200).json(packagesHistorial);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getPackageData = async (req, res, next) => {
+  try {
+    const pkgId = parseInt(req.params.id, 10);
+
+    if (isNaN(pkgId) || pkgId <= 0) {
+      throw new InvalidPackageIdError();
+    }
+
+    const packageData = await apiService.getPackageData(pkgId);
+
+    return res.status(200).json(packageData);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getVisitData = async (req, res, next) => {
+  try {
+    const visitId = parseInt(req.params.id, 10);
+
+    if (isNaN(visitId) || visitId <= 0) {
+      throw new invalidVisitIdError();
+    }
+
+    const visitData = await apiService.getVisitData(visitId);
+
+    return res.status(200).json(visitData);
   } catch (error) {
     next(error);
   }

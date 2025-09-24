@@ -7,10 +7,7 @@ export const createVisit = async (req, res, next) => {
   const validateVisitData = visitEntrySchema.safeParse(req.body);
 
   if (!validateVisitData.success) {
-    const error = new Error("Error de validación de datos.");
-    error.errors = validateVisitData.error.errors;
-    error.status = 400; // Código 400 para errores de validación
-    return next(error);
+    return next(validateVisitData.error);
   }
 
   const userId = req.user.userId;

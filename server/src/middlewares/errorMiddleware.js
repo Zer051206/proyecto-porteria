@@ -10,7 +10,7 @@ import pkg from "jsonwebtoken";
 const { JsonWebTokenError, TokenExpiredError } = pkg;
 
 const errorHandler = (err, req, res, next) => {
-  console.error("Error capturado:", err);
+  console.error("Error capturado:", err, err.message);
 
   let statusCode = 500;
   let message = "Ha ocurrido un error inesperado en el servidor.";
@@ -31,7 +31,7 @@ const errorHandler = (err, req, res, next) => {
   else if (err instanceof ZodError) {
     statusCode = 400;
     message = "Error de validación en los datos de la solicitud.";
-    errors = err.errors.map((e) => ({
+    errors = err.issues.map((e) => ({
       path: e.path.join("."),
       message: e.message,
     }));

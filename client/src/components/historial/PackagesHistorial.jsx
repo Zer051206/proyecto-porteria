@@ -19,6 +19,7 @@ export default function PackageHistoryTable() {
     selectedPackage,
     handleSelectPackage,
     handleCloseModal,
+    formatDate,
   } = usePackagesHistorial();
 
   const goBack = useGoBack();
@@ -118,35 +119,37 @@ export default function PackageHistoryTable() {
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200 text-gray-800">
+            <tbody className="bg-white divide-y divide-x divide-gray-200 text-gray-800">
               {/* Aquí irían las filas de datos */}
               {packagesHistorial.map((pkg) => (
-                <tr key={pkg.id_paquete}>
-                  <td className="px-6 py-4 whitespace-nowrap">{pkg.guia}</td>
+                <tr key={pkg.id_paquete} className="divide-x divide-gray-200">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {pkg.tipo_paquete_descripcion}
+                    {pkg.guia || "N/A"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {pkg.nombre_remitente}
+                    {pkg.tipo_paquete_descripcion || "N/A"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {pkg.destinatario}
+                    {pkg.nombre_remitente || "N/A"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {pkg.area_descripcion}
+                    {pkg.nombre_destinatario || "N/A"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {pkg.tipo_operacion}
+                    {pkg.area_descripcion || "N/A"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {pkg.fecha_recibido}
+                    {pkg.tipo_operacion || "N/A"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {pkg.fecha_enviado}
+                    {formatDate(pkg.fecha_recibido)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {formatDate(pkg.fecha_envio)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-left justify-center items-center text-sm">
                     <button
-                      onClick={handleSelectPackage(pkg)}
+                      onClick={() => handleSelectPackage(pkg)}
                       className="text-green-600 hover:text-green-800 transition-colors duration-200 justify-center items-center shadow-md hover:bg-gray-200 shadow-black"
                     >
                       <FontAwesomeIcon icon={faEye} className="text-xl" />
@@ -158,6 +161,7 @@ export default function PackageHistoryTable() {
           </table>
         )}
       </div>
+
       {error && (
         <div className="py-0.5 w-10/10 md:w-7/10">
           <div className="bg-red-100 border-l-4 w-full font-semibold border-red-500 text-red-700 p-3">
@@ -174,8 +178,8 @@ export default function PackageHistoryTable() {
       )}
 
       {showModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
-          <div className="relative bg-white p-8 rounded-lg shadow-2xl w-full max-w-md mx-4 transform transition-transform duration-300 scale-95 md:scale-100">
+        <div className="fixed inset-0 bg-gray-600/80 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+          <div className="relative bg-gray-50 p-6 rounded-lg shadow-2xl w-full max-w-md mx-4 transform transition-transform duration-300 scale-95 md:scale-100">
             <h3 className="text-2xl font-bold text-green-700 mb-6 text-center">
               Detalles del Paquete
             </h3>
@@ -187,33 +191,66 @@ export default function PackageHistoryTable() {
                   <strong>Guía del Paquete:</strong> {selectedPackage.guia}
                 </p>
                 <p className="text-lg">
-                  <strong>Tipo de Paquete:</strong>
-                  {selectedPackage.tipo_paquete_descripcion}
+                  <strong>Tipo de Paquete:</strong>{" "}
+                  {selectedPackage.descripcion}
                 </p>
+                {selectedPackage.nombre_remitente && (
+                  <p className="text-lg">
+                    <strong>Remitente:</strong>{" "}
+                    {selectedPackage.nombre_remitente}
+                  </p>
+                )}
+                {selectedPackage.nombre_destinatario && (
+                  <p className="text-lg">
+                    <strong>Destinatario:</strong>{" "}
+                    {selectedPackage.nombre_destinatario}
+                  </p>
+                )}
                 <p className="text-lg">
-                  <strong>Remitente:</strong> {selectedPackage.nombre_remitente}
-                </p>
-                <p className="text-lg">
-                  <strong>Destinatario:</strong> {selectedPackage.destinatario}
-                </p>
-                <p className="text-lg">
-                  <strong>Área:</strong> {selectedPackage.area_descripcion}
+                  <strong>Área:</strong> {selectedPackage.nombre_area}
                 </p>
                 <p className="text-lg">
                   <strong>Operación:</strong> {selectedPackage.tipo_operacion}
                 </p>
-                <p className="text-lg">
-                  <strong>Fecha/Hora recibido:</strong>
-                  {selectedPackage.fecha_entrada}
-                </p>
-                <p className="text-lg">
-                  <strong>Fecha/Hora enviado:</strong>
-                  {selectedPackage.fecha_salida}
-                </p>
+                {selectedPackage.empresa_transporte && (
+                  <p className="text-lg">
+                    <strong>Empresa de transporte:</strong>{" "}
+                    {selectedPackage.empresa_transporte}
+                  </p>
+                )}
+                {selectedPackage.mensajero_nombre && (
+                  <p className="text-lg">
+                    <strong>Nombre del mensajero:</strong>{" "}
+                    {selectedPackage.mensajero_nombre}
+                  </p>
+                )}
+                {selectedPackage.destino_salida && (
+                  <p className="text-lg">
+                    <strong>Destino:</strong> {selectedPackage.destino_salida}
+                  </p>
+                )}
+                {selectedPackage.fecha_recibido && (
+                  <p className="text-lg">
+                    <strong>Fecha/Hora recibido:</strong>{" "}
+                    {formatDate(selectedPackage.fecha_recibido)}
+                  </p>
+                )}
+                {selectedPackage.fecha_envio && (
+                  <p className="text-lg">
+                    <strong>Fecha/Hora enviado:</strong>{" "}
+                    {formatDate(selectedPackage.fecha_envio)}
+                  </p>
+                )}
+                {selectedPackage.observaciones && (
+                  <p className="text-lg">
+                    <strong>Observaciones:</strong>{" "}
+                    {selectedPackage.observaciones}
+                  </p>
+                )}
               </div>
             )}
 
-            <div className="mt-8 flex justify-end">
+            <div className="mt-5 flex justify-end">
               <button
                 onClick={handleCloseModal}
                 className="px-6 py-2 bg-green-700 text-white font-semibold rounded-md shadow-md hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors"

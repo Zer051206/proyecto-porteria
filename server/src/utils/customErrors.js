@@ -120,6 +120,16 @@ export class PackageError extends Error {
   }
 }
 
+export class InvalidPackageIdError extends PackageError {
+  constructor(
+    message = "El id del paquete proporcionado no es válido",
+    status = 400
+  ) {
+    super(message, status);
+    this.name = "InvalidPackageIdError";
+  }
+}
+
 /**
  * @class DuplicateGuideError
  * @description Error cuando ya existe un paquete con la misma guía (código 409).
@@ -154,6 +164,16 @@ export class VisitError extends Error {
     super(message);
     this.name = "VisitError";
     this.status = status;
+  }
+}
+
+export class invalidVisitIdError extends VisitError {
+  constructor(
+    message = "El id de la visita proporcionado no es válido",
+    status = 400
+  ) {
+    super(message, status);
+    this.name = "InvalidVisitIdError";
   }
 }
 

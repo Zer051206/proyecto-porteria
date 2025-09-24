@@ -1,5 +1,4 @@
 // src/hooks/useRecibirPaqueteForm.js
-
 import { useState, useEffect } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
@@ -84,8 +83,26 @@ const usePackagesRecibir = (navigate) => {
         });
         alert("✅ ¡Paquete recibido con éxito!");
         navigate("/dashboard");
-      } catch (err) {
-        alert("❌ Error al regitrar el paquete.");
+      } catch (error) {
+        const serverErrors = error.response?.data?.errors;
+        if (serverErrors) {
+          const formikErrors = {};
+          serverErrors.forEach((e) => {
+            if (e.path) {
+              const path = e.path.split(".");
+              // Mapeamos el error a la propiedad de Formik
+              formikErrors[path[path.length - 1]] = e.message;
+            }
+          });
+          // Usamos setErrors de Formik para los errores de campos específicos
+          setErrors(formikErrors);
+          setError(null); // Aseguramos que el error general esté vacío
+        } else {
+          // Si no hay errores de validación, mostramos el mensaje general del servidor
+          setError(
+            error.response?.data?.message || "Ha ocurrido un error inesperado."
+          );
+        }
       }
     },
   });

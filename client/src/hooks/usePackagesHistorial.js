@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../config/axios";
+import { formatDate } from "../utils/dateFormat";
 
 const usePackagesHistorial = () => {
   const [packagesHistorial, setPackagesHistorial] = useState([]);
@@ -25,16 +26,18 @@ const usePackagesHistorial = () => {
   }, []);
 
   const handleSelectPackage = async (pkg) => {
-    if (!selectedPackage) return;
-
     try {
-      await api.get(
-        `http://localhost:3000/historial/paquetes/${selectedPackage.id_paquete}`
+      const { data } = await api.get(
+        `http://localhost:3000/historial/paquetes/${pkg.id_paquete}`
       );
+      console.log("Datos completos del paquete recibidos:", data);
+
+      setSelectedPackage(data[0]);
       setShowModal(true);
-      setSelectedPackage(pkg);
     } catch (err) {
-      alert("❌ Hubo un error al intentar mostrar la información del paquete");
+      console.error(
+        "❌ Hubo un error al intentar mostrar la información del paquete"
+      );
     }
   };
 
@@ -51,6 +54,7 @@ const usePackagesHistorial = () => {
     selectedPackage,
     handleSelectPackage,
     handleCloseModal,
+    formatDate,
   };
 };
 

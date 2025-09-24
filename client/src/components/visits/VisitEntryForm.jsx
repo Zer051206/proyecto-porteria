@@ -6,8 +6,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBroom,
   faCheckCircle,
-  faSignOutAlt,
   faExclamationTriangle,
+  faSignOutAlt,
 } from "@fortawesome/free-solid-svg-icons";
 
 export default function VisitEntryForm() {
@@ -317,7 +317,7 @@ export default function VisitEntryForm() {
                       placeholder="El visitante ingresa con su mochila y casco..."
                       value={formik.values.observaciones}
                       onChange={formik.handleChange}
-                      className="mt-1 block w-full rounded-md border-2 p-[3px] placeholder-gray-700 placeholder:italic border-gray-400 bg-gray-50 shadow-lg"
+                      className="mt-1 block w-full rounded-md border-2 p-[3px] placeholder:italic border-gray-400 bg-gray-50 shadow-lg"
                       rows="3"
                     />
                     {formik.touched.observaciones &&

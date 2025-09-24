@@ -25,4 +25,8 @@ router.get("/visitas", authMiddleware, apiController.getVisitsHistorial);
 
 router.get("/paquetes", authMiddleware, apiController.getPackagesHistorial);
 
+router.get("/paquetes/:id", authMiddleware, apiController.getPackageData);
+
+router.get("/visitas/:id", authMiddleware, apiController.getVisitData)
+
 export default router;

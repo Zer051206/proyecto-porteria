@@ -26,7 +26,7 @@ export default function RecibirPaqueteForm() {
   } = usePackagesRecibir(navigate);
 
   return (
-    <div className="flex flex-col items-center h-screen w-screen p-4">
+    <div className="flex flex-col items-center h-full w-screen md:w-full mt-[40px] mb-[50px] p-4">
       <button
         type="button"
         onClick={goBack}
@@ -45,7 +45,7 @@ export default function RecibirPaqueteForm() {
       </button>
       <form
         onSubmit={formik.handleSubmit}
-        className="bg-gray-800 p-6 rounded-lg shadow-xl w-full font-semibold max-w-2xl mt-[70px]"
+        className="bg-gray-800 p-6 rounded-lg shadow-xl w-full font-semibold max-w-2xl mt-[50px]"
       >
         <h2 className="text-2xl font-bold mb-6 text-center text-blue-500">
           <FontAwesomeIcon icon={faDownload} className="mr-3" />

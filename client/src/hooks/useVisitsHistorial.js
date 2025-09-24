@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../config/axios";
+import { formatDate } from "../utils/dateFormat";
 
 const useVisitsHistorial = () => {
   const [visitsHistorial, setVisitsHistorial] = useState([]);
@@ -25,16 +26,16 @@ const useVisitsHistorial = () => {
   }, []);
 
   const handleSelectVisit = async (visit) => {
-    if (!selectedVisit) return;
-
     try {
-      await api.get(
-        `http://localhost:3000/historial/paquetes/${selectedPackage.id_paquete}`
+      const { data } = await api.get(
+        `http://localhost:3000/historial/visitas/${visit.id_visita}`
       );
       setShowModal(true);
-      setSelectedVisit(visit);
+      setSelectedVisit(data[0]);
     } catch (err) {
-      alert("❌ Hubo un error al intentar mostrar la información del paquete");
+      console.error(
+        "❌ Hubo un error al intentar mostrar la información de la visita"
+      );
     }
   };
 
@@ -51,6 +52,7 @@ const useVisitsHistorial = () => {
     selectedVisit,
     handleSelectVisit,
     handleCloseModal,
+    formatDate,
   };
 };
 

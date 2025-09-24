@@ -32,7 +32,7 @@ export const createVisit = async (visitData) => {
 
     const result = await visitModel.createVisit(visitData);
 
-    return { id_visita: result.insertId.toString(), ...visitData };
+    return { id_visita: result.insertId, ...visitData };
   } catch (error) {
     throw error;
   }

@@ -1,5 +1,5 @@
 // src/hooks/useDashboard.js
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import api from "../config/axios";
 
 const useDashboard = () => {
@@ -30,6 +30,23 @@ const useDashboard = () => {
     setShowModal(true);
   };
 
+  const fetchActiveVisits = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const activeVisitsRes = await api.get(
+        "http://localhost:3000/api/visitas-activas"
+      );
+      setActiveVisits(activeVisitsRes.data);
+    } catch (err) {
+      setError(
+        err.response?.data?.message || "Hubo un problema al cargar las visitas."
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   const handleConfirmEndVisit = async () => {
     if (!selectedVisit) return;
     try {
@@ -37,7 +54,7 @@ const useDashboard = () => {
         `http://localhost:3000/visitas/salida/${selectedVisit.id_visita}`
       );
       // Refresca la lista después de terminar la visita
-      setActiveVisits([]);
+      await fetchActiveVisits();
       setShowModal(false);
       setSelectedVisit(null);
       alert("✅ ¡Visita finalizada con éxito!");

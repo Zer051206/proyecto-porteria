@@ -13,6 +13,7 @@ const usePackagesEnviar = (navigate) => {
   const [areas, setAreas] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorCarga, setErrorCarga] = useState(null);
+  const [error, setError] = useState(null);
 
   const handleClickClear = () => {
     formik.resetForm();
@@ -28,8 +29,9 @@ const usePackagesEnviar = (navigate) => {
         setTiposPaquetes(tiposRes.data);
         setAreas(areasRes.data);
       } catch (error) {
-        console.error("Error al cargar datos del formulario:", error);
-        setErrorCarga("No se pudieron cargar las opciones. Intente recargar la página");
+        setErrorCarga(
+          "No se pudieron cargar las opciones. Intente recargar la página"
+        );
       } finally {
         setIsLoading(false);
       }
@@ -89,9 +91,26 @@ const usePackagesEnviar = (navigate) => {
         });
         alert("✅ ¡Paquete enviado con éxito!");
         navigate("/dashboard");
-      } catch (err) {
-        alert("❌ Error al enviar el paquete.");
-        console.error(err);
+      } catch (error) {
+        const serverErrors = error.response?.data?.errors;
+        if (serverErrors) {
+          const formikErrors = {};
+          serverErrors.forEach((e) => {
+            if (e.path) {
+              const path = e.path.split(".");
+              // Mapeamos el error a la propiedad de Formik
+              formikErrors[path[path.length - 1]] = e.message;
+            }
+          });
+          // Usamos setErrors de Formik para los errores de campos específicos
+          setErrors(formikErrors);
+          setError(null); // Aseguramos que el error general esté vacío
+        } else {
+          // Si no hay errores de validación, mostramos el mensaje general del servidor
+          setError(
+            error.response?.data?.message || "Ha ocurrido un error inesperado."
+          );
+        }
       }
     },
   });
@@ -105,6 +124,7 @@ const usePackagesEnviar = (navigate) => {
     handleClickClear,
     handleKeyTextDown,
     handleAddressKeyDown,
+    error,
   };
 };
 

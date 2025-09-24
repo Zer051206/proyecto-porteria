@@ -1,4 +1,3 @@
-//src/hooks/useVisitEntryForm.js
 import { useState, useEffect } from "react";
 import { useFormik } from "formik";
 import { useNavigate } from "react-router-dom";
@@ -10,7 +9,7 @@ import {
 } from "../utils/inputUtilities";
 
 const useVisitEntryForm = () => {
-  const navigate = useNavigate(); // Estado para los datos de los selects
+  const navigate = useNavigate();
   const [areas, setAreas] = useState([]);
   const [error, setError] = useState(null);
   const [tiposIdentificacion, setTiposIdentificacion] = useState([]);
@@ -19,12 +18,11 @@ const useVisitEntryForm = () => {
 
   const handleClickClear = () => {
     formik.resetForm();
-  }; // Lógica para obtener los datos al cargar el componente
+  };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Peticiones concurrentes para optimizar el tiempo de carga
         const [areasRes, tiposIdRes] = await Promise.all([
           api.get("http://localhost:3000/api/areas"),
           api.get("http://localhost:3000/api/tipos-identificacion"),
@@ -41,7 +39,7 @@ const useVisitEntryForm = () => {
     };
 
     fetchData();
-  }, []); // Lógica de Formik y la función de envío
+  }, []);
 
   const formik = useFormik({
     initialValues: {
@@ -59,20 +57,38 @@ const useVisitEntryForm = () => {
 
     validationSchema: VisitSchema,
 
-    onSubmit: async (values, { setSubmitting }) => {
+    onSubmit: async (values, { setSubmitting, setErrors }) => {
+      // Agregamos setErrors a la destructuración
       try {
         await api.post("http://localhost:3000/visitas/entrada", values);
-        alert("✅ ¡Visita registrada con éxito!");
+        formik.resetForm();
+        alert("✅ ¡La visita se ha registrado exitósamente!");
         navigate("/dashboard");
       } catch (error) {
-        if (err.response && err.response.data && err.response.data.message) {
-          setError(err.response.data.message);
+        const serverErrors = error.response?.data?.errors;
+        if (serverErrors) {
+          const formikErrors = {};
+          serverErrors.forEach((e) => {
+            if (e.path) {
+              const path = e.path.split(".");
+              // Mapeamos el error a la propiedad de Formik
+              formikErrors[path[path.length - 1]] = e.message;
+            }
+          });
+          // Usamos setErrors de Formik para los errores de campos específicos
+          setErrors(formikErrors);
+          setError(null); // Aseguramos que el error general esté vacío
+        } else {
+          // Si no hay errores de validación, mostramos el mensaje general del servidor
+          setError(
+            error.response?.data?.message || "Ha ocurrido un error inesperado."
+          );
         }
       } finally {
         setSubmitting(false);
       }
     },
-  }); // Retorna todos los valores y funciones necesarios para el componente
+  });
 
   return {
     formik,

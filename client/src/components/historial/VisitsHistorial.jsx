@@ -19,6 +19,7 @@ export default function VisitsHistorial() {
     selectedVisit,
     handleSelectVisit,
     handleCloseModal,
+    formatDate,
   } = useVisitsHistorial();
 
   const goBack = useGoBack();
@@ -72,13 +73,25 @@ export default function VisitsHistorial() {
                   scope="col"
                   className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
                 >
+                  Tipo de documento
+                </th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                >
                   Documento
                 </th>
                 <th
                   scope="col"
                   className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
                 >
-                  Tipo de documento
+                  Destinatario
+                </th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                >
+                  Área
                 </th>
                 <th
                   scope="col"
@@ -109,23 +122,29 @@ export default function VisitsHistorial() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {" "}
+                    {visit.nombre_area}{" "}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {" "}
+                    {visit.descripcion}{" "}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {" "}
                     {visit.identificacion}{" "}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {" "}
-                    {visit.tipo_identificacion_descripcion}{" "}
+                    {visit.nombre_destinatario}{" "}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {" "}
-                    {visit.fecha_entrada}{" "}
+                    {formatDate(visit.fecha_entrada)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {" "}
-                    {visit.fecha_salida}{" "}
+                    {formatDate(visit.fecha_salida)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-left justify-center items-center text-sm">
                     <button
-                      onClick={handleSelectVisit(visit)}
+                      onClick={() => handleSelectVisit(visit)}
                       className="text-blue-600 hover:text-blue-800 transition-colors duration-200 justify-center items-center shadow-md hover:bg-gray-200 shadow-black"
                     >
                       <FontAwesomeIcon icon={faEye} className="text-xl" />
@@ -137,6 +156,7 @@ export default function VisitsHistorial() {
           </table>
         )}
       </div>
+
       {error && (
         <div className="py-0.5 w-10/10 md:w-7/10">
           <div className="bg-red-100 border-l-4 w-full font-semibold border-red-500 text-red-700 p-3">
@@ -148,6 +168,72 @@ export default function VisitsHistorial() {
               <p className="font-bold text-lg">Error de Carga</p>
             </div>
             <p className="text-lg mt-[10px] mr-[20px]">{error}</p>
+          </div>
+        </div>
+      )}
+
+      {showModal && (
+        <div className="fixed inset-0 bg-gray-600/80 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+          <div className="relative bg-gray-50 p-4 rounded-lg shadow-2xl w-full max-w-md mx-4 transform transition-transform duration-300 scale-95">
+            <h3 className="text-2xl font-bold text-blue-700 mb-6 text-center">
+              Detalles de la visita
+            </h3>
+
+            {/* Contenido del modal */}
+            {selectedVisit && (
+              <div className="space-y-4">
+                <p className="text-lg">
+                  <strong>Nombre completo del visitante:</strong>{" "}
+                  {selectedVisit.nombre_visitante}
+                </p>
+                <p className="text-lg">
+                  <strong>tipo de identificacion:</strong>{" "}
+                  {selectedVisit.descripcion}
+                </p>
+                <p className="text-lg">
+                  <strong>Identificacion:</strong>{" "}
+                  {selectedVisit.identificacion}
+                </p>
+                {selectedVisit.empresa && (
+                  <p className="text-lg">
+                    <strong>Empresa:</strong> {selectedVisit.empresa}
+                  </p>
+                )}
+                <p className="text-lg">
+                  <strong>Destinatario:</strong>{" "}
+                  {selectedVisit.nombre_destinatario}
+                </p>
+                <p className="text-lg">
+                  <strong>Área:</strong> {selectedVisit.nombre_area}
+                </p>
+                <p className="text-lg">
+                  <strong>Fecha/Hora entrada:</strong>{" "}
+                  {formatDate(selectedVisit.fecha_entrada)}
+                </p>
+                <p className="text-lg">
+                  <strong>Fecha/Hora salida:</strong>{" "}
+                  {formatDate(selectedVisit.fecha_salida)}
+                </p>
+                <p className="text-lg">
+                  <strong>Motivo de la visita:</strong> {selectedVisit.motivo}
+                </p>
+                {selectedVisit.observaciones && (
+                  <p className="text-lg">
+                    <strong>Observaciones de la visita:</strong>{" "}
+                    {selectedVisit.observaciones}
+                  </p>
+                )}
+              </div>
+            )}
+
+            <div className="mt-5 flex justify-end">
+              <button
+                onClick={handleCloseModal}
+                className="px-6 py-2 bg-green-700 text-white font-semibold rounded-md shadow-md hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors"
+              >
+                Cerrar
+              </button>
+            </div>
           </div>
         </div>
       )}

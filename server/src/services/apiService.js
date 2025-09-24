@@ -89,3 +89,31 @@ export const getPackagesHistorial = async () => {
     throw error;
   }
 };
+
+export const getPackageData = async (pkgId) => {
+  try {
+    const packageData = await apiModel.fetchPackageData(pkgId);
+
+    if (!packageData) {
+      throw new ApiFetchError();
+    }
+
+    return packageData;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getVisitData = async (visitId) => {
+  try {
+    const visitData = await apiModel.fetchVisitData(visitId);
+
+    if (!visitData) {
+      throw new ApiFetchError();
+    }
+
+    return visitData;
+  } catch (error) {
+    throw error;
+  }
+};

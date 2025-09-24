@@ -24,10 +24,11 @@ export default function PackagesEnviarForm() {
     handleClickClear,
     handleKeyTextDown,
     handleAddressKeyDown,
+    error,
   } = usePackageEnviarForm(navigate);
 
   return (
-    <div className="flex flex-col items-center h-screen w-screen p-4">
+    <div className="flex flex-col items-center h-full w-screen md:w-full mb-[50px] mt-[40px] p-4">
       <button
         type="button"
         onClick={goBack}
@@ -46,7 +47,7 @@ export default function PackagesEnviarForm() {
       </button>
       <form
         onSubmit={formik.handleSubmit}
-        className="bg-gray-800 p-6 rounded-lg shadow-xl w-full font-semibold max-w-2xl mt-[70px]"
+        className="bg-gray-800 p-6 rounded-lg shadow-xl w-full font-semibold max-w-2xl mt-[50px]"
       >
         <h2 className="text-2xl font-bold mb-6 text-center text-green-500">
           <FontAwesomeIcon icon={faUpload} className="mr-3" />
@@ -80,11 +81,12 @@ export default function PackagesEnviarForm() {
               Datos del Paquete
             </legend>
 
-            <label className="block">
+            <label className="block" htmlFor="tipo_paquete">
               <span className="text-gray-400 text-sm font-medium">
                 Tipo de Paquete:
               </span>
               <select
+                id="tipo_paquete"
                 name="id_tipo_paquete"
                 value={formik.values.id_tipo_paquete}
                 onChange={formik.handleChange}
@@ -111,11 +113,12 @@ export default function PackagesEnviarForm() {
                 )}
             </label>
 
-            <label className="block">
+            <label className="block" htmlFor="nombre_remitente">
               <span className="text-gray-400 text-sm font-medium">
                 Nombre del remitente:
               </span>
               <input
+                id="nombre_remitente"
                 type="text"
                 autoComplete="off"
                 onKeyDown={handleKeyTextDown}
@@ -134,9 +137,10 @@ export default function PackagesEnviarForm() {
                 )}
             </label>
 
-            <label className="block">
+            <label className="block" htmlFor="id_area">
               <span className="text-gray-400 text-sm font-medium">Área:</span>
               <select
+                id="id_area"
                 name="id_area"
                 value={formik.values.id_area}
                 onChange={formik.handleChange}
@@ -159,11 +163,12 @@ export default function PackagesEnviarForm() {
               )}
             </label>
 
-            <label className="block">
+            <label className="block" htmlFor="empresa_transporte">
               <span className="text-gray-400 text-sm font-medium">
                 Empresa de Transporte (Opcional):
               </span>
               <input
+                id="empresa_transporte"
                 type="text"
                 autoComplete="off"
                 name="empresa_transporte"
@@ -175,11 +180,12 @@ export default function PackagesEnviarForm() {
               />
             </label>
 
-            <label className="block">
+            <label className="block" htmlFor="mensajero_nombre">
               <span className="text-gray-400 text-sm font-medium">
                 Nombre del Mensajero (Opcional):
               </span>
               <input
+                id="mensajero_nombre"
                 type="text"
                 autoComplete="off"
                 name="mensajero_nombre"
@@ -192,11 +198,12 @@ export default function PackagesEnviarForm() {
               />
             </label>
 
-            <label className="block">
+            <label className="block" htmlFor="destino_salida">
               <span className="text-gray-400 text-sm font-medium">
                 Destino del paquete:
               </span>
               <input
+                id="destino_salida"
                 type="text"
                 autoComplete="off"
                 onKeyDown={handleAddressKeyDown}
@@ -210,14 +217,15 @@ export default function PackagesEnviarForm() {
               {formik.touched.destino_salida &&
                 formik.errors.destino_salida && (
                   <div className="text-red-500 text-sm mt-1">
-                    {formik.errors.id_area}
+                    {formik.errors.destino_salida}
                   </div>
                 )}
             </label>
 
             <div className="col-span-1 md:col-span-2">
-              <label className="flex items-center space-x-2">
+              <label className="flex items-center space-x-2" htmlFor="conGuia">
                 <input
+                  id="conGuia"
                   type="checkbox"
                   name="conGuia"
                   checked={formik.values.conGuia}
@@ -230,11 +238,12 @@ export default function PackagesEnviarForm() {
               </label>
               {formik.values.conGuia && (
                 <div className="mt-2">
-                  <label className="block">
+                  <label className="block" htmlFor="guia">
                     <span className="text-gray-400 text-sm font-medium">
                       Número de Guía:
                     </span>
                     <input
+                      id="guia"
                       type="text"
                       name="guia"
                       placeholder="Ingrese el numero de guia del paquete"
@@ -255,11 +264,12 @@ export default function PackagesEnviarForm() {
             </div>
 
             <div className="col-span-1 md:col-span-2">
-              <label className="block">
+              <label className="block" htmlFor="observaciones">
                 <span className="text-gray-300 text-sm font-medium">
                   Observaciones (Opcional):
                 </span>
                 <textarea
+                  id="observaciones"
                   name="observaciones"
                   placeholder="El paquete se encuentra en las mejores condiciones."
                   autoComplete="off"
@@ -272,6 +282,12 @@ export default function PackagesEnviarForm() {
               </label>
             </div>
           </fieldset>
+        )}
+
+        {error && formik.submitCount > 0 && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md relative text-center mt-[30px] mb-[5px]">
+            <span className="block sm:inline">{error}</span>
+          </div>
         )}
 
         <div className="mt-6 flex justify-center space-x-4">

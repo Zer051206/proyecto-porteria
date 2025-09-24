@@ -68,7 +68,7 @@ export const createReceivePackage = async (packageData) => {
 
     const query = `
       INSERT INTO paquetes (id_tipo_paquete, tipo_operacion, guia, nombre_destinatario, id_area, 
-                  empresa_transporte, mensajero_nombre, fecha_entrada, observaciones, id_usuario_recibir)
+                  empresa_transporte, mensajero_nombre, fecha_recibido, observaciones, id_usuario_recibir)
       VALUES (?, 'recibir', ?, ?, ?, ?, ?, NOW(), ?, ?)
     `;
     const rows = await connect.query(query, [
@@ -145,7 +145,7 @@ export const createSentPackage = async (packageData) => {
 
     const query = `
       INSERT INTO paquetes (id_tipo_paquete, tipo_operacion, guia, nombre_remitente, id_area, 
-                  destino_salida, empresa_transporte, mensajero_nombre, fecha_salida, observaciones, id_usuario_enviar)
+                  destino_salida, empresa_transporte, mensajero_nombre, fecha_envio, observaciones, id_usuario_enviar)
       VALUES (?, 'enviar', ?, ?, ?, ?, ?, ?, NOW(), ?, ?)
     `;
     const rows = await connect.query(query, [
