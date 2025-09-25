@@ -20,12 +20,9 @@ const usePackagesHistorial = () => {
     setNoResults(false);
 
     try {
-      const response = await api.get(
-        "http://localhost:3000/historial/paquetes",
-        {
-          params: { search: term },
-        }
-      );
+      const response = await api.get("/historial/paquetes", {
+        params: { search: term },
+      });
 
       const results = response.data || [];
 

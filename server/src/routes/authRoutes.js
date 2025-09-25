@@ -2,6 +2,7 @@
 import { Router } from "express";
 import * as refreshTokenModel from "../models/refreshTokenModel.js";
 import * as authController from "../controllers/authController.js";
+import rateLimit from "express-rate-limit";
 import { InvalidTokenError } from "../utils/customErrors.js";
 
 /**
@@ -11,11 +12,22 @@ import { InvalidTokenError } from "../utils/customErrors.js";
 
 const router = Router();
 
-router.post("/register", authController.registerUser);
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 10, // Máximo de 10 intentos fallidos por IP
+  message: {
+    success: false,
+    message: "Demasiados intentos. Por favor, intenta de nuevo más tarde.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
-router.post("/login", authController.loginUser);
+router.post("/register", loginLimiter, authController.registerUser);
 
-router.post("/refresh", authController.refreshToken);
+router.post("/login", loginLimiter, authController.loginUser);
+
+router.post("/refresh", loginLimiter, authController.refreshToken);
 
 router.post("/logout", authController.logoutUser);
 

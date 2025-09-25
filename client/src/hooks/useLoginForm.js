@@ -21,7 +21,7 @@ export const useLoginForm = () => {
 
     try {
       await axiosClient.post(
-        "http://localhost:3000/auth/login",
+        "/auth/login",
         {
           correo: email,
           password,

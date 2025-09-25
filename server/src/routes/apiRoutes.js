@@ -2,8 +2,11 @@
 import { Router } from "express";
 import * as apiController from "../controllers/apiController.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
+import { csrfTokenMiddleware } from "../middlewares/csrfMiddleware.js";
 
 const router = Router();
+
+router.get("/csrf-token", csrfTokenMiddleware);
 
 router.get("/status", authMiddleware, (req, res) => {
   res.status(200).json({ message: "Sesión activa" });

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useFormik } from "formik";
 import { useNavigate } from "react-router-dom";
 import VisitSchema from "../schemas/visitSchema.js";
@@ -16,16 +16,22 @@ const useVisitEntryForm = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [errorCarga, setErrorCarga] = useState(null);
 
+  const sigCanvas = useRef({}); // Referencia para el componente SignaturePad
+
+  const clearSignature = () => sigCanvas.current.clear(); // Función para limpiar el lienzo
+
   const handleClickClear = () => {
     formik.resetForm();
+    clearSignature(); // Limpia la firma al resetear el formulario
   };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Usando rutas relativas (Axios usa la baseURL de tu .env)
         const [areasRes, tiposIdRes] = await Promise.all([
-          api.get("http://localhost:3000/api/areas"),
-          api.get("http://localhost:3000/api/tipos-identificacion"),
+          api.get("/api/areas"),
+          api.get("/api/tipos-identificacion"),
         ]);
         setAreas(areasRes.data);
         setTiposIdentificacion(tiposIdRes.data);
@@ -58,10 +64,28 @@ const useVisitEntryForm = () => {
     validationSchema: VisitSchema,
 
     onSubmit: async (values, { setSubmitting, setErrors }) => {
-      // Agregamos setErrors a la destructuración
+      if (sigCanvas.current.isEmpty()) {
+        setError(
+          "La firma es obligatoria para confirmar la visita y el consentimiento de datos."
+        );
+        setSubmitting(false);
+        return;
+      }
+
+      // Captura el dibujo como Base64 (formato PNG)
+      const signatureDataUrl = sigCanvas.current
+        .getTrimmedCanvas()
+        .toDataURL("image/png");
+
       try {
-        await api.post("http://localhost:3000/visitas/entrada", values);
+        // ENVIAR DATOS (incluyendo la firma)
+        await api.post("/visitas/entrada", {
+          ...values,
+          firma_base64: signatureDataUrl,
+        });
+
         formik.resetForm();
+        clearSignature(); // Limpia la firma al tener éxito
         alert("✅ ¡La visita se ha registrado exitósamente!");
         navigate("/dashboard");
       } catch (error) {
@@ -71,15 +95,12 @@ const useVisitEntryForm = () => {
           serverErrors.forEach((e) => {
             if (e.path) {
               const path = e.path.split(".");
-              // Mapeamos el error a la propiedad de Formik
               formikErrors[path[path.length - 1]] = e.message;
             }
           });
-          // Usamos setErrors de Formik para los errores de campos específicos
           setErrors(formikErrors);
-          setError(null); // Aseguramos que el error general esté vacío
+          setError(null);
         } else {
-          // Si no hay errores de validación, mostramos el mensaje general del servidor
           setError(
             error.response?.data?.message || "Ha ocurrido un error inesperado."
           );
@@ -100,6 +121,7 @@ const useVisitEntryForm = () => {
     handleKeyNumberDown,
     handleKeyTextDown,
     error,
+    sigCanvas, // <-- Exportamos la referencia para el componente
   };
 };
 

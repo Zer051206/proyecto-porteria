@@ -13,9 +13,7 @@ const useDashboard = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const activeVisitsRes = await api.get(
-        "http://localhost:3000/api/visitas-activas"
-      );
+      const activeVisitsRes = await api.get("/api/visitas-activas");
       setActiveVisits(activeVisitsRes.data);
     } catch (err) {
       const errorMessage = err.response?.data?.message;
@@ -37,9 +35,7 @@ const useDashboard = () => {
 
   const handleConfirmEndVisit = async () => {
     try {
-      await api.patch(
-        `http://localhost:3000/visitas/salida/${selectedVisit.id_visita}`
-      );
+      await api.patch(`/visitas/salida/${selectedVisit.id_visita}`);
       // Refresca la lista después de terminar la visita
       await fetchActiveVisits();
       setShowModal(false);

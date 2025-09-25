@@ -19,8 +19,8 @@ const usePackagesRecibir = (navigate) => {
     const fetchFormData = async () => {
       try {
         const [tiposRes, areasRes] = await Promise.all([
-          api.get("http://localhost:3000/api/tipos-paquetes"),
-          api.get("http://localhost:3000/api/areas"),
+          api.get("/api/tipos-paquetes"),
+          api.get("/api/areas"),
         ]);
         setTiposPaquetes(tiposRes.data);
         setAreas(areasRes.data);
@@ -74,7 +74,7 @@ const usePackagesRecibir = (navigate) => {
     validationSchema,
     onSubmit: async (values) => {
       try {
-        await api.post("http://localhost:3000/paquetes/recibir", {
+        await api.post("/paquetes/recibir", {
           ...values,
           // Envía null si el checkbox no está marcado
           guia: values.conGuia ? values.guia : null,
