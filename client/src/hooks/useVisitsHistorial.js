@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import api from "../config/axios";
 import { formatDate } from "../utils/dateFormat";
 
@@ -8,35 +8,62 @@ const useVisitsHistorial = () => {
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [selectedVisit, setSelectedVisit] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [noResults, setNoResults] = useState(false);
+  const debounceRef = useRef(null);
 
-  useEffect(() => {
-    const fetchVisitsHistorial = async () => {
-      try {
-        const [visitsHistorialRes] = await Promise.all([
-          api.get("http://localhost:3000/historial/visitas"),
-        ]);
-        setVisitsHistorial(visitsHistorialRes.data);
-      } catch (err) {
-        setError(err.response.data.message);
-      } finally {
-        setIsLoading(false);
+  const fetchVisitsHistorial = useCallback(async (term = "") => {
+    const isInitialLoad = term === "";
+
+    setIsLoading(true);
+    setError(null);
+    setNoResults(false);
+
+    try {
+      const response = await api.get(`/historial/visitas`, {
+        params: { search: term },
+      });
+
+      const results = response.data || [];
+
+      if (results.length > 0) {
+        setVisitsHistorial(results);
+        setNoResults(false);
+      } else {
+        setVisitsHistorial([]);
+        setNoResults(!isInitialLoad || (isInitialLoad && results.length === 0));
       }
-    };
-    fetchVisitsHistorial();
+    } catch (err) {
+      setError("No se pudo cargar el historial de visitas.");
+      setVisitsHistorial([]);
+      setNoResults(true);
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
-  const handleSelectVisit = async (visit) => {
-    try {
-      const { data } = await api.get(
-        `http://localhost:3000/historial/visitas/${visit.id_visita}`
-      );
-      setShowModal(true);
-      setSelectedVisit(data[0]);
-    } catch (err) {
-      console.error(
-        "❌ Hubo un error al intentar mostrar la información de la visita"
-      );
+  // Carga inicial
+  useEffect(() => {
+    fetchVisitsHistorial();
+  }, [fetchVisitsHistorial]);
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
     }
+
+    debounceRef.current = setTimeout(() => {
+      fetchVisitsHistorial(value);
+    }, 500);
+  };
+
+  const handleSelectVisit = (visit) => {
+    setSelectedVisit(visit);
+    setShowModal(true);
   };
 
   const handleCloseModal = () => {
@@ -53,6 +80,9 @@ const useVisitsHistorial = () => {
     handleSelectVisit,
     handleCloseModal,
     formatDate,
+    searchTerm,
+    handleSearchChange,
+    noResults,
   };
 };
 

@@ -47,7 +47,8 @@ export const getTiposPaquetes = async (req, res, next) => {
 
 export const getVisitsHistorial = async (req, res, next) => {
   try {
-    const visitsHistorial = await apiService.getVisitsHistorial();
+    const searchTerm = req.query.search;
+    const visitsHistorial = await apiService.getVisitsHistorial(searchTerm);
     return res.status(200).json(visitsHistorial);
   } catch (error) {
     next(error);
@@ -56,40 +57,9 @@ export const getVisitsHistorial = async (req, res, next) => {
 
 export const getPackagesHistorial = async (req, res, next) => {
   try {
-    const packagesHistorial = await apiService.getPackagesHistorial();
+    const searchTerm = req.query.search;
+    const packagesHistorial = await apiService.getPackagesHistorial(searchTerm);
     return res.status(200).json(packagesHistorial);
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const getPackageData = async (req, res, next) => {
-  try {
-    const pkgId = parseInt(req.params.id, 10);
-
-    if (isNaN(pkgId) || pkgId <= 0) {
-      throw new InvalidPackageIdError();
-    }
-
-    const packageData = await apiService.getPackageData(pkgId);
-
-    return res.status(200).json(packageData);
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const getVisitData = async (req, res, next) => {
-  try {
-    const visitId = parseInt(req.params.id, 10);
-
-    if (isNaN(visitId) || visitId <= 0) {
-      throw new invalidVisitIdError();
-    }
-
-    const visitData = await apiService.getVisitData(visitId);
-
-    return res.status(200).json(visitData);
   } catch (error) {
     next(error);
   }

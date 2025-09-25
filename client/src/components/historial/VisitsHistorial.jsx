@@ -1,4 +1,4 @@
-// src/components/visits/VisitHistoryTable.jsx
+// src/components/VisitHistoryTable.jsx
 import React from "react";
 import { useGoBack } from "../../hooks/useGoBackDashboard.js";
 import useVisitsHistorial from "../../hooks/useVisitsHistorial.js";
@@ -20,6 +20,9 @@ export default function VisitsHistorial() {
     handleSelectVisit,
     handleCloseModal,
     formatDate,
+    searchTerm,
+    handleSearchChange,
+    noResults,
   } = useVisitsHistorial();
 
   const goBack = useGoBack();
@@ -49,8 +52,10 @@ export default function VisitsHistorial() {
         <div className="relative">
           <input
             type="text"
-            placeholder="Buscar por nombre, documento, fecha, etc"
+            placeholder="Buscar por nombre, documento, etc"
             className="w-full p-3 pl-10 border border-blue-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={searchTerm}
+            onChange={handleSearchChange}
           />
           <FontAwesomeIcon
             icon={faSearch}
@@ -58,11 +63,27 @@ export default function VisitsHistorial() {
           />
         </div>
       </div>
+
+      {noResults && (
+        <div className="py-8 w-full max-w-4xl text-center">
+          <FontAwesomeIcon
+            icon={faExclamationTriangle}
+            className="text-yellow-500 text-6xl mb-4"
+          />
+          <p className="text-2xl font-bold text-gray-300">
+            ¡No se encontraron resultados!
+          </p>
+          <p className="text-gray-400 mt-2">
+            Intenta con otro término de búsqueda.
+          </p>
+        </div>
+      )}
+
       <div className="w-full max-w-4xl overflow-x-auto rounded-lg shadow-lg shadow-black">
-        {visitsHistorial && !error && (
-          <table className="min-w-full divide-y divide-blue-500 rounded-lg">
+        {!noResults && !error && (
+          <table className="min-w-full rounded-lg">
             <thead className="bg-blue-700 text-white">
-              <tr>
+              <tr className="divide-x divide-blue-800">
                 <th
                   scope="col"
                   className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
@@ -115,7 +136,7 @@ export default function VisitsHistorial() {
             </thead>
             <tbody className=" bg-white divide-y divide-gray-200 text-gray-800">
               {visitsHistorial.map((visit) => (
-                <tr key={visit.id_visita}>
+                <tr key={visit.id_visita} className="divide-x divide-gray-200">
                   <td className="px-6 py-4 whitespace-nowrap">
                     {" "}
                     {visit.nombre_visitante}{" "}
@@ -157,7 +178,7 @@ export default function VisitsHistorial() {
         )}
       </div>
 
-      {error && (
+      {!noResults && error && (
         <div className="py-0.5 w-10/10 md:w-7/10">
           <div className="bg-red-100 border-l-4 w-full font-semibold border-red-500 text-red-700 p-3">
             <div className="flex items-center">

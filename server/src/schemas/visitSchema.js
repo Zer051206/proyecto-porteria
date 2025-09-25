@@ -68,9 +68,9 @@ export const visitEntrySchema = z
           "El nombre de la persona a visitar debe ser una cadena de texto",
       })
       .trim()
-      .min(5, {
+      .min(3, {
         message:
-          "El nombre de la persona a visitar debe tener al menos 5 caracteres",
+          "El nombre de la persona a visitar debe tener al menos 3 caracteres",
       })
       .max(100, {
         message:

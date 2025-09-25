@@ -78,78 +78,111 @@ export const fetchTiposPaquetes = async () => {
   }
 };
 
-export const fetchVisitsHistorial = async () => {
+export const fetchPackagesHistorial = async (searchTerm) => {
   let connect;
   try {
     const pool = getPool();
     connect = await pool.getConnection();
-    const query = `SELECT * FROM visitas`;
-    const rows = await connect.query(query);
 
-    return rows.length > 0 ? rows : null;
-  } catch (error) {
-    throw new DatabaseConnectionError(
-      `Error en la base de datos al intentas obtener el historial de visitas: ${error.message}`
-    );
-  } finally {
-    if (connect) connect.release();
-  }
-};
-
-export const fetchPackagesHistorial = async () => {
-  let connect;
-  try {
-    const pool = getPool();
-    connect = await pool.getConnection();
-    const query = `SELECT * FROM paquetes`;
-    const rows = await connect.query(query);
-
-    return rows.length > 0 ? rows : null;
-  } catch (error) {
-    throw new DatabaseConnectionError(
-      `Error en la base de datos al intentas obtener el historial de visitas: ${error.message}`
-    );
-  } finally {
-    if (connect) connect.release();
-  }
-};
-
-export const fetchPackageData = async (pkgId) => {
-  let connect;
-  try {
-    const pool = getPool();
-    connect = await pool.getConnection();
-    const query = `
-      select p.id_paquete, p.tipo_operacion, p.guia, p.nombre_destinatario, p.nombre_remitente, p.destino_salida, 
-      p.empresa_transporte, p.mensajero_nombre, p.fecha_recibido, p.fecha_envio, p.observaciones, 
-      a.nombre_area, tp.descripcion from paquetes p join areas a on p.id_area = a.id_area join 
-      tipos_paquetes tp on p.id_tipo_paquete = tp.id_tipo_paquete where id_paquete = ?
+    // Consulta base
+    let query = `
+      SELECT p.*, a.nombre_area, tp.descripcion FROM paquetes p 
+      JOIN areas a ON p.id_area=a.id_area 
+      JOIN tipos_paquetes tp ON p.id_tipo_paquete=tp.id_tipo_paquete
     `;
-    const rows = await connect.query(query, [pkgId]);
+    let params = [];
+
+    // Si hay un término de búsqueda, añade la cláusula WHERE
+    if (searchTerm) {
+      const likeTerm = `%${searchTerm}%`;
+      query += ` WHERE (
+        LOWER(p.guia) LIKE LOWER(?)
+        OR LOWER(p.tipo_operacion) LIKE LOWER(?)
+        OR LOWER(a.nombre_area) LIKE LOWER(?)
+        OR LOWER(tp.descripcion) LIKE LOWER(?) 
+        OR LOWER(p.nombre_destinatario) LIKE LOWER(?)
+        OR LOWER(p.nombre_remitente) LIKE LOWER(?)
+        OR DATE_FORMAT(p.fecha_recibido, '%e/%c/%Y') LIKE ?
+        OR DATE_FORMAT(p.fecha_envio, '%e/%c/%Y') LIKE ?
+        OR DATE_FORMAT(p.fecha_recibido, '%H:%i') LIKE ?
+        OR DATE_FORMAT(p.fecha_envio, '%H:%i') LIKE ?
+      )`;
+
+      params = [
+        likeTerm,
+        likeTerm,
+        likeTerm,
+        likeTerm,
+        likeTerm,
+        likeTerm,
+        likeTerm,
+        likeTerm,
+        likeTerm,
+        likeTerm,
+      ];
+    }
+
+    const rows = await connect.query(query, params);
 
     return rows.length > 0 ? rows : null;
   } catch (error) {
     throw new DatabaseConnectionError(
-      `Error en la base de datos al intentas obtener el historial de visitas: ${error.message}`
+      `Error en la base de datos al intentas obtener el historial de paquetes: ${error.message}`
     );
   } finally {
     if (connect) connect.release();
   }
 };
 
-export const fetchVisitData = async (visitId) => {
+export const fetchVisitsHistorial = async (searchTerm) => {
   let connect;
   try {
     const pool = getPool();
     connect = await pool.getConnection();
-    const query = `
-      select v.*, a.nombre_area, tii.descripcion from visitas v join areas a on v.id_area=a.id_area join 
-      tipos_identificacion tii on v.id_tipo_identificacion=tii.id_tipo_identificacion where id_visita = ?
+
+    // Consulta base
+    let query = `
+      SELECT v.*, a.nombre_area, tii.descripcion FROM visitas v 
+      JOIN areas a ON v.id_area=a.id_area 
+      JOIN tipos_identificacion tii ON v.id_tipo_identificacion=tii.id_tipo_identificacion
     `;
-    const rows = await connect.query(query, [visitId]);
+    let params = [];
+
+    // Si hay un término de búsqueda, añade la cláusula WHERE
+    if (searchTerm) {
+      // Se utiliza OR para buscar coincidencias en múltiples campos
+      query += ` WHERE (
+             LOWER(v.nombre_visitante) LIKE LOWER(?) 
+             OR LOWER(tii.descripcion) LIKE LOWER(?)
+             OR LOWER(a.nombre_area) LIKE LOWER(?)
+             OR LOWER(v.identificacion) LIKE LOWER(?) 
+             OR LOWER(v.nombre_destinatario) LIKE LOWER(?)
+             OR DATE_FORMAT(v.fecha_entrada, '%e/%c/%Y') LIKE ? 
+             OR DATE_FORMAT(v.fecha_salida, '%e/%c/%Y') LIKE ?
+             OR DATE_FORMAT(v.fecha_entrada, '%H:%i') LIKE ? 
+             OR DATE_FORMAT(v.fecha_salida, '%H:%i') LIKE ?
+          )`;
+      const likeTerm = `%${searchTerm}%`;
+      params = [
+        likeTerm,
+        likeTerm,
+        likeTerm,
+        likeTerm,
+        likeTerm,
+        likeTerm,
+        likeTerm,
+        likeTerm,
+        likeTerm,
+      ];
+    }
+
+    const rows = await connect.query(query, params);
 
     return rows.length > 0 ? rows : null;
   } catch (error) {
+    throw new DatabaseConnectionError(
+      `Error en la base de datos al intentar obtener el historial de visitas: ${error.message}`
+    );
   } finally {
     if (connect) connect.release();
   }

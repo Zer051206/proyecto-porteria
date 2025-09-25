@@ -9,27 +9,6 @@ const useDashboard = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedVisit, setSelectedVisit] = useState(null);
 
-  useEffect(() => {
-    const fetchActiveVisits = async () => {
-      try {
-        const [activeVisitsRes] = await Promise.all([
-          api.get("http://localhost:3000/api/visitas-activas"),
-        ]);
-        setActiveVisits(activeVisitsRes.data);
-      } catch (err) {
-        setError(err.response.data.message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchActiveVisits();
-  }, []);
-
-  const handleEndVisit = (visit) => {
-    setSelectedVisit(visit);
-    setShowModal(true);
-  };
-
   const fetchActiveVisits = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -39,16 +18,24 @@ const useDashboard = () => {
       );
       setActiveVisits(activeVisitsRes.data);
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Hubo un problema al cargar las visitas."
-      );
+      const errorMessage = err.response?.data?.message;
+      setActiveVisits([]);
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
+  useEffect(() => {
+    fetchActiveVisits();
+  }, [fetchActiveVisits]);
+
+  const handleEndVisit = (visit) => {
+    setSelectedVisit(visit);
+    setShowModal(true);
+  };
+
   const handleConfirmEndVisit = async () => {
-    if (!selectedVisit) return;
     try {
       await api.patch(
         `http://localhost:3000/visitas/salida/${selectedVisit.id_visita}`

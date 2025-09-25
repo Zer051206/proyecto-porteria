@@ -62,9 +62,9 @@ export const getTiposPaquetes = async () => {
   }
 };
 
-export const getVisitsHistorial = async () => {
+export const getVisitsHistorial = async (searchTerm) => {
   try {
-    const visitsHistorial = await apiModel.fetchVisitsHistorial();
+    const visitsHistorial = await apiModel.fetchVisitsHistorial(searchTerm);
 
     if (!visitsHistorial) {
       throw new ApiFetchError();
@@ -76,43 +76,15 @@ export const getVisitsHistorial = async () => {
   }
 };
 
-export const getPackagesHistorial = async () => {
+export const getPackagesHistorial = async (searchTerm) => {
   try {
-    const packagesHistorial = await apiModel.fetchPackagesHistorial();
+    const packagesHistorial = await apiModel.fetchPackagesHistorial(searchTerm);
 
     if (!packagesHistorial) {
       throw new ApiFetchError();
     }
 
     return packagesHistorial;
-  } catch (error) {
-    throw error;
-  }
-};
-
-export const getPackageData = async (pkgId) => {
-  try {
-    const packageData = await apiModel.fetchPackageData(pkgId);
-
-    if (!packageData) {
-      throw new ApiFetchError();
-    }
-
-    return packageData;
-  } catch (error) {
-    throw error;
-  }
-};
-
-export const getVisitData = async (visitId) => {
-  try {
-    const visitData = await apiModel.fetchVisitData(visitId);
-
-    if (!visitData) {
-      throw new ApiFetchError();
-    }
-
-    return visitData;
   } catch (error) {
     throw error;
   }

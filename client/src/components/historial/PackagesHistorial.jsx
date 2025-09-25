@@ -20,6 +20,9 @@ export default function PackageHistoryTable() {
     handleSelectPackage,
     handleCloseModal,
     formatDate,
+    searchTerm,
+    handleSearchChange,
+    noResults,
   } = usePackagesHistorial();
 
   const goBack = useGoBack();
@@ -50,7 +53,9 @@ export default function PackageHistoryTable() {
           <input
             type="text"
             placeholder="Buscar por código de paquete..."
+            value={searchTerm}
             className="w-full p-3 pl-10 border border-green-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+            onChange={handleSearchChange}
           />
           <FontAwesomeIcon
             icon={faSearch}
@@ -58,8 +63,24 @@ export default function PackageHistoryTable() {
           />
         </div>
       </div>
+
+      {noResults && (
+        <div className="py-8 w-full max-w-4xl text-center">
+          <FontAwesomeIcon
+            icon={faExclamationTriangle}
+            className="text-yellow-500 text-6xl mb-4"
+          />
+          <p className="text-2xl font-bold text-gray-300">
+            ¡No se encontraron resultados!
+          </p>
+          <p className="text-gray-400 mt-2">
+            Intenta con otro término de búsqueda.
+          </p>
+        </div>
+      )}
+
       <div className="w-full max-w-4xl overflow-x-auto rounded-lg shadow-lg shadow-black">
-        {packagesHistorial && !error && (
+        {!noResults && !error && (
           <table className="w-full rounded-lg items-center justify-center">
             <thead className="bg-green-700 text-white">
               <tr className="divide-x divide-green-800">
@@ -127,7 +148,7 @@ export default function PackageHistoryTable() {
                     {pkg.guia || "N/A"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {pkg.tipo_paquete_descripcion || "N/A"}
+                    {pkg.descripcion || "N/A"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {pkg.nombre_remitente || "N/A"}
@@ -136,7 +157,7 @@ export default function PackageHistoryTable() {
                     {pkg.nombre_destinatario || "N/A"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {pkg.area_descripcion || "N/A"}
+                    {pkg.nombre_area || "N/A"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {pkg.tipo_operacion || "N/A"}
@@ -162,7 +183,7 @@ export default function PackageHistoryTable() {
         )}
       </div>
 
-      {error && (
+      {!noResults && error && (
         <div className="py-0.5 w-10/10 md:w-7/10">
           <div className="bg-red-100 border-l-4 w-full font-semibold border-red-500 text-red-700 p-3">
             <div className="flex items-center">
