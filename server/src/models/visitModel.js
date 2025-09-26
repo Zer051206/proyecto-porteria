@@ -82,11 +82,12 @@ export const createVisit = async (visitData) => {
       observaciones = null,
       id_usuario,
       ip_usuario,
+      path_firma,
     } = visitData;
 
     const query = `
       INSERT INTO visitas(nombre_visitante, telefono, identificacion, id_tipo_identificacion, empresa, nombre_destinatario, 
-      id_area, motivo, observaciones, fecha_entrada, id_usuario_entrada)  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)
+      id_area, motivo, observaciones, fecha_entrada, id_usuario_entrada, path_firma)  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?)
     `;
 
     const rows = await connect.query(query, [
@@ -100,6 +101,7 @@ export const createVisit = async (visitData) => {
       motivo,
       observaciones,
       id_usuario,
+      path_firma,
     ]);
 
     if (!rows || rows.affectedRows === 0) {

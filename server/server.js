@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 dotenv.config({ path: "../.env" });
 
 import express from "express";
+import path from "path";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import cors from "cors";
@@ -55,6 +56,11 @@ app.use(helmet());
 app.set("trust proxy", true);
 
 app.disable("x-powered-by");
+
+app.use(
+  "/signatures",
+  express.static(path.join(process.cwd(), "public", "signatures"))
+);
 
 // Conecta el enrutador de autenticación a la ruta /auth.
 app.use("/auth", authRoutes);

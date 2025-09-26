@@ -16,7 +16,7 @@ const useVisitEntryForm = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [errorCarga, setErrorCarga] = useState(null);
 
-  const sigCanvas = useRef({}); // Referencia para el componente SignaturePad
+  const sigCanvas = useRef(null); // Referencia para el componente SignaturePad
 
   const clearSignature = () => sigCanvas.current.clear(); // Función para limpiar el lienzo
 
@@ -74,7 +74,7 @@ const useVisitEntryForm = () => {
 
       // Captura el dibujo como Base64 (formato PNG)
       const signatureDataUrl = sigCanvas.current
-        .getTrimmedCanvas()
+        .getCanvas()
         .toDataURL("image/png");
 
       try {

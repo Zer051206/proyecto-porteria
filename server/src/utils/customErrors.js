@@ -167,6 +167,13 @@ export class VisitError extends Error {
   }
 }
 
+export class SignatureDontExistsError extends VisitError {
+  constructor(message = "La firma del visitante es obligatoria", status = 404) {
+    super(message, status);
+    this.name = "SignatureDontExistsError";
+  }
+}
+
 export class invalidVisitIdError extends VisitError {
   constructor(
     message = "El id de la visita proporcionado no es válido",

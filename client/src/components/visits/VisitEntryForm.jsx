@@ -1,4 +1,4 @@
-// src/pages/VisitEntryForm.jsx
+//src/components/VisitEntryForm.jsx
 import React from "react";
 import useVisitEntryForm from "../../hooks/useVisitEntryForm";
 import { useGoBack } from "../../hooks/useGoBackDashboard.js";
@@ -9,6 +9,7 @@ import {
   faExclamationTriangle,
   faSignOutAlt,
 } from "@fortawesome/free-solid-svg-icons";
+import SignatureCanvas from "react-signature-canvas";
 
 export default function VisitEntryForm() {
   const goBack = useGoBack();
@@ -23,6 +24,7 @@ export default function VisitEntryForm() {
     handleKeyNumberDown,
     handleKeyTextDown,
     error,
+    sigCanvas,
   } = useVisitEntryForm();
 
   return (
@@ -75,7 +77,7 @@ export default function VisitEntryForm() {
 
         {!isLoading && !errorCarga && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-            {/* Sección de Datos del Visitante */}
+            {/* ... Sección de Datos del Visitante (Sin cambios) ... */}
             <div className="col-span-1">
               <fieldset className="p-4 rounded-md border border-gray-400 shadow-lg shadow-black h-full">
                 <legend className="px-2 font-semibold text-blue-500">
@@ -169,8 +171,7 @@ export default function VisitEntryForm() {
                 </div>
               </fieldset>
             </div>
-
-            {/* Sección de Datos de la Visita */}
+            {/* ... Sección de Datos de la Visita (Sin cambios) ... */}
             <div className="col-span-1">
               <fieldset className="p-4 rounded-md border border-gray-400 shadow-lg shadow-black h-full">
                 <legend className="px-2 font-semibold text-blue-500">
@@ -259,7 +260,7 @@ export default function VisitEntryForm() {
                       value={formik.values.id_area}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className="mt-1 block w-full rounded-md p-1 border-2  border-gray-600 bg-gray-50 shadow-lg"
+                      className="mt-1 block w-full rounded-md p-1 border-2 border-gray-600 bg-gray-50 shadow-lg"
                     >
                       <option value="" hidden>
                         Seleccione un área
@@ -279,8 +280,7 @@ export default function VisitEntryForm() {
                 </div>
               </fieldset>
             </div>
-
-            {/* Sección de Motivo y Observaciones */}
+            {/* ... Sección de Motivo y Observaciones (Sin cambios) ... */}
             <div className="col-span-1 md:col-span-2">
               <fieldset className="p-4 rounded-md border border-gray-400 shadow-lg shadow-black">
                 <legend className="px-2 font-semibold text-blue-500">
@@ -330,6 +330,36 @@ export default function VisitEntryForm() {
                 </div>
               </fieldset>
             </div>
+
+            {/* --- Sección de la Firma Digital --- */}
+            <div className="col-span-1 md:col-span-2 mt-4">
+              <fieldset className="p-4 rounded-md border border-gray-400 shadow-lg shadow-black">
+                <legend className="px-2 font-semibold text-blue-500">
+                  Firma del Visitante (Obligatoria)
+                </legend>
+                <div className="mt-2 flex flex-col items-center">
+                  <div className="w-full border-2 border-dashed border-gray-500 rounded-md bg-white">
+                    <SignatureCanvas
+                      ref={sigCanvas} // <-- Enlazamos la referencia del hook aquí
+                      penColor="black"
+                      canvasProps={{
+                        width: 550, // Ajusta el ancho al máximo del contenedor
+                        height: 200,
+                        className: "sigCanvas w-full rounded-md", // Clases de Tailwind para el lienzo
+                      }}
+                      backgroundColor="rgb(249 250 251)" // Coincide con bg-gray-50
+                      dotSize={2}
+                      minWidth={0.5}
+                      maxWidth={2.5}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-400 mt-2">
+                    Firma aquí para registrar tu visita y dar consentimiento.
+                  </p>
+                </div>
+              </fieldset>
+            </div>
+            {/* ------------------------------------- */}
           </div>
         )}
 
