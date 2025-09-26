@@ -1,50 +1,85 @@
-// src/pages/EnviarPaqueteForm.jsx
+/**
+ * @file EnviarPaqueteForm.jsx
+ * @module EnviarPaqueteForm
+ * @description Componente de página que renderiza el formulario para registrar la salida (envío) de un paquete.
+ * Utiliza el hook `usePackagesEnviar` para manejar la lógica del formulario, validaciones, carga de opciones y submission a la API.
+ * @component
+ * @requires react
+ * @requires react-router-dom/useNavigate
+ * @requires ../../hooks/useGoBackDashboard - Hook para la navegación sencilla de vuelta al dashboard.
+ * @requires ../../hooks/packages/usePackagesEnviar - Lógica de estado y validación del formulario.
+ * @requires @fortawesome/react-fontawesome/FontAwesomeIcon
+ * @requires @fortawesome/free-solid-svg-icons/faUpload, faBroom, faCheckCircle, faExclamationTriangle, faSignOutAlt
+ */
 import React from "react";
-import { useGoBack } from "../../hooks/useGoBackDashboard.js";
+import { useGoBackDashboard } from "../../hooks/useGoBackDashboard.js"; // Asumo el nombre del hook
 import { useNavigate } from "react-router-dom";
-import usePackageEnviarForm from "../../hooks/usePackagesEnviar.js";
+import usePackageEnviarForm from "../../hooks/packages/usePackagesEnviar.js";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faUpload,
   faBroom,
   faCheckCircle,
   faExclamationTriangle,
-  faSignOutAlt,
+  faSignOutAlt, // Usado para el botón Volver/Salir
 } from "@fortawesome/free-solid-svg-icons";
 
-export default function PackagesEnviarForm() {
+/**
+ * @function EnviarPaqueteForm
+ * @description Renderiza el formulario de envío de paquetes con todos sus campos, estados de carga y manejo de errores.
+ *
+ * @returns {JSX.Element} El elemento JSX que contiene el formulario de registro.
+ */
+export default function EnviarPaqueteForm() {
+  /**
+   * @const {Function} navigate
+   * @description Hook de React Router para la navegación programática.
+   */
   const navigate = useNavigate();
-  const goBack = useGoBack();
+
+  /**
+   * @const {Function} goBack
+   * @description Función que redirige al usuario al dashboard principal.
+   */
+  const goBack = useGoBackDashboard(); // Usando el hook específico para dashboard
+
+  /**
+   * @const {object} formLogic
+   * @description Desestructuración de todos los estados y funciones proporcionadas por el hook de lógica.
+   */
   const {
-    formik,
-    tiposPaquetes,
-    areas,
-    isLoading,
-    errorCarga,
-    handleClickClear,
-    handleKeyTextDown,
-    handleAddressKeyDown,
-    error,
+    formik, // Objeto Formik con valores, errores, touched, handleChange, handleSubmit
+    tiposPaquetes, // Opciones para el select Tipo de Paquete
+    areas, // Opciones para el select Área
+    isLoading, // Estado de carga inicial de las opciones
+    errorCarga, // Error si fallan las peticiones de opciones iniciales
+    handleClickClear, // Función para limpiar el formulario (nombrado como estaba en el hook original)
+    handleKeyTextDown, // Utilidad para restringir texto
+    handleAddressKeyDown, // Utilidad para restringir direcciones
+    error, // Error general retornado por la API al fallar la submission
   } = usePackageEnviarForm(navigate);
 
   return (
-    <div className="flex flex-col items-center h-full w-screen md:w-full mb-[50px] mt-[40px] p-4">
+    <div className="flex flex-col items-center h-screen w-screen md:w-full mt-[70px] mb-[50px]">
+      {/* Botón de Volver/Cerrar (ubicado en la esquina superior derecha) */}
       <button
         type="button"
         onClick={goBack}
         className="
-          absolute top-1 right-4 
-          bg-red-600 hover:bg-red-700 
-          text-white font-bold 
-          p-4 rounded-lg 
-          flex flex-col items-center justify-center 
-          transition-colors duration-300
-          text-sm w-16 h-16 sm:w-20 sm:h-20
-        "
+                    absolute top-1 right-4 
+                    bg-red-600 hover:bg-red-700 
+                    text-white font-bold 
+                    p-4 rounded-lg 
+                    flex flex-col items-center justify-center 
+                    transition-colors duration-300
+                    text-sm w-16 h-16 sm:w-20 sm:h-20
+                "
       >
         <FontAwesomeIcon icon={faSignOutAlt} className="text-xl sm:text-xl" />
         <span className="text-xs sm:text-sm mt-1">Volver</span>
       </button>
+
+      {/* Formulario Principal */}
       <form
         onSubmit={formik.handleSubmit}
         className="bg-gray-800 p-6 rounded-lg shadow-xl w-full font-semibold max-w-2xl mt-[50px]"
@@ -54,11 +89,14 @@ export default function PackagesEnviarForm() {
           Envío de Paquete
         </h2>
 
+        {/* Mensaje de carga inicial */}
         {isLoading && (
           <div className="text-center text-gray-500 my-4">
             Cargando opciones...
           </div>
         )}
+
+        {/* Mensaje de error de carga inicial */}
         {errorCarga && (
           <div
             className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 my-4"
@@ -75,12 +113,14 @@ export default function PackagesEnviarForm() {
           </div>
         )}
 
+        {/* Campos del formulario (solo se muestran si no hay carga ni error de carga) */}
         {!isLoading && !errorCarga && (
           <fieldset className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 p-4 rounded-md border border-gray-500 shadow-black shadow-sm">
             <legend className="px-2 font-semibold text-green-400">
               Datos del Paquete
             </legend>
 
+            {/* Campo: Tipo de Paquete */}
             <label className="block" htmlFor="tipo_paquete">
               <span className="text-gray-400 text-sm font-medium">
                 Tipo de Paquete:
@@ -113,6 +153,7 @@ export default function PackagesEnviarForm() {
                 )}
             </label>
 
+            {/* Campo: Nombre del Remitente */}
             <label className="block" htmlFor="nombre_remitente">
               <span className="text-gray-400 text-sm font-medium">
                 Nombre del remitente:
@@ -127,7 +168,7 @@ export default function PackagesEnviarForm() {
                 value={formik.values.nombre_remitente}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                className="mt-1 block w-full rounded-md border-2 p-2 placeholder:italic  border-gray-400 bg-gray-50 shadow-lg"
+                className="mt-1 block w-full rounded-md border-2 p-2 placeholder:italic  border-gray-400 bg-gray-50 shadow-lg"
               />
               {formik.touched.nombre_remitente &&
                 formik.errors.nombre_remitente && (
@@ -137,6 +178,7 @@ export default function PackagesEnviarForm() {
                 )}
             </label>
 
+            {/* Campo: Área */}
             <label className="block" htmlFor="id_area">
               <span className="text-gray-400 text-sm font-medium">Área:</span>
               <select
@@ -163,6 +205,7 @@ export default function PackagesEnviarForm() {
               )}
             </label>
 
+            {/* Campo: Empresa de Transporte */}
             <label className="block" htmlFor="empresa_transporte">
               <span className="text-gray-400 text-sm font-medium">
                 Empresa de Transporte (Opcional):
@@ -180,6 +223,7 @@ export default function PackagesEnviarForm() {
               />
             </label>
 
+            {/* Campo: Nombre del Mensajero */}
             <label className="block" htmlFor="mensajero_nombre">
               <span className="text-gray-400 text-sm font-medium">
                 Nombre del Mensajero (Opcional):
@@ -194,10 +238,11 @@ export default function PackagesEnviarForm() {
                 value={formik.values.mensajero_nombre}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                className="mt-1 block w-full rounded-md border-2 p-2 placeholder:italic  border-gray-400 bg-gray-50 shadow-lg"
+                className="mt-1 block w-full rounded-md border-2 p-2 placeholder:italic  border-gray-400 bg-gray-50 shadow-lg"
               />
             </label>
 
+            {/* Campo: Destino de Salida */}
             <label className="block" htmlFor="destino_salida">
               <span className="text-gray-400 text-sm font-medium">
                 Destino del paquete:
@@ -212,7 +257,7 @@ export default function PackagesEnviarForm() {
                 value={formik.values.destino_salida}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                className="mt-1 block w-full rounded-md border-2 p-2 placeholder:italic  border-gray-400 bg-gray-50 shadow-lg"
+                className="mt-1 block w-full rounded-md border-2 p-2 placeholder:italic  border-gray-400 bg-gray-50 shadow-lg"
               />
               {formik.touched.destino_salida &&
                 formik.errors.destino_salida && (
@@ -222,6 +267,7 @@ export default function PackagesEnviarForm() {
                 )}
             </label>
 
+            {/* Checkbox y Campo de Guía Condicional */}
             <div className="col-span-1 md:col-span-2">
               <label className="flex items-center space-x-2" htmlFor="conGuia">
                 <input
@@ -251,7 +297,7 @@ export default function PackagesEnviarForm() {
                       value={formik.values.guia}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className="mt-1 block w-full rounded-md border-2 p-2 placeholder:italic  border-gray-400 bg-gray-50 shadow-lg"
+                      className="mt-1 block w-full rounded-md border-2 p-2 placeholder:italic  border-gray-400 bg-gray-50 shadow-lg"
                     />
                     {formik.touched.guia && formik.errors.guia && (
                       <div className="text-red-500 text-sm mt-1">
@@ -263,6 +309,7 @@ export default function PackagesEnviarForm() {
               )}
             </div>
 
+            {/* Campo: Observaciones (Colspan 2) */}
             <div className="col-span-1 md:col-span-2">
               <label className="block" htmlFor="observaciones">
                 <span className="text-gray-300 text-sm font-medium">
@@ -276,7 +323,7 @@ export default function PackagesEnviarForm() {
                   value={formik.values.observaciones}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  className="mt-1 block w-full rounded-md border-2 p-2 placeholder:italic  border-gray-400 bg-gray-50 shadow-lg"
+                  className="mt-1 block w-full rounded-md border-2 p-2 placeholder:italic  border-gray-400 bg-gray-50 shadow-lg"
                   rows="3"
                 />
               </label>
@@ -284,12 +331,14 @@ export default function PackagesEnviarForm() {
           </fieldset>
         )}
 
+        {/* Mensaje de error general de la API */}
         {error && formik.submitCount > 0 && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md relative text-center mt-[30px] mb-[5px]">
             <span className="block sm:inline">{error}</span>
           </div>
         )}
 
+        {/* Botones de acción */}
         <div className="mt-6 flex justify-center space-x-4">
           <button
             type="button"
@@ -302,6 +351,7 @@ export default function PackagesEnviarForm() {
           <button
             type="submit"
             className="flex items-center px-6 py-2 bg-blue-600 text-white font-bold rounded-md hover:bg-green-700 transition-colors duration-200"
+            // Deshabilita si está enviando, cargando opciones o si hay error de carga
             disabled={formik.isSubmitting || isLoading || !!errorCarga}
           >
             {formik.isSubmitting ? (

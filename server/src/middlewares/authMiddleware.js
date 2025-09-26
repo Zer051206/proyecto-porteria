@@ -1,3 +1,11 @@
+/**
+ * @file authMiddleware.js
+ * @module authMiddleware
+ * @description Middleware de autenticación principal. Se encarga de verificar el Access Token,
+ * y en caso de que este haya expirado, intenta usar el Refresh Token para generar uno nuevo
+ * (renovación silenciosa). También verifica que el usuario asociado esté activo.
+ */
+
 import { verifyAccessToken, generateAccessToken } from "../utils/tokenUtils.js";
 import * as userModel from "../models/userModel.js";
 import * as refreshTokenModel from "../models/refreshTokenModel.js";
@@ -7,10 +15,18 @@ import {
 } from "../utils/customErrors.js";
 
 /**
- * @file: Middleware de autenticación de usuarios.
- * @author M.M
+ * @async
+ * @function authMiddleware
+ * @description Verifica la autenticación del usuario a través de cookies (Access Token y Refresh Token).
+ * Si el Access Token expira, intenta renovarlo usando el Refresh Token.
+ * Si la autenticación es exitosa, adjunta `req.user` con los datos del usuario.
+ * @param {object} req - Objeto de solicitud de Express.
+ * @param {object} res - Objeto de respuesta de Express.
+ * @param {function} next - Función para pasar el control al siguiente middleware.
+ * @returns {void} Llama a `next()` si la autenticación es exitosa, o a `next(error)` si falla.
+ * @throws {InvalidTokenError} Si no se encuentran tokens o si el Refresh Token es inválido/expirado.
+ * @throws {AccountDisabledError} Si el usuario asociado al token no está activo.
  */
-
 const authMiddleware = async (req, res, next) => {
   let accessToken = req.cookies.accessToken;
   const refreshToken = req.cookies.refreshToken;
@@ -28,6 +44,9 @@ const authMiddleware = async (req, res, next) => {
         );
       }
 
+      /**
+       * @const {object} tokenData - Datos del token de refresco obtenidos de la base de datos.
+       */
       const tokenData = await refreshTokenModel.findValidRefreshToken(
         refreshToken
       );
@@ -37,6 +56,7 @@ const authMiddleware = async (req, res, next) => {
         );
       }
 
+      // Generar nuevo Access Token y establecer cookie
       const newAccessToken = generateAccessToken({
         id_usuario: tokenData.id_usuario,
         correo: tokenData.correo,

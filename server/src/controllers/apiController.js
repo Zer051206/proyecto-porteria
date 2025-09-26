@@ -1,14 +1,21 @@
+/**
+ * @file apiController.js
+ * @module apiController
+ * @description Controladores para endpoints de la API general, que incluyen la obtención
+ * de catálogos (áreas, tipos de identificación, tipos de paquetes) e historiales.
+ * Delega la lógica de negocio al apiService.
+ */
 import * as apiService from "../services/apiService.js";
-import {
-  InvalidPackageIdError,
-  invalidVisitIdError,
-} from "../utils/customErrors.js";
 
 /**
- * @file - // * This file contains the controller functions for API endpoints.
- * @author M.M
+ * @async
+ * @function getAreas
+ * @description Obtiene el listado de todas las áreas disponibles.
+ * @param {object} req - Objeto de solicitud de Express.
+ * @param {object} res - Objeto de respuesta de Express.
+ * @param {function} next - Función para pasar errores al middleware global.
+ * @returns {Promise<void>} Responde con un estado 200 y la lista de áreas en formato JSON.
  */
-
 export const getAreas = async (req, res, next) => {
   try {
     const areas = await apiService.getAreas();
@@ -18,6 +25,15 @@ export const getAreas = async (req, res, next) => {
   }
 };
 
+/**
+ * @async
+ * @function getTiposIdentificacion
+ * @description Obtiene el listado de tipos de identificación válidos.
+ * @param {object} req - Objeto de solicitud de Express.
+ * @param {object} res - Objeto de respuesta de Express.
+ * @param {function} next - Función para pasar errores al middleware global.
+ * @returns {Promise<void>} Responde con un estado 200 y la lista de tipos de identificación.
+ */
 export const getTiposIdentificacion = async (req, res, next) => {
   try {
     const tiposIdentificacion = await apiService.getTiposIdentificacion();
@@ -27,6 +43,15 @@ export const getTiposIdentificacion = async (req, res, next) => {
   }
 };
 
+/**
+ * @async
+ * @function getActiveVisits
+ * @description Obtiene un listado de todas las visitas que se encuentran activas (pendientes de salida).
+ * @param {object} req - Objeto de solicitud de Express.
+ * @param {object} res - Objeto de respuesta de Express.
+ * @param {function} next - Función para pasar errores al middleware global.
+ * @returns {Promise<void>} Responde con un estado 200 y el listado de visitas activas.
+ */
 export const getActiveVisits = async (req, res, next) => {
   try {
     const activeVisits = await apiService.getActiveVisits();
@@ -36,6 +61,15 @@ export const getActiveVisits = async (req, res, next) => {
   }
 };
 
+/**
+ * @async
+ * @function getTiposPaquetes
+ * @description Obtiene el listado de tipos de paquetes disponibles.
+ * @param {object} req - Objeto de solicitud de Express.
+ * @param {object} res - Objeto de respuesta de Express.
+ * @param {function} next - Función para pasar errores al middleware global.
+ * @returns {Promise<void>} Responde con un estado 200 y la lista de tipos de paquetes.
+ */
 export const getTiposPaquetes = async (req, res, next) => {
   try {
     const tiposPaquetes = await apiService.getTiposPaquetes();
@@ -45,8 +79,20 @@ export const getTiposPaquetes = async (req, res, next) => {
   }
 };
 
+/**
+ * @async
+ * @function getVisitsHistorial
+ * @description Obtiene el historial completo de visitas, con soporte opcional para búsqueda (searchTerm).
+ * @param {object} req - Objeto de solicitud de Express.
+ * @param {object} res - Objeto de respuesta de Express.
+ * @param {function} next - Función para pasar errores al middleware global.
+ * @returns {Promise<void>} Responde con un estado 200 y el historial de visitas.
+ */
 export const getVisitsHistorial = async (req, res, next) => {
   try {
+    /**
+     * @const {string | undefined} searchTerm - Término de búsqueda extraído de los query parameters (req.query).
+     */
     const searchTerm = req.query.search;
     const visitsHistorial = await apiService.getVisitsHistorial(searchTerm);
     return res.status(200).json(visitsHistorial);
@@ -55,8 +101,20 @@ export const getVisitsHistorial = async (req, res, next) => {
   }
 };
 
+/**
+ * @async
+ * @function getPackagesHistorial
+ * @description Obtiene el historial completo de paquetes, con soporte opcional para búsqueda (searchTerm).
+ * @param {object} req - Objeto de solicitud de Express.
+ * @param {object} res - Objeto de respuesta de Express.
+ * @param {function} next - Función para pasar errores al middleware global.
+ * @returns {Promise<void>} Responde con un estado 200 y el historial de paquetes.
+ */
 export const getPackagesHistorial = async (req, res, next) => {
   try {
+    /**
+     * @const {string | undefined} searchTerm - Término de búsqueda extraído de los query parameters (req.query).
+     */
     const searchTerm = req.query.search;
     const packagesHistorial = await apiService.getPackagesHistorial(searchTerm);
     return res.status(200).json(packagesHistorial);

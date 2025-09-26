@@ -1,11 +1,26 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+/**
+ * @file WelcomePage.jsx
+ * @module WelcomePage
+ * @description Componente funcional que sirve como la página de inicio de la aplicación.
+ * Presenta el nombre de la aplicación y ofrece enlaces directos para Iniciar Sesión o Registrarse.
+ * @component
+ * @requires react
+ * @requires react-router-dom/Link
+ */
+import React from "react";
+import { Link } from "react-router-dom";
 
+/**
+ * @function WelcomePage
+ * @description Renderiza la interfaz principal de bienvenida con el título de la aplicación
+ * y dos "cajones" de navegación para las funcionalidades de autenticación (Login y Register).
+ *
+ * @returns {JSX.Element} El elemento JSX que representa la página de bienvenida.
+ */
 export function WelcomePage() {
   return (
     <div className="flex flex-col items-center gap-10 p-4 w-full">
-      
-      {/* Contenedor del logo y el texto */}
+      {/* Contenedor del logo y el texto de bienvenida */}
       <div className="flex flex-col items-center mb-10">
         <div className="w-24 h-24 mb-8 bg-white rounded-full flex items-center justify-center shadow-lg">
           <span className="text-gray-400">Logo App</span>
@@ -14,7 +29,7 @@ export function WelcomePage() {
         <h1 className="text-4xl sm:text-5xl font-extrabold text-blue-800 mb-4">
           Nombre de la aplicacion
         </h1>
-        
+
         <p className="text-lg sm:text-xl text-gray-500 max-w-lg">
           Gestión de visitas y paquetes.
         </p>
@@ -23,30 +38,64 @@ export function WelcomePage() {
       {/* Contenedor de los "cajones" de navegación */}
       <div className="flex flex-col sm:flex-row justify-center items-center gap-6 mb-2 sm:gap-12 w-full">
         {/* Cajón de Iniciar Sesión */}
-        <Link 
-          to="/auth/login" 
+        <Link
+          to="/auth/login"
           className="flex flex-col items-center justify-center p-8 w-44 h-44 bg-blue-200 hover:bg-blue-400 rounded-lg shadow-black shadow-lg hover:shadow-xl transition-all duration-300"
+          aria-label="Ir a la página de inicio de sesión"
         >
           <div className="text-blue-600 mb-2 ">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-16 h-16">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+            {/* SVG: Icono de Usuario (representando login) */}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="w-16 h-16"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+              />
             </svg>
           </div>
-          <span className="text-lg font-semibold text-gray-800">Iniciar Sesión</span>
+          <span className="text-lg font-semibold text-gray-800">
+            Iniciar Sesión
+          </span>
         </Link>
 
         {/* Cajón de Registrarse */}
-        <Link 
-          to="/auth/register" 
+        <Link
+          to="/auth/register"
           className="flex flex-col items-center justify-center p-8 w-44 h-44 bg-green-200 hover:bg-green-400 rounded-lg shadow-black shadow-lg hover:shadow-xl transition-all duration-300"
+          aria-label="Ir a la página de registro de nuevo usuario"
         >
           <div className="text-green-600 mb-2">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-16 h-16">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.5h3m-3 0v3m-3-3v3m-3-3v3" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12a7.5 7.5 0 0 1-7.5 7.5m15-6a7.5 7.5 0 0 1-7.5-7.5" />
+            {/* SVG: Icono de Signo de más (representando registro) */}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="w-16 h-16"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.5h3m-3 0v3m-3-3v3m-3-3v3"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9 12a7.5 7.5 0 0 1-7.5 7.5m15-6a7.5 7.5 0 0 1-7.5-7.5"
+              />
             </svg>
           </div>
-          <span className="text-lg font-semibold text-gray-800">Registrarse</span>
+          <span className="text-lg font-semibold text-gray-800">
+            Registrarse
+          </span>
         </Link>
       </div>
     </div>

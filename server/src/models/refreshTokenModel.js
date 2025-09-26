@@ -1,6 +1,22 @@
+/**
+ * @file refreshTokenModel.js
+ * @module refreshTokenModel
+ * @description Módulo de modelos para la gestión de Refresh Tokens. Maneja la persistencia,
+ * la verificación de validez, la revocación individual y masiva, y la limpieza de tokens expirados.
+ */
 import { getPool } from "../config/db.config.js";
 import { DatabaseConnectionError } from "../utils/customErrors.js";
 
+/**
+ * @async
+ * @function saveRefreshToken
+ * @description Guarda un nuevo refresh token asociado a un usuario en la base de datos.
+ * @param {number} userId - ID del usuario.
+ * @param {string} refreshToken - El token de refresco a guardar.
+ * @param {Date} expiredAt - Marca de tiempo de cuándo expira el token.
+ * @returns {Promise<object>} Promesa que resuelve con el resultado de la inserción.
+ * @throws {DatabaseConnectionError} Si ocurre un error de conexión o consulta.
+ */
 export const saveRefreshToken = async (userId, refreshToken, expiredAt) => {
   let connect;
   try {
@@ -26,6 +42,15 @@ export const saveRefreshToken = async (userId, refreshToken, expiredAt) => {
   }
 };
 
+/**
+ * @async
+ * @function findValidRefreshToken
+ * @description Busca un refresh token en la base de datos que sea válido (no expirado ni revocado)
+ * y que pertenezca a un usuario activo. Devuelve los datos básicos del usuario si se encuentra.
+ * @param {string} refreshToken - El token a verificar.
+ * @returns {Promise<object | null>} Promesa que resuelve con los datos del usuario (id, correo, rol) o null si el token es inválido.
+ * @throws {DatabaseConnectionError} Si ocurre un error de conexión o consulta.
+ */
 export const findValidRefreshToken = async (refreshToken) => {
   let connect;
   try {
@@ -56,6 +81,15 @@ export const findValidRefreshToken = async (refreshToken) => {
   }
 };
 
+/**
+ * @async
+ * @function revokeRefreshToken
+ * @description Marca un refresh token específico como revocado (`revocado = 1`), invalidándolo para su uso futuro.
+ * Se usa típicamente para el proceso de *logout*.
+ * @param {string} refreshToken - El token a revocar.
+ * @returns {Promise<object>} Promesa que resuelve con el resultado de la actualización.
+ * @throws {DatabaseConnectionError} Si ocurre un error de conexión o consulta.
+ */
 export const revokeRefreshToken = async (refreshToken) => {
   let connect;
   try {
@@ -76,6 +110,15 @@ export const revokeRefreshToken = async (refreshToken) => {
   }
 };
 
+/**
+ * @async
+ * @function revokeAllUserTokens
+ * @description Revoca (`revocado = 1`) todos los refresh tokens activos para un usuario específico.
+ * Se usa típicamente para forzar el cierre de sesión en todos los dispositivos.
+ * @param {number} userId - ID del usuario cuyos tokens serán revocados.
+ * @returns {Promise<object>} Promesa que resuelve con el resultado de la actualización.
+ * @throws {DatabaseConnectionError} Si ocurre un error de conexión o consulta.
+ */
 export const revokeAllUserTokens = async (userId) => {
   let connect;
   try {
@@ -96,6 +139,15 @@ export const revokeAllUserTokens = async (userId) => {
   }
 };
 
+/**
+ * @async
+ * @function cleanExpiresTokens
+ * @description Elimina físicamente de la base de datos todos los tokens que hayan expirado
+ * (`expira_en < NOW()`) o que hayan sido marcados como revocados.
+ * Diseñada para ser ejecutada periódicamente por un proceso programado (cron job).
+ * @returns {Promise<object>} Promesa que resuelve con el resultado de la operación DELETE.
+ * @throws {DatabaseConnectionError} Si ocurre un error de conexión o consulta.
+ */
 export const cleanExpiresTokens = async () => {
   let connect;
   try {
@@ -103,13 +155,15 @@ export const cleanExpiresTokens = async () => {
     connect = await pool.getConnection();
     const query = `
       DELETE from refresh_tokens 
-      WHERE exprira_en < NOW() OR revocado = 1
-    `;
-    const result = connect.query(query);
+      WHERE expira_en < NOW() OR revocado = 1
+      `;
+
+    const result = await connect.query(query);
+
     return result;
   } catch (error) {
     throw new DatabaseConnectionError(
-      `Error en la base de datos al intentar limpiar los tokens expidados: ${error.message}`
+      `Error en la base de datos al intentar limpiar los tokens expirados: ${error.message}`
     );
   } finally {
     if (connect) connect.release();

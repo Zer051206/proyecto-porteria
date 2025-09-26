@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: client/src/components/WelcomePage.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: client/src/components/WelcomePage.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @file WelcomePage.jsx
+ * @module WelcomePage
+ * @description Componente funcional que sirve como la página de inicio de la aplicación.
+ * Presenta el nombre de la aplicación y ofrece enlaces directos para Iniciar Sesión o Registrarse.
+ * @component
+ * @requires react
+ * @requires react-router-dom/Link
+ */
+import React from "react";
+import { Link } from "react-router-dom";
+
+/**
+ * @function WelcomePage
+ * @description Renderiza la interfaz principal de bienvenida con el título de la aplicación
+ * y dos "cajones" de navegación para las funcionalidades de autenticación (Login y Register).
+ *
+ * @returns {JSX.Element} El elemento JSX que representa la página de bienvenida.
+ */
+export function WelcomePage() {
+  return (
+    &lt;div className="flex flex-col items-center gap-10 p-4 w-full">
+      {/* Contenedor del logo y el texto de bienvenida */}
+      &lt;div className="flex flex-col items-center mb-10">
+        &lt;div className="w-24 h-24 mb-8 bg-white rounded-full flex items-center justify-center shadow-lg">
+          &lt;span className="text-gray-400">Logo App&lt;/span>
+        &lt;/div>
+
+        &lt;h1 className="text-4xl sm:text-5xl font-extrabold text-blue-800 mb-4">
+          Nombre de la aplicacion
+        &lt;/h1>
+
+        &lt;p className="text-lg sm:text-xl text-gray-500 max-w-lg">
+          Gestión de visitas y paquetes.
+        &lt;/p>
+      &lt;/div>
+
+      {/* Contenedor de los "cajones" de navegación */}
+      &lt;div className="flex flex-col sm:flex-row justify-center items-center gap-6 mb-2 sm:gap-12 w-full">
+        {/* Cajón de Iniciar Sesión */}
+        &lt;Link
+          to="/auth/login"
+          className="flex flex-col items-center justify-center p-8 w-44 h-44 bg-blue-200 hover:bg-blue-400 rounded-lg shadow-black shadow-lg hover:shadow-xl transition-all duration-300"
+          aria-label="Ir a la página de inicio de sesión"
+        >
+          &lt;div className="text-blue-600 mb-2 ">
+            {/* SVG: Icono de Usuario (representando login) */}
+            &lt;svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="w-16 h-16"
+            >
+              &lt;path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+              />
+            &lt;/svg>
+          &lt;/div>
+          &lt;span className="text-lg font-semibold text-gray-800">
+            Iniciar Sesión
+          &lt;/span>
+        &lt;/Link>
+
+        {/* Cajón de Registrarse */}
+        &lt;Link
+          to="/auth/register"
+          className="flex flex-col items-center justify-center p-8 w-44 h-44 bg-green-200 hover:bg-green-400 rounded-lg shadow-black shadow-lg hover:shadow-xl transition-all duration-300"
+          aria-label="Ir a la página de registro de nuevo usuario"
+        >
+          &lt;div className="text-green-600 mb-2">
+            {/* SVG: Icono de Signo de más (representando registro) */}
+            &lt;svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="w-16 h-16"
+            >
+              &lt;path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.5h3m-3 0v3m-3-3v3m-3-3v3"
+              />
+              &lt;path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9 12a7.5 7.5 0 0 1-7.5 7.5m15-6a7.5 7.5 0 0 1-7.5-7.5"
+              />
+            &lt;/svg>
+          &lt;/div>
+          &lt;span className="text-lg font-semibold text-gray-800">
+            Registrarse
+          &lt;/span>
+        &lt;/Link>
+      &lt;/div>
+    &lt;/div>
+  );
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-App.html">App</a></li><li><a href="module-AppRoutes.html">AppRoutes</a></li><li><a href="module-AuthRedirect.html">AuthRedirect</a></li><li><a href="module-AuthRoutes.html">AuthRoutes</a></li><li><a href="module-AxiosClient.html">AxiosClient</a></li><li><a href="module-AxiosConfig.html">AxiosConfig</a></li><li><a href="module-Components_Dashboard_Historial.html">Components/Dashboard/Historial</a></li><li><a href="module-Components_Packages_PackageHistoryTable.html">Components/Packages/PackageHistoryTable</a></li><li><a href="module-Components_RecibirPaqueteForm.html">Components/RecibirPaqueteForm</a></li><li><a href="module-Components_VisitEntryForm.html">Components/VisitEntryForm</a></li><li><a href="module-Components_VisitHistory_VisitsHistorial.html">Components/VisitHistory/VisitsHistorial</a></li><li><a href="module-DashboardPackage.html">DashboardPackage</a></li><li><a href="module-DashboardPage.html">DashboardPage</a></li><li><a href="module-DateUtils.html">DateUtils</a></li><li><a href="module-EntryPoint.html">EntryPoint</a></li><li><a href="module-EnviarPaqueteForm.html">EnviarPaqueteForm</a></li><li><a href="module-Hooks.html">Hooks</a></li><li><a href="module-Hooks_Auth.html">Hooks/Auth</a></li><li><a href="module-Hooks_Paquetes.html">Hooks/Paquetes</a></li><li><a href="module-Hooks_usePackagesRecibir.html">Hooks/usePackagesRecibir</a></li><li><a href="module-InputHandlers.html">InputHandlers</a></li><li><a href="module-LoginForm.html">LoginForm</a></li><li><a href="module-PrivateRoute.html">PrivateRoute</a></li><li><a href="module-RegisterForm.html">RegisterForm</a></li><li><a href="module-ValidationSchemas.html">ValidationSchemas</a></li><li><a href="module-WelcomePage.html">WelcomePage</a></li><li><a href="module-apiController.html">apiController</a></li><li><a href="module-apiModel.html">apiModel</a></li><li><a href="module-apiRoutes.html">apiRoutes</a></li><li><a href="module-apiService.html">apiService</a></li><li><a href="module-authController.html">authController</a></li><li><a href="module-authMiddleware.html">authMiddleware</a></li><li><a href="module-authRoutes_.html">authRoutes</a></li><li><a href="module-authService.html">authService</a></li><li><a href="module-csrfMiddleware.html">csrfMiddleware</a></li><li><a href="module-customErrors.html">customErrors</a></li><li><a href="module-dbConfig.html">dbConfig</a></li><li><a href="module-errorHandlerMiddleware.html">errorHandlerMiddleware</a></li><li><a href="module-hooks_usePackagesHistorial.html">hooks/usePackagesHistorial</a></li><li><a href="module-hooks_useVisitsHistorial.html">hooks/useVisitsHistorial</a></li><li><a href="module-packageController.html">packageController</a></li><li><a href="module-packageModel.html">packageModel</a></li><li><a href="module-packageRoutes.html">packageRoutes</a></li><li><a href="module-packageSchema.html">packageSchema</a></li><li><a href="module-packageService.html">packageService</a></li><li><a href="module-passportConfig.html">passportConfig</a></li><li><a href="module-refreshTokenModel.html">refreshTokenModel</a></li><li><a href="module-tokenUtils.html">tokenUtils</a></li><li><a href="module-userModel.html">userModel</a></li><li><a href="module-userSchema.html">userSchema</a></li><li><a href="module-visitController.html">visitController</a></li><li><a href="module-visitModel.html">visitModel</a></li><li><a href="module-visitRoutes.html">visitRoutes</a></li><li><a href="module-visitSchema.html">visitSchema</a></li><li><a href="module-visitService.html">visitService</a></li></ul><h3>Classes</h3><ul><li><a href="module-customErrors.AccountDisabledError.html">AccountDisabledError</a></li><li><a href="module-customErrors.ActiveVisitDontExists.html">ActiveVisitDontExists</a></li><li><a href="module-customErrors.ApiError.html">ApiError</a></li><li><a href="module-customErrors.ApiFetchError.html">ApiFetchError</a></li><li><a href="module-customErrors.ApiNoActiveVisitError.html">ApiNoActiveVisitError</a></li><li><a href="module-customErrors.AreaDontExistsError.html">AreaDontExistsError</a></li><li><a href="module-customErrors.AuthError.html">AuthError</a></li><li><a href="module-customErrors.AuthenticationError.html">AuthenticationError</a></li><li><a href="module-customErrors.DatabaseConnectionError.html">DatabaseConnectionError</a></li><li><a href="module-customErrors.DuplicateGuideError.html">DuplicateGuideError</a></li><li><a href="module-customErrors.ExpiredTokenError.html">ExpiredTokenError</a></li><li><a href="module-customErrors.ForbiddenError.html">ForbiddenError</a></li><li><a href="module-customErrors.InvalidPackageIdError.html">InvalidPackageIdError</a></li><li><a href="module-customErrors.InvalidTokenError.html">InvalidTokenError</a></li><li><a href="module-customErrors.InvalidVisitIdError.html">InvalidVisitIdError</a></li><li><a href="module-customErrors.NoValidUpdateDataError.html">NoValidUpdateDataError</a></li><li><a href="module-customErrors.PackageCreateError.html">PackageCreateError</a></li><li><a href="module-customErrors.PackageError.html">PackageError</a></li><li><a href="module-customErrors.SignatureDontExistsError.html">SignatureDontExistsError</a></li><li><a href="module-customErrors.UpdateVisitError.html">UpdateVisitError</a></li><li><a href="module-customErrors.UserAlreadyExistsError.html">UserAlreadyExistsError</a></li><li><a href="module-customErrors.UserNotFoundOrInvalidPasswordError.html">UserNotFoundOrInvalidPasswordError</a></li><li><a href="module-customErrors.VisitError.html">VisitError</a></li><li><a href="module-customErrors.VisitExistsError.html">VisitExistsError</a></li><li><a href="module-customErrors.VisitIdInvalidError.html">VisitIdInvalidError</a></li><li><a href="module-customErrors-AccountDisabledError.html">AccountDisabledError</a></li><li><a href="module-customErrors-ActiveVisitDontExists.html">ActiveVisitDontExists</a></li><li><a href="module-customErrors-ApiError.html">ApiError</a></li><li><a href="module-customErrors-ApiFetchError.html">ApiFetchError</a></li><li><a href="module-customErrors-ApiNoActiveVisitError.html">ApiNoActiveVisitError</a></li><li><a href="module-customErrors-AreaDontExistsError.html">AreaDontExistsError</a></li><li><a href="module-customErrors-AuthError.html">AuthError</a></li><li><a href="module-customErrors-AuthenticationError.html">AuthenticationError</a></li><li><a href="module-customErrors-DatabaseConnectionError.html">DatabaseConnectionError</a></li><li><a href="module-customErrors-DuplicateGuideError.html">DuplicateGuideError</a></li><li><a href="module-customErrors-ExpiredTokenError.html">ExpiredTokenError</a></li><li><a href="module-customErrors-ForbiddenError.html">ForbiddenError</a></li><li><a href="module-customErrors-InvalidPackageIdError.html">InvalidPackageIdError</a></li><li><a href="module-customErrors-InvalidTokenError.html">InvalidTokenError</a></li><li><a href="module-customErrors-InvalidVisitIdError.html">InvalidVisitIdError</a></li><li><a href="module-customErrors-NoValidUpdateDataError.html">NoValidUpdateDataError</a></li><li><a href="module-customErrors-PackageCreateError.html">PackageCreateError</a></li><li><a href="module-customErrors-PackageError.html">PackageError</a></li><li><a href="module-customErrors-SignatureDontExistsError.html">SignatureDontExistsError</a></li><li><a href="module-customErrors-UpdateVisitError.html">UpdateVisitError</a></li><li><a href="module-customErrors-UserAlreadyExistsError.html">UserAlreadyExistsError</a></li><li><a href="module-customErrors-UserNotFoundOrInvalidPasswordError.html">UserNotFoundOrInvalidPasswordError</a></li><li><a href="module-customErrors-VisitError.html">VisitError</a></li><li><a href="module-customErrors-VisitExistsError.html">VisitExistsError</a></li><li><a href="module-customErrors-VisitIdInvalidError.html">VisitIdInvalidError</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Fri Sep 26 2025 17:34:32 GMT-0500 (hora estándar de Colombia)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

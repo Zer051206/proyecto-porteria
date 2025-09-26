@@ -1,17 +1,35 @@
-//src/routes/packageRoutes.js
+/**
+ * @file packageRoutes.js
+ * @module packageRoutes
+ * @description Define las rutas para las operaciones de recepción y envío de paquetes.
+ * Todas las rutas están protegidas con el middleware de autenticación (`authMiddleware`).
+ */
 import { Router } from "express";
 import * as packageController from "../controllers/packageController.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
 
-/**
- * @file - // * This file contains the package management routes.
- * @author M.M
- */
-
 const router = Router();
 
+/**
+ * @route POST /paquetes/recibir
+ * @description Registra la recepción de un nuevo paquete en el sistema.
+ * @access Private
+ * @middleware authMiddleware - Requiere autenticación.
+ * @handler packageController.receivePackage
+ */
 router.post("/recibir", authMiddleware, packageController.receivePackage);
 
+/**
+ * @route POST /paquetes/enviar
+ * @description Registra el envío o despacho de un paquete.
+ * @access Private
+ * @middleware authMiddleware - Requiere autenticación.
+ * @handler packageController.sendPackage
+ */
 router.post("/enviar", authMiddleware, packageController.sendPackage);
 
+/**
+ * @description Exporta el enrutador de Express configurado con las rutas de gestión de paquetes.
+ * @type {Router}
+ */
 export default router;

@@ -1,5 +1,19 @@
+/**
+ * @file visitSchema.js
+ * @module visitSchema
+ * @description Define el esquema de validación (usando Zod) para el registro de una
+ * nueva visita (entrada), incluyendo la validación estricta de datos personales,
+ * destino y motivo.
+ */
 import { z } from "zod";
 
+/**
+ * @const {z.ZodObject} visitEntrySchema
+ * @description Esquema de validación para el formulario de registro de entrada de un visitante.
+ * Realiza una transformación final para concatenar 'nombre_visitante' y 'apellido'
+ * en el campo 'nombre_visitante' y eliminar el campo 'apellido' antes de ser pasado
+ * al controlador.
+ */
 export const visitEntrySchema = z
   .object({
     nombre_visitante: z

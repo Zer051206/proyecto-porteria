@@ -1,7 +1,20 @@
-//src/components/VisitEntryForm.jsx
+/**
+ * @file VisitEntryForm.jsx
+ * @module Components/VisitEntryForm
+ * @description Componente de formulario para registrar la entrada de un visitante.
+ * Gestiona el estado y la lógica de validación a través del hook `useVisitEntryForm`
+ * e incluye un componente para la firma digital.
+ * @component
+ * @requires react
+ * @requires ../../hooks/visits/useVisitEntryForm - Lógica del formulario, estado y validación.
+ * @requires ../../hooks/useGoBackDashboard.js - Hook para la navegación de regreso.
+ * @requires @fortawesome/react-fontawesome/FontAwesomeIcon
+ * @requires @fortawesome/free-solid-svg-icons/faBroom, faCheckCircle, faExclamationTriangle, faSignOutAlt
+ * @requires react-signature-canvas - Componente para la firma digital.
+ */
 import React from "react";
-import useVisitEntryForm from "../../hooks/useVisitEntryForm";
-import { useGoBack } from "../../hooks/useGoBackDashboard.js";
+import useVisitEntryForm from "../../hooks/visits/useVisitEntryForm.js";
+import { useGoBackDashboard } from "../../hooks/useGoBackDashboard.js";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBroom,
@@ -11,40 +24,58 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import SignatureCanvas from "react-signature-canvas";
 
+/**
+ * @function VisitEntryForm
+ * @description Renderiza el formulario de registro de visitantes.
+ *
+ * @returns {JSX.Element} El elemento JSX que contiene el formulario de registro.
+ */
 export default function VisitEntryForm() {
-  const goBack = useGoBack();
+  /**
+   * @const {Function} goBack
+   * @description Función que redirige al usuario al dashboard principal.
+   */
+  const goBack = useGoBackDashboard();
 
+  /**
+   * @const {object} formLogic
+   * @description Desestructuración de todos los estados, utilidades y funciones
+   * proporcionadas por el hook de lógica `useVisitEntryForm`.
+   */
   const {
-    formik,
-    areas,
-    tiposIdentificacion,
-    isLoading,
-    errorCarga,
-    handleClickClear,
-    handleKeyNumberDown,
-    handleKeyTextDown,
-    error,
-    sigCanvas,
+    formik, // Objeto Formik con valores, errores, touched, handleChange, handleSubmit
+    areas, // Lista de áreas disponibles (para el select)
+    tiposIdentificacion, // Lista de tipos de identificación (para el select)
+    isLoading, // Estado de carga inicial de las opciones
+    errorCarga, // Error si fallan las peticiones de opciones iniciales
+    handleClickClear, // Función para limpiar el formulario y la firma
+    handleKeyNumberDown, // Utilidad para restringir entradas a números
+    handleKeyTextDown, // Utilidad para restringir entradas a texto
+    error, // Error general retornado por la API al fallar la submission
+    sigCanvas, // Referencia para el componente SignatureCanvas
   } = useVisitEntryForm();
 
   return (
     <div className="flex flex-col items-center min-h-screen w-full p-4">
+      {/* Botón de Volver/Cerrar (ubicado en la esquina superior derecha) */}
       <button
         type="button"
         onClick={goBack}
         className="
-          absolute top-1 right-4 
-          bg-red-600 hover:bg-red-700 
-          text-white font-bold 
-          p-4 rounded-lg 
-          flex flex-col items-center justify-center 
-          transition-colors duration-300
-          text-sm w-16 h-16 sm:w-20 sm:h-20
-        "
+                    absolute top-1 right-4 
+                    bg-red-600 hover:bg-red-700 
+                    text-white font-bold 
+                    p-4 rounded-lg 
+                    flex flex-col items-center justify-center 
+                    transition-colors duration-300
+                    text-sm w-16 h-16 sm:w-20 sm:h-20
+                "
       >
         <FontAwesomeIcon icon={faSignOutAlt} className="text-xl sm:text-xl" />
         <span className="text-xs sm:text-sm mt-1">Volver</span>
       </button>
+
+      {/* Formulario Principal */}
       <form
         onSubmit={formik.handleSubmit}
         className="bg-gray-800 font-semibold text-black p-6 rounded-lg shadow-2xl w-full max-w-2xl mt-[70px]"
@@ -53,12 +84,14 @@ export default function VisitEntryForm() {
           Registro de Visita
         </h2>
 
+        {/* Mensaje de carga inicial */}
         {isLoading && (
           <div className="text-center text-gray-500 my-4">
             Cargando opciones...
           </div>
         )}
 
+        {/* Mensaje de error de carga inicial */}
         {errorCarga && (
           <div
             className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 my-4"
@@ -75,15 +108,17 @@ export default function VisitEntryForm() {
           </div>
         )}
 
+        {/* Campos del formulario (solo se muestran si no hay carga ni error de carga) */}
         {!isLoading && !errorCarga && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-            {/* ... Sección de Datos del Visitante (Sin cambios) ... */}
+            {/* Sección de Datos del Visitante */}
             <div className="col-span-1">
               <fieldset className="p-4 rounded-md border border-gray-400 shadow-lg shadow-black h-full">
                 <legend className="px-2 font-semibold text-blue-500">
                   Información del Visitante
                 </legend>
                 <div className="space-y-4 pt-2">
+                  {/* Nombre */}
                   <label className="block">
                     <span className="text-gray-400 text-sm font-medium">
                       Nombre:
@@ -106,6 +141,7 @@ export default function VisitEntryForm() {
                         </div>
                       )}
                   </label>
+                  {/* Apellido */}
                   <label className="block">
                     <span className="text-gray-400 text-sm font-medium">
                       Apellido:
@@ -127,6 +163,7 @@ export default function VisitEntryForm() {
                       </div>
                     )}
                   </label>
+                  {/* Teléfono */}
                   <label className="block">
                     <span className="text-gray-400 text-sm font-medium">
                       Teléfono:
@@ -148,6 +185,7 @@ export default function VisitEntryForm() {
                       </div>
                     )}
                   </label>
+                  {/* Empresa (Opcional) */}
                   <label className="block">
                     <span className="text-gray-400 text-sm font-medium">
                       Empresa (Opcional):
@@ -171,13 +209,15 @@ export default function VisitEntryForm() {
                 </div>
               </fieldset>
             </div>
-            {/* ... Sección de Datos de la Visita (Sin cambios) ... */}
+
+            {/* Sección de Datos de la Visita */}
             <div className="col-span-1">
               <fieldset className="p-4 rounded-md border border-gray-400 shadow-lg shadow-black h-full">
                 <legend className="px-2 font-semibold text-blue-500">
                   Datos de la Visita
                 </legend>
                 <div className="space-y-4 pt-2">
+                  {/* Tipo de Identificación */}
                   <label className="block">
                     <span className="text-gray-400 text-sm font-medium">
                       Tipo de Identificación:
@@ -207,6 +247,7 @@ export default function VisitEntryForm() {
                       </div>
                     )}
                   </label>
+                  {/* Identificación */}
                   <label className="block">
                     <span className="text-gray-400 text-sm font-medium">
                       Identificación:
@@ -229,6 +270,7 @@ export default function VisitEntryForm() {
                         </div>
                       )}
                   </label>
+                  {/* Destinatario */}
                   <label className="block">
                     <span className="text-gray-400 text-sm font-medium">
                       Destinatario:
@@ -251,6 +293,7 @@ export default function VisitEntryForm() {
                         </div>
                       )}
                   </label>
+                  {/* Área */}
                   <label className="block">
                     <span className="text-gray-400 text-sm font-medium">
                       Área:
@@ -280,13 +323,15 @@ export default function VisitEntryForm() {
                 </div>
               </fieldset>
             </div>
-            {/* ... Sección de Motivo y Observaciones (Sin cambios) ... */}
+
+            {/* Sección de Motivo y Observaciones (Colspan 2) */}
             <div className="col-span-1 md:col-span-2">
               <fieldset className="p-4 rounded-md border border-gray-400 shadow-lg shadow-black">
                 <legend className="px-2 font-semibold text-blue-500">
                   Detalles Adicionales
                 </legend>
                 <div className="space-y-4 pt-2">
+                  {/* Motivo */}
                   <label className="block">
                     <span className="text-gray-400 text-sm font-medium">
                       Motivo:
@@ -307,6 +352,7 @@ export default function VisitEntryForm() {
                       </div>
                     )}
                   </label>
+                  {/* Observaciones (Opcional) */}
                   <label className="block">
                     <span className="text-gray-400 text-sm font-medium">
                       Observaciones (Opcional):
@@ -331,7 +377,7 @@ export default function VisitEntryForm() {
               </fieldset>
             </div>
 
-            {/* --- Sección de la Firma Digital --- */}
+            {/* Sección de la Firma Digital (Colspan 2) */}
             <div className="col-span-1 md:col-span-2 mt-4">
               <fieldset className="p-4 rounded-md border border-gray-400 shadow-lg shadow-black">
                 <legend className="px-2 font-semibold text-blue-500">
@@ -340,12 +386,12 @@ export default function VisitEntryForm() {
                 <div className="mt-2 flex flex-col items-center">
                   <div className="w-full border-2 border-dashed border-gray-500 rounded-md bg-white">
                     <SignatureCanvas
-                      ref={sigCanvas} // <-- Enlazamos la referencia del hook aquí
+                      ref={sigCanvas} // Enlazamos la referencia del hook aquí
                       penColor="black"
                       canvasProps={{
-                        width: 550, // Ajusta el ancho al máximo del contenedor
+                        width: 550,
                         height: 200,
-                        className: "sigCanvas w-full rounded-md", // Clases de Tailwind para el lienzo
+                        className: "sigCanvas w-full rounded-md",
                       }}
                       backgroundColor="rgb(249 250 251)" // Coincide con bg-gray-50
                       dotSize={2}
@@ -359,10 +405,10 @@ export default function VisitEntryForm() {
                 </div>
               </fieldset>
             </div>
-            {/* ------------------------------------- */}
           </div>
         )}
 
+        {/* Mensaje de error general de la API */}
         {error && formik.submitCount > 0 && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md relative text-center mt-[30px] mb-[5px]">
             <span className="block sm:inline">{error}</span>
@@ -382,6 +428,7 @@ export default function VisitEntryForm() {
           <button
             type="submit"
             className="flex items-center bg-blue-600 text-white font-bold py-2 px-4 sm:px-6 rounded-md hover:bg-blue-700 transition-colors"
+            // Deshabilita si está enviando, cargando opciones o si hay error de carga
             disabled={formik.isSubmitting || isLoading || !!errorCarga}
           >
             {formik.isSubmitting ? (

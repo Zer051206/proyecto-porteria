@@ -1,5 +1,17 @@
+/**
+ * @file packageSchema.js
+ * @module packageSchema
+ * @description Define los esquemas de validación (usando Zod) para las operaciones
+ * de gestión de paquetes: recepción (entrada) y envío (salida).
+ */
 import { z } from "zod";
 
+/**
+ * @const {z.ZodObject} packageSchemaReceive
+ * @description Esquema de validación para el registro de recepción de un paquete (entrada).
+ * Requiere el tipo de paquete, destinatario y área, con campos opcionales para la guía,
+ * empresa de transporte y mensajero.
+ */
 export const packageSchemaReceive = z.object({
   id_tipo_paquete: z.coerce
     .number({
@@ -73,6 +85,12 @@ export const packageSchemaReceive = z.object({
     .optional(),
 });
 
+/**
+ * @const {z.ZodObject} packageSchemaSend
+ * @description Esquema de validación para el registro de envío de un paquete (salida).
+ * Incluye todos los campos de recepción más el campo obligatorio 'destino_salida',
+ * pero se enfoca en el nombre del remitente.
+ */
 export const packageSchemaSend = z.object({
   id_tipo_paquete: z.coerce
     .number({
@@ -82,17 +100,16 @@ export const packageSchemaSend = z.object({
     .min(1, { message: "El tipo de paquete debe ser un número positivo" }),
   nombre_remitente: z
     .string({
-      required_error: "El nombre del destinatario es obligatorio",
+      required_error: "El nombre del remitente es obligatorio",
       invalid_type_error:
-        "El nombre del destinatario debe ser una cadena de texto",
+        "El nombre del remitente debe ser una cadena de texto",
     })
     .trim()
     .min(5, {
-      message: "El nombre del destinatario debe tener al menos 5 caracteres",
+      message: "El nombre del remitente debe tener al menos 5 caracteres",
     })
     .max(100, {
-      message:
-        "El nombre del destinatario no puede tener más de 100 caracteres",
+      message: "El nombre del remitente no puede tener más de 100 caracteres",
     }),
   id_area: z.coerce
     .number({

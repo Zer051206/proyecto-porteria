@@ -1,15 +1,27 @@
+/**
+ * @file packageService.js
+ * @module packageService
+ * @description Capa de servicio para la gestión de paquetes, incluyendo la recepción y el envío.
+ * Se encarga de la lógica de negocio, como la verificación de guías duplicadas.
+ */
 import * as packageModel from "../models/packageModel.js";
 import {
   DuplicateGuideError,
   PackageCreateError,
-  PackageError,
+  DatabaseConnectionError,
 } from "../utils/customErrors.js";
 
 /**
- * @file - This file contains the business logic for package-related operations.
- * @author M.M
+ * @async
+ * @function receivePackage
+ * @description Registra la recepción de un paquete. Verifica si el número de guía (si existe)
+ * ya ha sido registrado como recibido.
+ * @param {object} packageData - Datos del paquete, incluyendo metadatos de auditoría y la guía.
+ * @returns {Promise<object>} Promesa que resuelve con el objeto del paquete creado.
+ * @throws {DuplicateGuideError} Si la guía ya ha sido utilizada para un paquete recibido.
+ * @throws {PackageCreateError} Si el modelo no retorna el paquete creado (fallo silencioso).
+ * @throws {DatabaseConnectionError} Si ocurre un error de base de datos durante el proceso.
  */
-
 export const receivePackage = async (packageData) => {
   const { guia } = packageData;
   try {
@@ -23,7 +35,7 @@ export const receivePackage = async (packageData) => {
       packageData
     );
 
-    if (!receivePackage) {
+    if (!receivedPackage) {
       throw new PackageCreateError();
     }
     return receivedPackage;
@@ -33,10 +45,21 @@ export const receivePackage = async (packageData) => {
         "Error en la base de datos al procesar el paquete."
       );
     }
-    throw new error();
+    throw error;
   }
 };
 
+/**
+ * @async
+ * @function sendPackage
+ * @description Registra el envío o despacho de un paquete. Verifica si el número de guía
+ * ya ha sido registrado como enviado.
+ * @param {object} packageData - Datos del paquete, incluyendo metadatos de auditoría y la guía.
+ * @returns {Promise<object>} Promesa que resuelve con el objeto del paquete creado.
+ * @throws {DuplicateGuideError} Si la guía ya ha sido utilizada para un paquete enviado.
+ * @throws {PackageCreateError} Si el modelo no retorna el paquete creado (fallo silencioso).
+ * @throws {DatabaseConnectionError} Si ocurre un error de base de datos durante el proceso.
+ */
 export const sendPackage = async (packageData) => {
   const { guia } = packageData;
   try {

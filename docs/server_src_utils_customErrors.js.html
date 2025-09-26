@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: server/src/utils/customErrors.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: server/src/utils/customErrors.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @file customErrors.js
+ * @module customErrors
+ * @description Módulo que define clases de errores personalizadas (extienden la clase base Error)
+ * con códigos de estado HTTP específicos, facilitando la gestión y el manejo de errores en el backend.
+ */
+
+/**
+ * @class AuthError
+ * @description Clase base para errores de autenticación (código 401).
+ * @augments Error
+ */
+export class AuthError extends Error {
+  /**
+   * @param {string} [message] - Mensaje de error personalizado.
+   * @param {number} [status=401] - Código de estado HTTP por defecto.
+   */
+  constructor(message, status = 401) {
+    super(message);
+    this.name = "AuthError";
+    this.status = status;
+  }
+}
+
+/**
+ * @class AuthenticationError
+ * @description Error para cuando el usuario no tiene acceso autorizado (codigo 401).
+ * @augments AuthError
+ */
+export class AuthenticationError extends AuthError {
+  /**
+   * @param {string} [message] - Mensaje de error personalizado.
+   */
+  constructor(
+    message = "Acceso no autorizado. Por favor, inicia sesión con tu cuenta."
+  ) {
+    super(message);
+    this.name = "AuthenticationError";
+  }
+}
+
+/**
+ * @class ExpiredTokenError
+ * @description Error para cuando la sesión del usuario expiró (codigo 401).
+ * @augments AuthError
+ */
+export class ExpiredTokenError extends AuthError {
+  /**
+   * @param {string} [message] - Mensaje de error personalizado.
+   */
+  constructor(
+    message = "Sesión expirada. Por favor, vuelve a iniciar sesión para continuar."
+  ) {
+    super(message);
+    this.name = "ExpiredTokenError";
+  }
+}
+
+/**
+ * @class InvalidTokenError
+ * @description Error para cuando el token del usuario no es válido o directamente no existe (codigo 401).
+ * @augments AuthError
+ */
+export class InvalidTokenError extends AuthError {
+  /**
+   * @param {string} [message] - Mensaje de error personalizado.
+   */
+  constructor(
+    message = "El token de acceso proporcionado es inválido o no existe."
+  ) {
+    super(message);
+    this.name = "InvalidTokenError";
+  }
+}
+
+/**
+ * @class ForbiddenError
+ * @description Error para cuando el usuario está autenticado pero no autorizado (código 403).
+ * @augments Error
+ */
+export class ForbiddenError extends Error {
+  /**
+   * @param {string} [message] - Mensaje de error personalizado.
+   * @param {number} [status=403] - Código de estado HTTP por defecto.
+   */
+  constructor(
+    message = "Acceso denegado. Tu cuenta no tiene los permisos para realizar esta acción.",
+    status = 403
+  ) {
+    super(message);
+    this.name = "ForbiddenError";
+    this.status = status;
+  }
+}
+
+/**
+ * @class UserAlreadyExistsError
+ * @description Error para cuando el correo electrónico ya está registrado (código 409).
+ * @augments AuthError
+ */
+export class UserAlreadyExistsError extends AuthError {
+  /**
+   * @param {string} [message] - Mensaje de error personalizado.
+   * @param {number} [status=409] - Código de estado HTTP por defecto.
+   */
+  constructor(
+    message = "El correo electrónico ya está registrado.",
+    status = 409
+  ) {
+    super(message, status);
+    this.name = "UserAlreadyExistsError";
+  }
+}
+
+/**
+ * @class UserNotFoundOrInvalidPasswordError
+ * @description Error para credenciales incorrectas o si el usuario no exite (código 404).
+ * @augments AuthError
+ */
+export class UserNotFoundOrInvalidPasswordError extends AuthError {
+  /**
+   * @param {string} [message] - Mensaje de error personalizado.
+   * @param {number} [status=404] - Código de estado HTTP por defecto.
+   */
+  constructor(
+    message = "La cuenta no existe o las credenciales son incorrectas.",
+    status = 404
+  ) {
+    super(message, status);
+    this.name = "UserNotFoundOrInvalidPasswordError";
+  }
+}
+
+/**
+ * @class AccountDisabledError
+ * @description Error para cuentas desactivadas (código 401).
+ * @augments AuthError
+ */
+export class AccountDisabledError extends AuthError {
+  /**
+   * @param {string} [message] - Mensaje de error personalizado.
+   */
+  constructor(
+    message = "La cuenta está desactivada, contacte al administrador."
+  ) {
+    super(message);
+    this.name = "AccountDisabledError";
+  }
+}
+
+/**
+ * @class DatabaseConnectionError
+ * @description Error para problemas de conexión con la base de datos (código 500).
+ * @augments Error
+ */
+export class DatabaseConnectionError extends Error {
+  /**
+   * @param {string} [message] - Mensaje de error personalizado.
+   * @param {number} [status=500] - Código de estado HTTP por defecto.
+   */
+  constructor(
+    message = "No fue posible conectar con la base de datos.",
+    status = 500
+  ) {
+    super(message);
+    this.name = "DatabaseConnectionError";
+    this.status = status;
+  }
+}
+
+/**
+ * @class PackageError
+ * @description Clase base para errores en los CRUD de los paquetes.
+ * @augments Error
+ */
+export class PackageError extends Error {
+  /**
+   * @param {string} [message] - Mensaje de error personalizado.
+   * @param {number} [status=400] - Código de estado HTTP por defecto.
+   */
+  constructor(message, status = 400) {
+    super(message);
+    this.name = "PackageError";
+    this.status = status;
+  }
+}
+
+/**
+ * @class InvalidPackageIdError
+ * @description Error para cuando el id del paquete proporcionado no sea válido (codigo 400).
+ * @augments PackageError
+ */
+export class InvalidPackageIdError extends PackageError {
+  /**
+   * @param {string} [message] - Mensaje de error personalizado.
+   * @param {number} [status=400] - Código de estado HTTP por defecto.
+   */
+  constructor(
+    message = "El id del paquete proporcionado no es válido",
+    status = 400
+  ) {
+    super(message, status);
+    this.name = "InvalidPackageIdError";
+  }
+}
+
+/**
+ * @class DuplicateGuideError
+ * @description Error cuando ya existe un paquete con la misma guía en el mismo proceso (código 409).
+ * @augments PackageError
+ */
+export class DuplicateGuideError extends PackageError {
+  /**
+   * @param {string} [message] - Mensaje de error personalizado.
+   * @param {number} [status=409] - Código de estado HTTP por defecto.
+   */
+  constructor(
+    message = "Ya existe un paquete con la misma guia en este proceso.",
+    status = 409
+  ) {
+    super(message, status);
+    this.name = "DuplicateGuideError";
+  }
+}
+
+/**
+ * @class PackageCreateError
+ * @description Error cuando falla el registro de un paquete (código 500).
+ * @augments PackageError
+ */
+export class PackageCreateError extends PackageError {
+  /**
+   * @param {string} [message] - Mensaje de error personalizado.
+   * @param {number} [status=500] - Código de estado HTTP por defecto.
+   */
+  constructor(message = "No se pudo registrar el paquete.", status = 500) {
+    super(message, status);
+    this.name = "PackageCreateError";
+  }
+}
+
+/**
+ * @class VisitError
+ * @description Clase base para errores en los CRUD de las visitas.
+ * @augments Error
+ */
+export class VisitError extends Error {
+  /**
+   * @param {string} [message] - Mensaje de error personalizado.
+   * @param {number} [status=400] - Código de estado HTTP por defecto.
+   */
+  constructor(message, status = 400) {
+    super(message);
+    this.name = "VisitError";
+    this.status = status;
+  }
+}
+
+/**
+ * @class SignatureDontExistsError
+ * @description Error para cuando no se proporcione la firma del visitante (codigo 404).
+ * @augments VisitError
+ */
+export class SignatureDontExistsError extends VisitError {
+  /**
+   * @param {string} [message] - Mensaje de error personalizado.
+   * @param {number} [status=404] - Código de estado HTTP por defecto.
+   */
+  constructor(message = "La firma del visitante es obligatoria", status = 404) {
+    super(message, status);
+    this.name = "SignatureDontExistsError";
+  }
+}
+
+/**
+ * @class InvalidVisitIdError
+ * @description Error para cuando el id de la visita proporcionado no es válido (codigo 400).
+ * @augments VisitError
+ */
+export class InvalidVisitIdError extends VisitError {
+  /**
+   * @param {string} [message] - Mensaje de error personalizado.
+   * @param {number} [status=400] - Código de estado HTTP por defecto.
+   */
+  constructor(
+    message = "El id de la visita proporcionado no es válido",
+    status = 400
+  ) {
+    super(message, status);
+    this.name = "InvalidVisitIdError";
+  }
+}
+
+/**
+ * @class VisitExistsError
+ * @description Error para cuando ya hay una visita activa con la misma identificación (código 409).
+ * @augments VisitError
+ */
+export class VisitExistsError extends VisitError {
+  /**
+   * @param {string} [message] - Mensaje de error personalizado.
+   * @param {number} [status=409] - Código de estado HTTP por defecto.
+   */
+  constructor(
+    message = "Una visita con la misma identificación ya está activa.",
+    status = 409
+  ) {
+    super(message, status);
+    this.name = "VisitExistsError";
+  }
+}
+
+/**
+ * @class AreaDontExistsError
+ * @description Error para cuando el área seleccionada para una visita no existe (código 404).
+ * @augments VisitError
+ */
+export class AreaDontExistsError extends VisitError {
+  /**
+   * @param {string} [message] - Mensaje de error personalizado.
+   * @param {number} [status=404] - Código de estado HTTP por defecto.
+   */
+  constructor(message = "El área seleccionada no existe.", status = 404) {
+    super(message, status);
+    this.name = "AreaDontExistsError";
+  }
+}
+
+/**
+ * @class ActiveVisitDontExists
+ * @description Error para cuando no existe una visita activa para el ID proporcionado (código 404).
+ * @augments VisitError
+ */
+export class ActiveVisitDontExists extends VisitError {
+  /**
+   * @param {string} [message] - Mensaje de error personalizado.
+   * @param {number} [status=404] - Código de estado HTTP por defecto.
+   */
+  constructor(
+    message = "No existe ninguna visita activa ahora mismo asociada a este ID.",
+    status = 404
+  ) {
+    super(message, status);
+    this.name = "ActiveVisitDontExists";
+  }
+}
+
+/**
+ * @class UpdateVisitError
+ * @description Error para cuando falla la actualización del estado de una visita (ej. al terminarla) (código 500).
+ * @augments VisitError
+ */
+export class UpdateVisitError extends VisitError {
+  /**
+   * @param {string} [message] - Mensaje de error personalizado.
+   * @param {number} [status=500] - Código de estado HTTP por defecto.
+   */
+  constructor(message = "No se pudo terminar la visita.", status = 500) {
+    super(message, status);
+    this.name = "UpdateVisitError";
+  }
+}
+
+/**
+ * @class VisitIdInvalidError
+ * @description Error para cuando el ID de visita proporcionado no es válido (código 400).
+ * @augments VisitError
+ */
+export class VisitIdInvalidError extends VisitError {
+  /**
+   * @param {string} [message] - Mensaje de error personalizado.
+   * @param {number} [status=400] - Código de estado HTTP por defecto.
+   */
+  constructor(message = "El ID proporcionado no es válido.", status = 400) {
+    super(message, status);
+    this.name = "VisitIdInvalidError";
+  }
+}
+
+/**
+ * @class ApiError
+ * @description Clase base para errores de la API.
+ * @augments Error
+ */
+export class ApiError extends Error {
+  /**
+   * @param {string} [message] - Mensaje de error personalizado.
+   * @param {number} [status=500] - Código de estado HTTP por defecto.
+   */
+  constructor(message, status = 500) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
+/**
+ * @class ApiFetchError
+ * @description Error para cuando ocurre un fallo al obtener información de la API (código 500).
+ * @augments ApiError
+ */
+export class ApiFetchError extends ApiError {
+  /**
+   * @param {string} [message] - Mensaje de error personalizado.
+   */
+  constructor(message = "Ocurrió un error al obtener la información.") {
+    super(message);
+    this.name = "ApiFetchError";
+  }
+}
+
+/**
+ * @class ApiNoActiveVisitError
+ * @description Error para cuando no hay visitas activas en la API (código 404).
+ * @augments ApiError
+ */
+export class ApiNoActiveVisitError extends ApiError {
+  /**
+   * @param {string} [message] - Mensaje de error personalizado.
+   * @param {number} [status=404] - Código de estado HTTP por defecto.
+   */
+  constructor(message = "No hay visitas activas.", status = 404) {
+    super(message, status);
+    this.name = "ApiNoActiveVisitError";
+  }
+}
+
+/**
+ * @class NoValidUpdateDataError
+ * @description Error para cuando una operación de actualización es llamada sin
+ * datos válidos (código 400).
+ * @augments Error
+ */
+export class NoValidUpdateDataError extends Error {
+  /**
+   * @param {string} [message] - Mensaje de error personalizado.
+   * @param {number} [status=400] - Código de estado HTTP por defecto.
+   */
+  constructor(
+    message = "No se proporcionaron datos válidos para actualizar el registro.",
+    status = 400 // Se utiliza 'status' para consistencia con otras clases
+  ) {
+    super(message);
+    this.name = "NoValidUpdateDataError";
+    this.status = status; // Cambiado de 'statusCode' a 'status' para estandarización
+  }
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-App.html">App</a></li><li><a href="module-AppRoutes.html">AppRoutes</a></li><li><a href="module-AuthRedirect.html">AuthRedirect</a></li><li><a href="module-AuthRoutes.html">AuthRoutes</a></li><li><a href="module-AxiosClient.html">AxiosClient</a></li><li><a href="module-AxiosConfig.html">AxiosConfig</a></li><li><a href="module-Components_Dashboard_Historial.html">Components/Dashboard/Historial</a></li><li><a href="module-Components_Packages_PackageHistoryTable.html">Components/Packages/PackageHistoryTable</a></li><li><a href="module-Components_RecibirPaqueteForm.html">Components/RecibirPaqueteForm</a></li><li><a href="module-Components_VisitEntryForm.html">Components/VisitEntryForm</a></li><li><a href="module-Components_VisitHistory_VisitsHistorial.html">Components/VisitHistory/VisitsHistorial</a></li><li><a href="module-DashboardPackage.html">DashboardPackage</a></li><li><a href="module-DashboardPage.html">DashboardPage</a></li><li><a href="module-DateUtils.html">DateUtils</a></li><li><a href="module-EntryPoint.html">EntryPoint</a></li><li><a href="module-EnviarPaqueteForm.html">EnviarPaqueteForm</a></li><li><a href="module-Hooks.html">Hooks</a></li><li><a href="module-Hooks_Auth.html">Hooks/Auth</a></li><li><a href="module-Hooks_Paquetes.html">Hooks/Paquetes</a></li><li><a href="module-Hooks_usePackagesRecibir.html">Hooks/usePackagesRecibir</a></li><li><a href="module-InputHandlers.html">InputHandlers</a></li><li><a href="module-LoginForm.html">LoginForm</a></li><li><a href="module-PrivateRoute.html">PrivateRoute</a></li><li><a href="module-RegisterForm.html">RegisterForm</a></li><li><a href="module-ValidationSchemas.html">ValidationSchemas</a></li><li><a href="module-WelcomePage.html">WelcomePage</a></li><li><a href="module-apiController.html">apiController</a></li><li><a href="module-apiModel.html">apiModel</a></li><li><a href="module-apiRoutes.html">apiRoutes</a></li><li><a href="module-apiService.html">apiService</a></li><li><a href="module-authController.html">authController</a></li><li><a href="module-authMiddleware.html">authMiddleware</a></li><li><a href="module-authRoutes_.html">authRoutes</a></li><li><a href="module-authService.html">authService</a></li><li><a href="module-csrfMiddleware.html">csrfMiddleware</a></li><li><a href="module-customErrors.html">customErrors</a></li><li><a href="module-dbConfig.html">dbConfig</a></li><li><a href="module-errorHandlerMiddleware.html">errorHandlerMiddleware</a></li><li><a href="module-hooks_usePackagesHistorial.html">hooks/usePackagesHistorial</a></li><li><a href="module-hooks_useVisitsHistorial.html">hooks/useVisitsHistorial</a></li><li><a href="module-packageController.html">packageController</a></li><li><a href="module-packageModel.html">packageModel</a></li><li><a href="module-packageRoutes.html">packageRoutes</a></li><li><a href="module-packageSchema.html">packageSchema</a></li><li><a href="module-packageService.html">packageService</a></li><li><a href="module-passportConfig.html">passportConfig</a></li><li><a href="module-refreshTokenModel.html">refreshTokenModel</a></li><li><a href="module-tokenUtils.html">tokenUtils</a></li><li><a href="module-userModel.html">userModel</a></li><li><a href="module-userSchema.html">userSchema</a></li><li><a href="module-visitController.html">visitController</a></li><li><a href="module-visitModel.html">visitModel</a></li><li><a href="module-visitRoutes.html">visitRoutes</a></li><li><a href="module-visitSchema.html">visitSchema</a></li><li><a href="module-visitService.html">visitService</a></li></ul><h3>Classes</h3><ul><li><a href="module-customErrors.AccountDisabledError.html">AccountDisabledError</a></li><li><a href="module-customErrors.ActiveVisitDontExists.html">ActiveVisitDontExists</a></li><li><a href="module-customErrors.ApiError.html">ApiError</a></li><li><a href="module-customErrors.ApiFetchError.html">ApiFetchError</a></li><li><a href="module-customErrors.ApiNoActiveVisitError.html">ApiNoActiveVisitError</a></li><li><a href="module-customErrors.AreaDontExistsError.html">AreaDontExistsError</a></li><li><a href="module-customErrors.AuthError.html">AuthError</a></li><li><a href="module-customErrors.AuthenticationError.html">AuthenticationError</a></li><li><a href="module-customErrors.DatabaseConnectionError.html">DatabaseConnectionError</a></li><li><a href="module-customErrors.DuplicateGuideError.html">DuplicateGuideError</a></li><li><a href="module-customErrors.ExpiredTokenError.html">ExpiredTokenError</a></li><li><a href="module-customErrors.ForbiddenError.html">ForbiddenError</a></li><li><a href="module-customErrors.InvalidPackageIdError.html">InvalidPackageIdError</a></li><li><a href="module-customErrors.InvalidTokenError.html">InvalidTokenError</a></li><li><a href="module-customErrors.InvalidVisitIdError.html">InvalidVisitIdError</a></li><li><a href="module-customErrors.NoValidUpdateDataError.html">NoValidUpdateDataError</a></li><li><a href="module-customErrors.PackageCreateError.html">PackageCreateError</a></li><li><a href="module-customErrors.PackageError.html">PackageError</a></li><li><a href="module-customErrors.SignatureDontExistsError.html">SignatureDontExistsError</a></li><li><a href="module-customErrors.UpdateVisitError.html">UpdateVisitError</a></li><li><a href="module-customErrors.UserAlreadyExistsError.html">UserAlreadyExistsError</a></li><li><a href="module-customErrors.UserNotFoundOrInvalidPasswordError.html">UserNotFoundOrInvalidPasswordError</a></li><li><a href="module-customErrors.VisitError.html">VisitError</a></li><li><a href="module-customErrors.VisitExistsError.html">VisitExistsError</a></li><li><a href="module-customErrors.VisitIdInvalidError.html">VisitIdInvalidError</a></li><li><a href="module-customErrors-AccountDisabledError.html">AccountDisabledError</a></li><li><a href="module-customErrors-ActiveVisitDontExists.html">ActiveVisitDontExists</a></li><li><a href="module-customErrors-ApiError.html">ApiError</a></li><li><a href="module-customErrors-ApiFetchError.html">ApiFetchError</a></li><li><a href="module-customErrors-ApiNoActiveVisitError.html">ApiNoActiveVisitError</a></li><li><a href="module-customErrors-AreaDontExistsError.html">AreaDontExistsError</a></li><li><a href="module-customErrors-AuthError.html">AuthError</a></li><li><a href="module-customErrors-AuthenticationError.html">AuthenticationError</a></li><li><a href="module-customErrors-DatabaseConnectionError.html">DatabaseConnectionError</a></li><li><a href="module-customErrors-DuplicateGuideError.html">DuplicateGuideError</a></li><li><a href="module-customErrors-ExpiredTokenError.html">ExpiredTokenError</a></li><li><a href="module-customErrors-ForbiddenError.html">ForbiddenError</a></li><li><a href="module-customErrors-InvalidPackageIdError.html">InvalidPackageIdError</a></li><li><a href="module-customErrors-InvalidTokenError.html">InvalidTokenError</a></li><li><a href="module-customErrors-InvalidVisitIdError.html">InvalidVisitIdError</a></li><li><a href="module-customErrors-NoValidUpdateDataError.html">NoValidUpdateDataError</a></li><li><a href="module-customErrors-PackageCreateError.html">PackageCreateError</a></li><li><a href="module-customErrors-PackageError.html">PackageError</a></li><li><a href="module-customErrors-SignatureDontExistsError.html">SignatureDontExistsError</a></li><li><a href="module-customErrors-UpdateVisitError.html">UpdateVisitError</a></li><li><a href="module-customErrors-UserAlreadyExistsError.html">UserAlreadyExistsError</a></li><li><a href="module-customErrors-UserNotFoundOrInvalidPasswordError.html">UserNotFoundOrInvalidPasswordError</a></li><li><a href="module-customErrors-VisitError.html">VisitError</a></li><li><a href="module-customErrors-VisitExistsError.html">VisitExistsError</a></li><li><a href="module-customErrors-VisitIdInvalidError.html">VisitIdInvalidError</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Fri Sep 26 2025 17:34:32 GMT-0500 (hora estándar de Colombia)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

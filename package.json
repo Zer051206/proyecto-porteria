@@ -6,13 +6,21 @@
   "type": "module",
   "scripts": {
     "watch-css": "npm run watch-css-script",
-    "docs": "jsdoc -c  jsdoc.json"
+    "docs": "jsdoc -r client/src server/src -d docs"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "packageManager": "pnpm@10.14.0",
   "dependencies": {
-    "vite": "7.1.1"
+    "vite": "^7.1.7"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.28.4",
+    "@babel/plugin-syntax-import-meta": "^7.10.4",
+    "@babel/preset-env": "^7.28.3",
+    "@babel/preset-react": "^7.27.1",
+    "documentation": "^6.2.0",
+    "jsdoc": "^4.0.4"
   }
 }
