@@ -36,6 +36,5 @@ export function getPool() {
     connectionLimit: process.env.DB_CONNECTION_LIMIT,
   });
 
-  console.log("Pool de MariaDB inicializado.");
   return pool;
 }

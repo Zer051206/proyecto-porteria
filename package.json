@@ -21,6 +21,7 @@
     "@babel/preset-env": "^7.28.3",
     "@babel/preset-react": "^7.27.1",
     "documentation": "^6.2.0",
-    "jsdoc": "^4.0.4"
+    "jsdoc": "^4.0.4",
+    "terser": "^5.44.0"
   }
 }
