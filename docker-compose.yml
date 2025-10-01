@@ -7,6 +7,11 @@ services:
   db:
     image: mariadb:10.6
     container_name: gestion_db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${DB_MARIA_DATABASE}
+      MARIADB_USER: ${DB_MARIA_USER}
+      MARIADB_PASSWORD: ${DB_MARIA_PASSWORD}
     ports:
       - "3307:3306" # Mapea para poder conectar herramientas externas (HeidiSQL, DBeaver)
     volumes:
