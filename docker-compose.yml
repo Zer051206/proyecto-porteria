@@ -1,0 +1,48 @@
+version: "3.8"
+
+services:
+  # =======================================================
+  # 1. SERVICIO DE BASE DE DATOS (MariaDB)
+  # =======================================================
+  db:
+    image: mariadb:10.6
+    container_name: gestion_db
+    ports:
+      - "3307:3306" # Mapea para poder conectar herramientas externas (HeidiSQL, DBeaver)
+    volumes:
+      # Montar el script SQL para crear tablas
+      - ./init/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - db_data:/var/lib/mysql
+    restart: always
+
+  # =======================================================
+  # 2. SERVICIO DE BACKEND (Tu API de Node.js)
+  # =======================================================
+  api:
+    build:
+      context: ./server # Usa el Dockerfile dentro de la carpeta 'server'
+    container_name: gestion_api
+    ports:
+      - "3000:3000" # Acceso directo al backend en puerto 3000
+    depends_on:
+      - db
+    env_file:
+      - ./.env
+    restart: always
+
+  # =======================================================
+  # 3. SERVICIO DE FRONTEND (Nginx sirviendo React/Vue)
+  # =======================================================
+  frontend:
+    build:
+      context: ./client # Usa el Dockerfile dentro de la carpeta 'client'
+    container_name: gestion_frontend
+    # Mapea el puerto 80 del contenedor al 8080 de tu máquina
+    ports:
+      - "8080:80"
+    depends_on:
+      - api # Asegura que la API esté corriendo antes de iniciar el frontend
+    restart: always
+
+volumes:
+  db_data:

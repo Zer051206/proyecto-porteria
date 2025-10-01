@@ -34,6 +34,7 @@ export function getPool() {
     password: process.env.DB_MARIA_PASSWORD,
     database: process.env.DB_MARIA_DATABASE,
     connectionLimit: process.env.DB_CONNECTION_LIMIT,
+    port: 3306,
   });
 
   return pool;

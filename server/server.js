@@ -21,9 +21,7 @@ import packageRoutes from "./src/routes/packageRoutes.js";
 import cookieParser from "cookie-parser";
 import authMiddleware from "./src/middlewares/authMiddleware.js";
 import errorHandler from "./src/middlewares/errorMiddleware.js";
-import csrfMiddleware, {
-  csrfTokenMiddleware,
-} from "./src/middlewares/csrfMiddleware.js";
+import csrfMiddleware from "./src/middlewares/csrfMiddleware.js";
 
 /**
  * @const {Array<string>} allowedOrigins
