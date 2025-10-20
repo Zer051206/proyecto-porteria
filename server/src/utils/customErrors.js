@@ -1,447 +1,140 @@
 /**
  * @file customErrors.js
- * @module customErrors
- * @description Módulo que define clases de errores personalizadas (extienden la clase base Error)
- * con códigos de estado HTTP específicos, facilitando la gestión y el manejo de errores en el backend.
+ * @module Utils/Errors
+ * @description Define una jerarquía de clases de error personalizadas, todas heredando de una clase base AppError.
+ * Esto estandariza el manejo de errores operacionales en toda la aplicación.
  */
 
 /**
- * @class AuthError
- * @description Clase base para errores de autenticación (código 401).
- * @augments Error
+ * @class AppError
+ * @description Clase base para todos los errores operacionales controlados de la aplicación.
+ * @extends Error
  */
-export class AuthError extends Error {
+export class AppError extends Error {
   /**
-   * @param {string} [message] - Mensaje de error personalizado.
-   * @param {number} [status=401] - Código de estado HTTP por defecto.
+   * @constructor
+   * @param {string} message - El mensaje de error legible.
+   * @param {number} status - El código de estado HTTP asociado.
    */
-  constructor(message, status = 401) {
+  constructor(message, status) {
     super(message);
-    this.name = "AuthError";
     this.status = status;
+    this.name = this.constructor.name; // Asegura que el nombre del error sea el de la clase hija
+    Error.captureStackTrace(this, this.constructor);
   }
 }
 
-/**
- * @class AuthenticationError
- * @description Error para cuando el usuario no tiene acceso autorizado (codigo 401).
- * @augments AuthError
- */
-export class AuthenticationError extends AuthError {
-  /**
-   * @param {string} [message] - Mensaje de error personalizado.
-   */
-  constructor(
-    message = "Acceso no autorizado. Por favor, inicia sesión con tu cuenta."
-  ) {
-    super(message);
-    this.name = "AuthenticationError";
-  }
-}
+// --- ERRORES DE AUTENTICACIÓN Y USUARIO ---
 
 /**
- * @class ExpiredTokenError
- * @description Error para cuando la sesión del usuario expiró (codigo 401).
- * @augments AuthError
+ * @class UserNotFoundOrInvalidPasswordError
+ * @description Error para credenciales incorrectas o si el usuario no existe.
+ * @extends AppError
  */
-export class ExpiredTokenError extends AuthError {
-  /**
-   * @param {string} [message] - Mensaje de error personalizado.
-   */
+export class UserNotFoundOrInvalidPasswordError extends AppError {
   constructor(
-    message = "Sesión expirada. Por favor, vuelve a iniciar sesión para continuar."
+    message = "La cuenta no existe o las credenciales son incorrectas."
   ) {
-    super(message);
-    this.name = "ExpiredTokenError";
-  }
-}
-
-/**
- * @class InvalidTokenError
- * @description Error para cuando el token del usuario no es válido o directamente no existe (codigo 401).
- * @augments AuthError
- */
-export class InvalidTokenError extends AuthError {
-  /**
-   * @param {string} [message] - Mensaje de error personalizado.
-   */
-  constructor(
-    message = "El token de acceso proporcionado es inválido o no existe."
-  ) {
-    super(message);
-    this.name = "InvalidTokenError";
-  }
-}
-
-/**
- * @class ForbiddenError
- * @description Error para cuando el usuario está autenticado pero no autorizado (código 403).
- * @augments Error
- */
-export class ForbiddenError extends Error {
-  /**
-   * @param {string} [message] - Mensaje de error personalizado.
-   * @param {number} [status=403] - Código de estado HTTP por defecto.
-   */
-  constructor(
-    message = "Acceso denegado. Tu cuenta no tiene los permisos para realizar esta acción.",
-    status = 403
-  ) {
-    super(message);
-    this.name = "ForbiddenError";
-    this.status = status;
+    super(message, 401); // 401 Unauthorized es el estándar para logins fallidos.
   }
 }
 
 /**
  * @class UserAlreadyExistsError
- * @description Error para cuando el correo electrónico ya está registrado (código 409).
- * @augments AuthError
+ * @description Error para cuando se intenta registrar un usuario con un correo o ID que ya existe.
+ * @extends AppError
  */
-export class UserAlreadyExistsError extends AuthError {
-  /**
-   * @param {string} [message] - Mensaje de error personalizado.
-   * @param {number} [status=409] - Código de estado HTTP por defecto.
-   */
+export class UserAlreadyExistsError extends AppError {
   constructor(
-    message = "El correo electrónico ya está registrado.",
-    status = 409
+    message = "El correo electrónico o la identificación ya están registrados."
   ) {
-    super(message, status);
-    this.name = "UserAlreadyExistsError";
-  }
-}
-
-/**
- * @class UserNotFoundOrInvalidPasswordError
- * @description Error para credenciales incorrectas o si el usuario no exite (código 404).
- * @augments AuthError
- */
-export class UserNotFoundOrInvalidPasswordError extends AuthError {
-  /**
-   * @param {string} [message] - Mensaje de error personalizado.
-   * @param {number} [status=404] - Código de estado HTTP por defecto.
-   */
-  constructor(
-    message = "La cuenta no existe o las credenciales son incorrectas.",
-    status = 404
-  ) {
-    super(message, status);
-    this.name = "UserNotFoundOrInvalidPasswordError";
+    super(message, 409); // 409 Conflict
   }
 }
 
 /**
  * @class AccountDisabledError
- * @description Error para cuentas desactivadas (código 401).
- * @augments AuthError
+ * @description Error para intentos de login a una cuenta que existe pero ha sido desactivada.
+ * @extends AppError
  */
-export class AccountDisabledError extends AuthError {
-  /**
-   * @param {string} [message] - Mensaje de error personalizado.
-   */
+export class AccountDisabledError extends AppError {
   constructor(
     message = "La cuenta está desactivada, contacte al administrador."
   ) {
-    super(message);
-    this.name = "AccountDisabledError";
+    super(message, 403); // 403 Forbidden
+  }
+}
+
+// --- ERRORES DE TOKEN Y AUTORIZACIÓN ---
+
+/**
+ * @class InvalidTokenError
+ * @description Error para tokens JWT inválidos, malformados o no proporcionados.
+ * @extends AppError
+ */
+export class InvalidTokenError extends AppError {
+  constructor(message = "El token proporcionado es inválido o no existe.") {
+    super(message, 401);
   }
 }
 
 /**
- * @class DatabaseConnectionError
- * @description Error para problemas de conexión con la base de datos (código 500).
- * @augments Error
+ * @class ForbiddenError
+ * @description Error para cuando un usuario autenticado no tiene los permisos necesarios.
+ * @extends AppError
  */
-export class DatabaseConnectionError extends Error {
-  /**
-   * @param {string} [message] - Mensaje de error personalizado.
-   * @param {number} [status=500] - Código de estado HTTP por defecto.
-   */
+export class ForbiddenError extends AppError {
+  constructor(message = "Acceso denegado. No tienes los permisos necesarios.") {
+    super(message, 403);
+  }
+}
+
+// --- ERRORES DE LÓGICA DE NEGOCIO (VISITAS Y PAQUETES) ---
+
+/**
+ * @class DuplicateError
+ * @description Error para cuando hay se intenta crear algun recurso con un ID ya usado.
+ * @extends AppError
+ */
+export class DuplicateError extends AppError {
+  constructor(message = "Ya existe un recurso con el mismo identificador.") {
+    super(message, 409);
+  }
+}
+
+/**
+ * @class ActiveVisitDontExistsError
+ * @description Error para cuando no se encuentra una visita activa para finalizar.
+ * @extends AppError
+ */
+export class ActiveVisitDontExistsError extends AppError {
+  constructor(message = "No existe ninguna visita activa asociada a este ID.") {
+    super(message, 404);
+  }
+}
+
+// --- ERRORES GENÉRICOS DE SOLICITUD Y DATOS ---
+
+/**
+ * @class NotFoundError
+ * @description Error genérico para cuando un recurso solicitado no se encuentra.
+ * @extends AppError
+ */
+export class NotFoundError extends AppError {
+  constructor(message = "El recurso solicitado no fue encontrado.") {
+    super(message, 404);
+  }
+}
+
+/**
+ * @class BadRequestError
+ * @description Error para datos de solicitud malformados o faltantes.
+ * @extends AppError
+ */
+export class BadRequestError extends AppError {
   constructor(
-    message = "No fue posible conectar con la base de datos.",
-    status = 500
+    message = "Los datos proporcionados son inválidos o están incompletos."
   ) {
-    super(message);
-    this.name = "DatabaseConnectionError";
-    this.status = status;
-  }
-}
-
-/**
- * @class PackageError
- * @description Clase base para errores en los CRUD de los paquetes.
- * @augments Error
- */
-export class PackageError extends Error {
-  /**
-   * @param {string} [message] - Mensaje de error personalizado.
-   * @param {number} [status=400] - Código de estado HTTP por defecto.
-   */
-  constructor(message, status = 400) {
-    super(message);
-    this.name = "PackageError";
-    this.status = status;
-  }
-}
-
-/**
- * @class InvalidPackageIdError
- * @description Error para cuando el id del paquete proporcionado no sea válido (codigo 400).
- * @augments PackageError
- */
-export class InvalidPackageIdError extends PackageError {
-  /**
-   * @param {string} [message] - Mensaje de error personalizado.
-   * @param {number} [status=400] - Código de estado HTTP por defecto.
-   */
-  constructor(
-    message = "El id del paquete proporcionado no es válido",
-    status = 400
-  ) {
-    super(message, status);
-    this.name = "InvalidPackageIdError";
-  }
-}
-
-/**
- * @class DuplicateGuideError
- * @description Error cuando ya existe un paquete con la misma guía en el mismo proceso (código 409).
- * @augments PackageError
- */
-export class DuplicateGuideError extends PackageError {
-  /**
-   * @param {string} [message] - Mensaje de error personalizado.
-   * @param {number} [status=409] - Código de estado HTTP por defecto.
-   */
-  constructor(
-    message = "Ya existe un paquete con la misma guia en este proceso.",
-    status = 409
-  ) {
-    super(message, status);
-    this.name = "DuplicateGuideError";
-  }
-}
-
-/**
- * @class PackageCreateError
- * @description Error cuando falla el registro de un paquete (código 500).
- * @augments PackageError
- */
-export class PackageCreateError extends PackageError {
-  /**
-   * @param {string} [message] - Mensaje de error personalizado.
-   * @param {number} [status=500] - Código de estado HTTP por defecto.
-   */
-  constructor(message = "No se pudo registrar el paquete.", status = 500) {
-    super(message, status);
-    this.name = "PackageCreateError";
-  }
-}
-
-/**
- * @class VisitError
- * @description Clase base para errores en los CRUD de las visitas.
- * @augments Error
- */
-export class VisitError extends Error {
-  /**
-   * @param {string} [message] - Mensaje de error personalizado.
-   * @param {number} [status=400] - Código de estado HTTP por defecto.
-   */
-  constructor(message, status = 400) {
-    super(message);
-    this.name = "VisitError";
-    this.status = status;
-  }
-}
-
-/**
- * @class SignatureDontExistsError
- * @description Error para cuando no se proporcione la firma del visitante (codigo 404).
- * @augments VisitError
- */
-export class SignatureDontExistsError extends VisitError {
-  /**
-   * @param {string} [message] - Mensaje de error personalizado.
-   * @param {number} [status=404] - Código de estado HTTP por defecto.
-   */
-  constructor(message = "La firma del visitante es obligatoria", status = 404) {
-    super(message, status);
-    this.name = "SignatureDontExistsError";
-  }
-}
-
-/**
- * @class InvalidVisitIdError
- * @description Error para cuando el id de la visita proporcionado no es válido (codigo 400).
- * @augments VisitError
- */
-export class InvalidVisitIdError extends VisitError {
-  /**
-   * @param {string} [message] - Mensaje de error personalizado.
-   * @param {number} [status=400] - Código de estado HTTP por defecto.
-   */
-  constructor(
-    message = "El id de la visita proporcionado no es válido",
-    status = 400
-  ) {
-    super(message, status);
-    this.name = "InvalidVisitIdError";
-  }
-}
-
-/**
- * @class VisitExistsError
- * @description Error para cuando ya hay una visita activa con la misma identificación (código 409).
- * @augments VisitError
- */
-export class VisitExistsError extends VisitError {
-  /**
-   * @param {string} [message] - Mensaje de error personalizado.
-   * @param {number} [status=409] - Código de estado HTTP por defecto.
-   */
-  constructor(
-    message = "Una visita con la misma identificación ya está activa.",
-    status = 409
-  ) {
-    super(message, status);
-    this.name = "VisitExistsError";
-  }
-}
-
-/**
- * @class AreaDontExistsError
- * @description Error para cuando el área seleccionada para una visita no existe (código 404).
- * @augments VisitError
- */
-export class AreaDontExistsError extends VisitError {
-  /**
-   * @param {string} [message] - Mensaje de error personalizado.
-   * @param {number} [status=404] - Código de estado HTTP por defecto.
-   */
-  constructor(message = "El área seleccionada no existe.", status = 404) {
-    super(message, status);
-    this.name = "AreaDontExistsError";
-  }
-}
-
-/**
- * @class ActiveVisitDontExists
- * @description Error para cuando no existe una visita activa para el ID proporcionado (código 404).
- * @augments VisitError
- */
-export class ActiveVisitDontExists extends VisitError {
-  /**
-   * @param {string} [message] - Mensaje de error personalizado.
-   * @param {number} [status=404] - Código de estado HTTP por defecto.
-   */
-  constructor(
-    message = "No existe ninguna visita activa ahora mismo asociada a este ID.",
-    status = 404
-  ) {
-    super(message, status);
-    this.name = "ActiveVisitDontExists";
-  }
-}
-
-/**
- * @class UpdateVisitError
- * @description Error para cuando falla la actualización del estado de una visita (ej. al terminarla) (código 500).
- * @augments VisitError
- */
-export class UpdateVisitError extends VisitError {
-  /**
-   * @param {string} [message] - Mensaje de error personalizado.
-   * @param {number} [status=500] - Código de estado HTTP por defecto.
-   */
-  constructor(message = "No se pudo terminar la visita.", status = 500) {
-    super(message, status);
-    this.name = "UpdateVisitError";
-  }
-}
-
-/**
- * @class VisitIdInvalidError
- * @description Error para cuando el ID de visita proporcionado no es válido (código 400).
- * @augments VisitError
- */
-export class VisitIdInvalidError extends VisitError {
-  /**
-   * @param {string} [message] - Mensaje de error personalizado.
-   * @param {number} [status=400] - Código de estado HTTP por defecto.
-   */
-  constructor(message = "El ID proporcionado no es válido.", status = 400) {
-    super(message, status);
-    this.name = "VisitIdInvalidError";
-  }
-}
-
-/**
- * @class ApiError
- * @description Clase base para errores de la API.
- * @augments Error
- */
-export class ApiError extends Error {
-  /**
-   * @param {string} [message] - Mensaje de error personalizado.
-   * @param {number} [status=500] - Código de estado HTTP por defecto.
-   */
-  constructor(message, status = 500) {
-    super(message);
-    this.name = "ApiError";
-    this.status = status;
-  }
-}
-
-/**
- * @class ApiFetchError
- * @description Error para cuando ocurre un fallo al obtener información de la API (código 500).
- * @augments ApiError
- */
-export class ApiFetchError extends ApiError {
-  /**
-   * @param {string} [message] - Mensaje de error personalizado.
-   */
-  constructor(message = "Ocurrió un error al obtener la información.") {
-    super(message);
-    this.name = "ApiFetchError";
-  }
-}
-
-/**
- * @class ApiNoActiveVisitError
- * @description Error para cuando no hay visitas activas en la API (código 404).
- * @augments ApiError
- */
-export class ApiNoActiveVisitError extends ApiError {
-  /**
-   * @param {string} [message] - Mensaje de error personalizado.
-   * @param {number} [status=404] - Código de estado HTTP por defecto.
-   */
-  constructor(message = "No hay visitas activas.", status = 404) {
-    super(message, status);
-    this.name = "ApiNoActiveVisitError";
-  }
-}
-
-/**
- * @class NoValidUpdateDataError
- * @description Error para cuando una operación de actualización es llamada sin
- * datos válidos (código 400).
- * @augments Error
- */
-export class NoValidUpdateDataError extends Error {
-  /**
-   * @param {string} [message] - Mensaje de error personalizado.
-   * @param {number} [status=400] - Código de estado HTTP por defecto.
-   */
-  constructor(
-    message = "No se proporcionaron datos válidos para actualizar el registro.",
-    status = 400 // Se utiliza 'status' para consistencia con otras clases
-  ) {
-    super(message);
-    this.name = "NoValidUpdateDataError";
-    this.status = status; // Cambiado de 'statusCode' a 'status' para estandarización
+    super(message, 400);
   }
 }

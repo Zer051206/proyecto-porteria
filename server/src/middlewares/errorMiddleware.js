@@ -1,51 +1,56 @@
 /**
  * @file errorMiddleware.js
- * @module errorHandlerMiddleware
- * @description Middleware de manejo de errores centralizado para Express. Captura errores lanzados
- * en cualquier parte de la aplicación (rutas, controladores, middlewares) y formatea la respuesta
- * HTTP con un código de estado (statusCode) y un mensaje amigable para el cliente.
+ * @module Middlewares
+ * @description Middleware de manejo de errores centralizado para Express. Captura todos los errores
+ * lanzados en la aplicación, los registra y formatea una respuesta HTTP estandarizada.
+ * @requires ../utils/customErrors.js
+ * @requires zod
+ * @requires jsonwebtoken
+ * @requires sequelize
+ * @requires ../config/logger.js
  */
 
-import {
-  AuthError,
-  VisitError,
-  PackageError,
-  ApiError,
-  DatabaseConnectionError,
-} from "../utils/customErrors.js";
+import logger from "../config/logger.js";
+import { AppError } from "../utils/customErrors.js";
 import { ZodError } from "zod";
 import pkg from "jsonwebtoken";
+import {
+  ValidationError as SequelizeValidationError,
+  UniqueConstraintError,
+  ForeignKeyConstraintError,
+  DatabaseError,
+} from "sequelize";
+
 const { JsonWebTokenError, TokenExpiredError } = pkg;
 
 /**
  * @function errorHandler
- * @description Middleware de manejo de errores de Express (firma de 4 parámetros).
- * Decide el código de estado HTTP y el mensaje de respuesta basándose en el tipo de error lanzado.
- * @param {Error} err - Objeto de error lanzado (puede ser una instancia de error estándar o personalizado).
+ * @description Middleware de Express que maneja todos los errores de la aplicación.
+ * @param {Error} err - El objeto de error capturado.
  * @param {object} req - Objeto de solicitud de Express.
  * @param {object} res - Objeto de respuesta de Express.
- * @param {function} next - Función para pasar el control al siguiente middleware (usualmente no se llama).
- * @returns {void} Envía una respuesta JSON con el formato de error estandarizado.
+ * @param {Function} _next - Función next de Express (sin usar).
+ * @returns {void} Envía una respuesta JSON estandarizada.
  */
-const errorHandler = (err, req, res, next) => {
-  console.error("Error capturado:", err, err.message);
+const errorHandler = (err, req, res, _next) => {
+  // 1. REGISTRAMOS EL ERROR
+  // Pino maneja el objeto 'err' de forma nativa, incluyendo el stack trace.
+  logger.error(
+    err,
+    `Error capturado en la ruta: ${req.method} ${req.originalUrl}`
+  );
 
+  // 2. DETERMINAMOS EL CÓDIGO DE ESTADO Y EL MENSAJE
   let statusCode = 500;
   let message = "Ha ocurrido un error inesperado en el servidor.";
   let errors = null;
 
-  // Manejar errores personalizados de la aplicación (ej: 400, 403, 404, etc.)
-  if (
-    err instanceof AuthError ||
-    err instanceof VisitError ||
-    err instanceof PackageError ||
-    err instanceof ApiError
-  ) {
-    statusCode = err.status || 500;
+  // Manejo de nuestros errores personalizados (todos heredan de AppError)
+  if (err instanceof AppError) {
+    statusCode = err.status;
     message = err.message;
   }
-
-  // Manejar errores de validación de Zod (peticiones con formato inválido)
+  // Manejo de errores de validación de Zod
   else if (err instanceof ZodError) {
     statusCode = 400;
     message = "Error de validación en los datos de la solicitud.";
@@ -54,8 +59,7 @@ const errorHandler = (err, req, res, next) => {
       message: e.message,
     }));
   }
-
-  // Manejar errores de JWT (Autenticación)
+  // Manejo de errores de JWT
   else if (
     err instanceof JsonWebTokenError ||
     err instanceof TokenExpiredError
@@ -63,32 +67,33 @@ const errorHandler = (err, req, res, next) => {
     statusCode = 401;
     message = "Token inválido o expirado. Acceso no autorizado.";
   }
-
-  // Manejar errores de conexión a la base de datos
-  else if (err instanceof DatabaseConnectionError) {
+  // Manejo de errores específicos de Sequelize
+  else if (err instanceof UniqueConstraintError) {
+    statusCode = 409; // Conflict
+    message = "El registro ya existe. Uno de los campos únicos ya está en uso.";
+    errors = err.errors.map((e) => ({ path: e.path, message: e.message }));
+  } else if (err instanceof ForeignKeyConstraintError) {
+    statusCode = 409; // Conflict
+    message = "No se puede realizar la operación debido a registros asociados.";
+  } else if (err instanceof SequelizeValidationError) {
+    statusCode = 400;
+    message = "Error de validación de la base de datos.";
+    errors = err.errors.map((e) => ({ path: e.path, message: e.message }));
+  } else if (err instanceof DatabaseError) {
     statusCode = 500;
-    message =
-      "Estamos experimentando problemas técnicos. Por favor, inténtelo de nuevo más tarde.";
+    message = "Error interno de la base de datos.";
   }
 
-  // Manejar errores de validación genéricos (si los hubiera, ej. Mongoose u otros)
-  else if (err.name === "ValidationError") {
-    statusCode = 400;
-    message = "Error de validación.";
-    errors = err.errors;
-  } else if (err.name === "NoValidUpdateDataError") {
-    statusCode = 400;
+  // Para errores genéricos 500 en desarrollo, mostramos el mensaje real para facilitar la depuración.
+  if (process.env.NODE_ENV !== "production" && statusCode === 500 && !errors) {
     message = err.message;
   }
-  /**
-   * @description Envía la respuesta de error estandarizada al cliente.
-   * La respuesta incluye el código de estado, un indicador de éxito (false), el mensaje
-   * de error y, opcionalmente, una lista de errores detallados (para validaciones).
-   */
+
+  // 3. ENVIAMOS LA RESPUESTA
   res.status(statusCode).json({
     success: false,
     message: message,
-    ...(errors && { errors }), // Incluir 'errors' solo si no es nulo
+    ...(errors && { errors }), // Incluye 'errors' solo si no es nulo
   });
 };
 

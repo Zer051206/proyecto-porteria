@@ -9,7 +9,7 @@
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Strategy as MicrosoftStrategy } from "passport-microsoft";
-import * as userModel from "../models/userModel.js";
+import * as userModel from "../repositories/userRepository.js";
 import * as authService from "../services/authService.js";
 import dotenv from "dotenv";
 

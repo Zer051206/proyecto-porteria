@@ -1,88 +1,154 @@
 /**
  * @file visitService.js
- * @module visitService
- * @description Capa de servicio para la gestión del flujo de visitas: registro de entrada
- * y registro de salida. Contiene la lógica de negocio para la validación de duplicados
- * y la verificación de IDs de referencia (áreas).
+ * @module Services
+ * @description Capa de servicio para la gestión de la lógica de negocio de las visitas.
+ * Se encarga de la creación (entrada) y finalización (salida) de visitas, asegurando la integridad
+ * de los datos a través de transacciones y registrando las acciones para auditoría.
+ * @requires ../models/index.js
+ * @requires ../repositories/visitRepository.js
+ * @requires ../repositories/logRepository.js
+ * @requires ../repositories/areaRepository.js
+ * @requires ../utils/customErrors.js
+ * @requires ../config/logger.js
  */
-import * as visitModel from "../models/visitModel.js";
+
+import db from "../models/index.js";
+import * as visitRepository from "../repositories/visitRepository.js";
+import * as logRepository from "../repositories/logRepository.js";
+import * as areaRepository from "../repositories/areaRepository.js";
 import {
   VisitExistsError,
-  AreaDontExistsError,
-  ActiveVisitDontExists,
-  UpdateVisitError,
+  NotFoundError,
+  ActiveVisitDontExistsError,
 } from "../utils/customErrors.js";
+import logger from "../config/logger.js";
 
 /**
  * @async
  * @function createVisit
- * @description Registra la entrada de un nuevo visitante. Verifica dos condiciones clave:
- * 1. Que no exista una visita activa previa para la misma identificación.
- * 2. Que el ID de área proporcionado sea válido.
- * @param {object} visitData - Objeto con los datos de la visita a registrar, incluyendo identificacion e id_area.
- * @returns {Promise<object>} Promesa que resuelve con el ID de la visita recién creada y los datos proporcionados.
- * @throws {VisitExistsError} Si ya existe una visita activa para esa identificación.
- * @throws {AreaDontExistsError} Si el ID de área no corresponde a un área válida.
+ * @description Registra la entrada de un nuevo visitante en una transacción.
+ * @param {object} visitData - Datos de la visita a registrar.
+ * @param {object} user - El usuario (portero) que registra la entrada.
+ * @param {string} ipAddress - La dirección IP del usuario.
+ * @returns {Promise<object>} El objeto de la visita recién creada.
+ * @throws {VisitExistsError} Si ya existe una visita activa para la misma identificación.
+ * @throws {NotFoundError} Si el ID de área proporcionado no es válido.
  */
-export const createVisit = async (visitData) => {
-  try {
-    const { identificacion, id_area } = visitData;
+export const createVisit = async (visitData, user, ipAddress) => {
+  return db.sequelize.transaction(async (t) => {
+    const { identificacion, id_area, ...restOfData } = visitData;
 
-    // 1. Verificar visitas activas previas
-    const activeVisite = await visitModel.findActiveVisitByIdentificacion(
-      identificacion
+    // 1. Verificar que no exista una visita activa para la misma identificación.
+    const activeVisit = await visitRepository.findActiveByIdentification(
+      identificacion,
+      { transaction: t }
     );
-
-    if (activeVisite) {
+    if (activeVisit) {
+      logger.warn(
+        { userId: user.id_usuario, visitorId: identificacion },
+        "Intento de registrar una visita duplicada activa."
+      );
       throw new VisitExistsError();
     }
 
-    // 2. Verificar que el área exista
-    const areaExists = await visitModel.findAreaById(id_area);
-
+    // 2. Verificar que el área de destino exista.
+    const areaExists = await areaRepository.findById(id_area, {
+      transaction: t,
+    });
     if (!areaExists) {
-      throw new AreaDontExistsError();
+      logger.warn(
+        { userId: user.id_usuario, areaId: id_area },
+        "Intento de registrar visita a un área inexistente."
+      );
+      throw new NotFoundError(`El área con ID ${id_area} no existe.`);
     }
 
-    // 3. Crear la visita
-    const result = await visitModel.createVisit(visitData);
+    // 3. Preparar y crear el registro de la visita.
+    const visitForDb = {
+      ...restOfData,
+      identificacion,
+      id_area,
+      id_usuario_entrada: user.id_usuario,
+      fecha_entrada: new Date(),
+      estado: true, // Se establece explícitamente el estado activo.
+    };
 
-    return { id_visita: result.insertId, ...visitData };
-  } catch (error) {
-    throw error;
-  }
+    const newVisit = await visitRepository.create(visitForDb, {
+      transaction: t,
+    });
+
+    // 4. Registrar la acción en el log.
+    await logRepository.create(
+      {
+        accion: "REGISTRAR_ENTRADA_VISITA",
+        id_usuario: user.id_usuario,
+        descripcion: `Se registró la entrada del visitante '${newVisit.nombre_visitante}' (ID Visita: ${newVisit.id_visita}).`,
+        ip_usuario: ipAddress,
+        id_visita: newVisit.id_visita, // Enlazamos el log con la visita.
+      },
+      { transaction: t }
+    );
+
+    logger.info(
+      { userId: user.id_usuario, visitId: newVisit.id_visita },
+      "Nueva visita registrada exitosamente."
+    );
+
+    return newVisit;
+  });
 };
 
 /**
  * @async
  * @function updateVisitExit
- * @description Registra la salida de una visita activa. Verifica que la visita exista
- * y que actualmente se encuentre activa (sin hora de salida registrada).
- * @param {object} visitData - Objeto que contiene el ID de la visita (`visitId`) y metadatos de auditoría.
- * @returns {Promise<object>} Promesa que resuelve con el objeto de la visita actualizada.
- * @throws {ActiveVisitDontExists} Si la visita no existe o ya ha sido marcada como salida.
- * @throws {UpdateVisitError} Si la actualización en el modelo no es exitosa (ej. 0 filas afectadas).
+ * @description Registra la salida de una visita activa en una transacción.
+ * @param {number} visitId - El ID de la visita a finalizar.
+ * @param {object} user - El usuario (portero) que registra la salida.
+ * @param {string} ipAddress - La dirección IP del usuario.
+ * @returns {Promise<object>} El objeto de la visita actualizada.
+ * @throws {ActiveVisitDontExistsError} Si la visita no se encuentra o ya está finalizada.
  */
-export const updateVisitExit = async (visitData) => {
-  try {
-    const { visitId } = visitData;
+export const updateVisitExit = async (visitId, user, ip_usuario) => {
+  return db.sequelize.transaction(async (t) => {
+    // 1. Buscar la visita para asegurar que existe y está activa.
+    const visitDb = await visitRepository.findById(visitId, { transaction: t });
 
-    // 1. Verificar si la visita existe y está activa
-    const activeVisit = await visitModel.findActiveVisitByVisitId(visitId);
-
-    if (!activeVisit) {
-      throw new ActiveVisitDontExists();
+    if (!visitDb || !visitDb.estado) {
+      logger.warn(
+        { userId: user.id_usuario, visitId },
+        "Intento de finalizar una visita inexistente o ya finalizada."
+      );
+      throw new ActiveVisitDontExistsError();
     }
 
-    // 2. Registrar la salida
-    const updatedVisit = await visitModel.updateVisitExit(visitData);
+    // 2. Preparar y ejecutar la actualización.
+    const updateData = {
+      fecha_salida: new Date(),
+      estado: false,
+      id_usuario_salida: user.id_usuario,
+    };
 
-    if (!updatedVisit) {
-      throw new UpdateVisitError();
-    }
+    const updatedVisit = await visitRepository.update(visitId, updateData, {
+      transaction: t,
+    });
+
+    // 3. Registrar la acción en el log.
+    await logRepository.create(
+      {
+        accion: "REGISTRAR_SALIDA_VISITA",
+        id_usuario: user.id_usuario,
+        descripcion: `Se registró la salida del visitante '${visitDb.nombre_visitante}' (ID Visita: ${visitId}).`,
+        ip_usuario: ip_usuario,
+        id_visita: visitId, // Enlazamos el log con la visita.
+      },
+      { transaction: t }
+    );
+
+    logger.info(
+      { userId: user.id_usuario, visitId },
+      "Salida de visita registrada exitosamente."
+    );
 
     return updatedVisit;
-  } catch (error) {
-    throw error;
-  }
+  });
 };

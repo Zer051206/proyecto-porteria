@@ -6,7 +6,7 @@
  * a las rutas sensibles a ataques de fuerza bruta.
  */
 import { Router } from "express";
-import * as refreshTokenModel from "../models/refreshTokenModel.js";
+import * as refreshTokenModel from "../repositories/refreshTokenRepository.js";
 import * as authController from "../controllers/authController.js";
 import rateLimit from "express-rate-limit";
 import { InvalidTokenError } from "../utils/customErrors.js";

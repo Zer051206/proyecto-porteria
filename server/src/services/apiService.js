@@ -1,142 +1,161 @@
 /**
  * @file apiService.js
- * @module apiService
- * @description Capa de servicios que contiene la lógica de negocio para obtener datos
- * estáticos (catálogos) y datos de historial de la aplicación, interactuando con apiModel.
- * Se encarga de validar la existencia de los datos y lanzar errores personalizados.
+ * @module Services
+ * @description Capa de servicio unificada para las consultas de la API.
+ * Orquesta la obtención de datos para los dashboards (visitas activas, historiales)
+ * y para los catálogos, aplicando la lógica de autorización basada en roles.
+ * @requires sequelize
+ * @requires ../repositories/*.js
+ * @requires ../config/logger.js
  */
-import * as apiModel from "../models/apiModel.js";
-import { ApiFetchError, ApiNoActiveVisitError } from "../utils/customErrors.js";
+
+import { Op } from "sequelize";
+import * as visitRepository from "../repositories/visitRepository.js";
+import * as packageRepository from "../repositories/packageRepository.js";
+import * as areaRepository from "../repositories/areaRepository.js";
+import * as identificationTypeRepository from "../repositories/identificationTypeRepository.js";
+import * as packageTypeRepository from "../repositories/packageTypeRepository.js";
+import logger from "../config/logger.js";
+
+// --- SERVICIOS DE CATÁLOGO ---
 
 /**
  * @async
  * @function getAreas
- * @description Obtiene el listado de todas las áreas desde el modelo.
- * @returns {Promise<Array<object>>} Promesa que resuelve con la lista de áreas.
- * @throws {ApiFetchError} Si no se puede obtener la lista de áreas (ej. la consulta retorna nulo).
+ * @description Obtiene una lista de todas las áreas.
+ * @returns {Promise<Array<object>>}
  */
 export const getAreas = async () => {
-  try {
-    const areas = await apiModel.fetchAreas();
-
-    if (!areas) {
-      throw new ApiFetchError("No se pudo obtener el listado de áreas.");
-    }
-
-    return areas;
-  } catch (error) {
-    throw error;
+  logger.info("Solicitando lista de áreas del catálogo.");
+  const areas = await areaRepository.findAll();
+  if (!areas) {
+    return null;
   }
+  return areas;
 };
 
 /**
  * @async
- * @function getTiposIdentificacion
- * @description Obtiene el listado de tipos de identificación desde el modelo.
- * @returns {Promise<Array<object>>} Promesa que resuelve con la lista de tipos de identificación.
- * @throws {ApiFetchError} Si no se puede obtener la lista de tipos de identificación.
+ * @function getIdentificationTypes
+ * @description Obtiene una lista de todos los tipos de identificación.
+ * @returns {Promise<Array<object>>}
  */
-export const getTiposIdentificacion = async () => {
-  try {
-    const tiposIdentificacion = await apiModel.fetchTiposIdentificacion();
-
-    if (!tiposIdentificacion) {
-      throw new ApiFetchError(
-        "No se pudo obtener el listado de tipos de identificación."
-      );
-    }
-
-    return tiposIdentificacion;
-  } catch (error) {
-    throw error;
+export const getIdentificationTypes = async () => {
+  logger.info("Solicitando lista de tipos de identificación del catálogo.");
+  const identificationTypes = await identificationTypeRepository.findAll();
+  if (!identificationTypes) {
+    return null;
   }
+  return identificationTypes;
 };
+
+/**
+ * @async
+ * @function getPackageTypes
+ * @description Obtiene una lista de todos los tipos de paquetes.
+ * @returns {Promise<Array<object>>}
+ */
+export const getPackageTypes = async () => {
+  logger.info("Solicitando lista de tipos de paquetes del catálogo.");
+  const packageTypes = await packageTypeRepository.findAll();
+  if (!packageTypes) {
+    return null;
+  }
+  return packageTypes;
+};
+
+// --- SERVICIOS DE DASHBOARD E HISTORIAL ---
 
 /**
  * @async
  * @function getActiveVisits
- * @description Obtiene un listado de todas las visitas que se encuentran activas (pendientes de salida).
- * @returns {Promise<Array<object>>} Promesa que resuelve con la lista de visitas activas.
- * @throws {ApiNoActiveVisitError} Si no hay visitas activas registradas.
+ * @description Obtiene un listado de todas las visitas que están actualmente activas.
+ * @returns {Promise<Array<object>>}
  */
 export const getActiveVisits = async () => {
-  try {
-    const activeVisits = await apiModel.fetchActiveVisits();
-
-    if (!activeVisits) {
-      // Usamos un error específico ya que la ausencia de visitas activas puede ser una condición esperada
-      throw new ApiNoActiveVisitError("No se encontraron visitas activas.");
-    }
-
-    return activeVisits;
-  } catch (error) {
-    throw error;
+  logger.info("Solicitando lista de visitas activas.");
+  const activeVisits = await visitRepository.findAll({
+    where: { estado: true },
+    order: [["fecha_entrada", "DESC"]],
+  });
+  if (!activeVisits) {
+    return null;
   }
+  return activeVisits;
 };
 
 /**
  * @async
- * @function getTiposPaquetes
- * @description Obtiene el listado de tipos de paquetes desde el modelo.
- * @returns {Promise<Array<object>>} Promesa que resuelve con la lista de tipos de paquetes.
- * @throws {ApiFetchError} Si no se puede obtener el listado de tipos de paquetes.
+ * @function getPackageHistory
+ * @description Obtiene el historial de paquetes, filtrado por rol. La búsqueda por texto se delega al frontend.
+ * @param {object} user - El usuario autenticado que realiza la solicitud.
+ * @returns {Promise<Array<object>>}
  */
-export const getTiposPaquetes = async () => {
-  try {
-    const tiposPaquetes = await apiModel.fetchTiposPaquetes();
+export const getPackageHistory = async (user) => {
+  logger.info(
+    { userId: user.id_usuario },
+    "Solicitando historial de paquetes."
+  );
 
-    if (!tiposPaquetes) {
-      throw new ApiFetchError(
-        "No se pudo obtener el listado de tipos de paquetes."
-      );
-    }
+  const options = {
+    order: [
+      ["fecha_recibido", "DESC"],
+      ["fecha_envio", "DESC"],
+    ],
+    where: {},
+  };
 
-    return tiposPaquetes;
-  } catch (error) {
-    throw error;
+  // Lógica de rol: Un 'portero' solo ve los paquetes que ha gestionado.
+  if (user.rol === "portero") {
+    options.where = {
+      [Op.or]: [
+        { id_usuario_recibir: user.id_usuario },
+        { id_usuario_enviar: user.id_usuario },
+      ],
+    };
   }
+
+  // Si es 'admin', el 'where' queda vacío, por lo que ve todo.
+  const packageHistory = await packageRepository.findAll(options);
+
+  if (!packageHistory) {
+    return null;
+  }
+
+  return packageHistory;
 };
 
 /**
  * @async
- * @function getVisitsHistorial
- * @description Obtiene el historial completo de visitas, aplicando un filtro de búsqueda si se proporciona.
- * @param {string | undefined} searchTerm - El término de búsqueda opcional para filtrar el historial.
- * @returns {Promise<Array<object>>} Promesa que resuelve con el historial de visitas.
- * @throws {ApiFetchError} Si la consulta de historial retorna nulo.
+ * @function getVisitHistory
+ * @description Obtiene el historial de visitas, filtrado por rol. La búsqueda por texto se delega al frontend.
+ * @param {object} user - El usuario autenticado que realiza la solicitud.
+ * @returns {Promise<Array<object>>}
  */
-export const getVisitsHistorial = async (searchTerm) => {
-  try {
-    const visitsHistorial = await apiModel.fetchVisitsHistorial(searchTerm);
+export const getVisitHistory = async (user) => {
+  logger.info({ userId: user.id_usuario }, "Solicitando historial de visitas.");
 
-    if (!visitsHistorial) {
-      throw new ApiFetchError("No se pudo obtener el historial de visitas.");
-    }
+  const options = {
+    order: [["fecha_entrada", "DESC"]],
+    where: {},
+  };
 
-    return visitsHistorial;
-  } catch (error) {
-    throw error;
+  // Lógica de rol: Un 'portero' solo ve las visitas que ha gestionado.
+  if (user.rol === "portero") {
+    options.where = {
+      [Op.or]: [
+        { id_usuario_entrada: user.id_usuario },
+        { id_usuario_salida: user.id_usuario },
+      ],
+    };
   }
-};
 
-/**
- * @async
- * @function getPackagesHistorial
- * @description Obtiene el historial completo de paquetes, aplicando un filtro de búsqueda si se proporciona.
- * @param {string | undefined} searchTerm - El término de búsqueda opcional para filtrar el historial.
- * @returns {Promise<Array<object>>} Promesa que resuelve con el historial de paquetes.
- * @throws {ApiFetchError} Si la consulta de historial retorna nulo.
- */
-export const getPackagesHistorial = async (searchTerm) => {
-  try {
-    const packagesHistorial = await apiModel.fetchPackagesHistorial(searchTerm);
+  // Si es 'admin', el 'where' queda vacío, por lo que ve todo.
+  const visitHistory = await visitRepository.findAll(options);
 
-    if (!packagesHistorial) {
-      throw new ApiFetchError("No se pudo obtener el historial de paquetes.");
-    }
-
-    return packagesHistorial;
-  } catch (error) {
-    throw error;
+  if (!visitHistory) {
+    return null;
   }
+
+  return visitHistory;
 };

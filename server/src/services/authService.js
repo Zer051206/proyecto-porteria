@@ -1,250 +1,236 @@
 /**
  * @file authService.js
- * @module authService
- * @description Capa de servicio para la gestión de la autenticación de usuarios:
- * registro, login con contraseña, manejo de tokens (refresh/logout) y autenticación OAuth.
- * Contiene la lógica de negocio para la verificación de credenciales, hashing de contraseñas
- * y gestión de tokens de acceso y refresh.
+ * @module Services
+ * @description Capa de servicio para la gestión de la autenticación de usuarios.
+ * Contiene la lógica de negocio para registro, login, manejo de tokens y autenticación OAuth.
+ * @requires bcrypt
+ * @requires ../repositories/userRepository.js
+ * @requires ../repositories/refreshTokenRepository.js
+ * @requires ../utils/tokenUtils.js
+ * @requires ../utils/customErrors.js
+ * @requires ../config/logger.js
  */
+
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
+import * as userRepository from "../repositories/userRepository.js";
+import * as refreshTokenRepository from "../repositories/refreshTokenRepository.js";
 import * as tokenUtils from "../utils/tokenUtils.js";
-import * as userModel from "../models/userModel.js";
-import * as refreshTokenModel from "../models/refreshTokenModel.js";
 import {
   UserAlreadyExistsError,
   UserNotFoundOrInvalidPasswordError,
   AccountDisabledError,
   InvalidTokenError,
 } from "../utils/customErrors.js";
+import logger from "../config/logger.js";
+
+/**
+ * @private
+ * @async
+ * @function _generateAndSaveTokens
+ * @description Función auxiliar interna para generar y guardar el par de tokens (acceso y refresco).
+ * @param {object} user - El objeto del usuario para el cual se generarán los tokens.
+ * @returns {Promise<{accessToken: string, refreshToken: string, userPayload: object}>}
+ */
+const _generateAndSaveTokens = async (user) => {
+  const userPayload = {
+    id_usuario: user.id_usuario,
+    correo: user.correo,
+    rol: user.rol,
+  };
+
+  const accessToken = tokenUtils.generateAccessToken(userPayload);
+  const refreshToken = tokenUtils.generateRefreshToken();
+  const refreshTokenExpires = tokenUtils.getRefreshTokenExpiration();
+
+  await refreshTokenRepository.create({
+    id_usuario: user.id_usuario,
+    token: refreshToken,
+    expira_en: refreshTokenExpires,
+  });
+
+  await userRepository.updateLastLogin(user.id_usuario);
+
+  return { accessToken, refreshToken, userPayload };
+};
 
 /**
  * @async
  * @function registerUser
- * @description Verifica si un usuario con el correo electrónico proporcionado ya existe.
- * Si no existe, hashea la contraseña y crea un nuevo usuario.
- * @param {object} validatedData - Objeto con los datos validados del usuario (nombre, apellido, correo, password).
- * @returns {Promise<object>} Promesa que resuelve con la información básica del usuario creado.
- * @throws {UserAlreadyExistsError} Si ya existe un usuario con ese correo electrónico.
+ * @description Registra un nuevo usuario en el sistema.
+ * @param {object} validatedData - Datos validados del usuario.
+ * @returns {Promise<object>} Información del usuario creado.
+ * @throws {UserAlreadyExistsError} Si el correo ya está registrado.
  */
 export const registerUser = async (validatedData) => {
-  try {
-    const { nombre, apellido, correo, password } = validatedData;
-    const userDb = await userModel.findByEmail(correo);
+  const { correo, password, ...restOfData } = validatedData;
 
-    if (userDb) {
-      throw new UserAlreadyExistsError();
-    }
-
-    const contrasena_hash = await bcrypt.hash(password, 10);
-    const userForDB = {
-      nombre,
-      apellido,
-      correo,
-      contrasena_hash: contrasena_hash,
-    };
-
-    const userCreated = await userModel.createUser(userForDB);
-    return {
-      message: "Usuario registrado exitosamente",
-      usuario: {
-        id: userCreated.id_usuario,
-        nombre: userCreated.nombre,
-        apellido: userCreated.apellido,
-        correo: userCreated.correo,
-        rol: userCreated.rol,
-      },
-    };
-  } catch (error) {
-    throw error;
+  const existingUser = await userRepository.findByEmail(correo);
+  if (existingUser) {
+    logger.warn({ email: correo }, "Intento de registro con correo duplicado.");
+    throw new UserAlreadyExistsError();
   }
+
+  const contrasena_hash = await bcrypt.hash(password, 10);
+  const userForDB = { ...restOfData, correo, contrasena_hash, rol: "portero" }; // rol por defecto
+
+  const userCreated = await userRepository.create(userForDB);
+
+  logger.info(
+    { userId: userCreated.id_usuario, email: correo },
+    "Nuevo usuario registrado exitosamente."
+  );
+
+  const { contrasena_hash: _, ...safeUser } = userCreated.dataValues;
+  return safeUser;
 };
 
 /**
  * @async
  * @function loginUser
- * @description Realiza el login de un usuario con correo/contraseña.
- * Verifica la existencia del usuario, el estado de la cuenta, y la coincidencia de la contraseña.
- * Genera y guarda el par de Access Token y Refresh Token.
- * @param {object} validatedData - Objeto con los datos validados del usuario (correo, password).
- * @returns {Promise<object>} Promesa que resuelve con el Access Token, Refresh Token y los datos del usuario.
- * @throws {UserNotFoundOrInvalidPasswordError} Si el usuario no existe, no tiene contraseña o la contraseña es incorrecta.
- * @throws {AccountDisabledError} Si la cuenta del usuario no está activa.
+ * @description Autentica a un usuario y genera sus tokens de sesión.
+ * @param {object} validatedData - Datos de login validados (correo y password).
+ * @returns {Promise<object>} Objeto con los tokens y los datos del usuario.
+ * @throws {UserNotFoundOrInvalidPasswordError|AccountDisabledError}
  */
 export const loginUser = async (validatedData) => {
-  try {
-    const { correo, password } = validatedData;
+  const { correo, password } = validatedData;
+  const userDb = await userRepository.findByEmail(correo);
 
-    const userDb = await userModel.findByEmail(correo);
-
-    if (!userDb || !userDb.contrasena_hash) {
-      // Unificamos el error para no dar pistas sobre la existencia del usuario
-      throw new UserNotFoundOrInvalidPasswordError();
-    }
-
-    if (!userDb.activo) {
-      throw new AccountDisabledError();
-    }
-
-    const isPasswordCorrect = await bcrypt.compare(
-      password,
-      userDb.contrasena_hash
+  if (!userDb || !userDb.contrasena_hash) {
+    logger.warn(
+      { email: correo },
+      "Intento de login fallido: usuario no encontrado o sin contraseña."
     );
-    if (!isPasswordCorrect) {
-      throw new UserNotFoundOrInvalidPasswordError();
-    }
-
-    // Generación y guardado de tokens
-    const accessToken = tokenUtils.generateAccessToken(userDb);
-    const refreshToken = tokenUtils.generateRefreshToken();
-    const refreshTokenExpires = tokenUtils.getRefreshTokenExpiration();
-
-    await refreshTokenModel.saveRefreshToken(
-      userDb.id_usuario,
-      refreshToken,
-      refreshTokenExpires
-    );
-
-    await userModel.updateLastLogin(userDb.id_usuario);
-
-    return {
-      accessToken,
-      refreshToken,
-      user: {
-        id: userDb.id_usuario,
-        nombre: userDb.nombre,
-        apellido: userDb.apellido,
-        correo: userDb.correo,
-        rol: userDb.rol,
-      },
-    };
-  } catch (error) {
-    throw error;
+    throw new UserNotFoundOrInvalidPasswordError();
   }
+
+  if (!userDb.activo) {
+    logger.warn(
+      { email: correo, userId: userDb.id_usuario },
+      "Intento de login fallido: cuenta inactiva."
+    );
+    throw new AccountDisabledError();
+  }
+
+  const isPasswordCorrect = await bcrypt.compare(
+    password,
+    userDb.contrasena_hash
+  );
+  if (!isPasswordCorrect) {
+    logger.warn(
+      { email: correo, userId: userDb.id_usuario },
+      "Intento de login fallido: contraseña incorrecta."
+    );
+    throw new UserNotFoundOrInvalidPasswordError();
+  }
+
+  logger.info(
+    { userId: userDb.id_usuario, email: correo },
+    "Inicio de sesión exitoso."
+  );
+
+  const { accessToken, refreshToken, userPayload } =
+    await _generateAndSaveTokens(userDb);
+
+  return { accessToken, refreshToken, user: userPayload };
 };
 
 /**
  * @async
  * @function refreshAccessToken
- * @description Renueva el Access Token utilizando un Refresh Token válido.
- * @param {string} refreshToken - El token de refresco enviado por el cliente.
- * @returns {Promise<object>} Promesa que resuelve con el nuevo Access Token y datos básicos del usuario.
- * @throws {InvalidTokenError} Si el refresh token es nulo, inválido o ha expirado.
+ * @description Renueva un accessToken utilizando un refreshToken válido.
+ * @param {string} refreshToken - El token de refresco.
+ * @returns {Promise<object>} Objeto con el nuevo accessToken y los datos del usuario.
+ * @throws {InvalidTokenError} Si el refreshToken es inválido.
  */
 export const refreshAccessToken = async (refreshToken) => {
-  try {
-    if (!refreshToken) {
-      throw new InvalidTokenError("El refresh token es requerido.");
-    }
+  if (!refreshToken)
+    throw new InvalidTokenError("El refresh token es requerido.");
 
-    const tokenData = await refreshTokenModel.findValidRefreshToken(
-      refreshToken
-    );
+  const userData = await refreshTokenRepository.findValidToken(refreshToken);
+  if (!userData)
+    throw new InvalidTokenError("Refresh token inválido o expirado.");
 
-    if (!tokenData) {
-      // Importante: No se elimina el refresh token de la base de datos aquí. Se asume que el token
-      // ya no existe (expirado, revocado, o nunca existió), por lo que simplemente se rechaza.
-      throw new InvalidTokenError("Refresh token inválido o expirado.");
-    }
+  logger.info(
+    { userId: userData.id_usuario },
+    "Token de acceso renovado exitosamente."
+  );
 
-    const newAccessToken = tokenUtils.generateAccessToken({
-      id_usuario: tokenData.id_usuario,
-      correo: tokenData.correo,
-      rol: tokenData.rol,
-    });
-
-    return {
-      accessToken: newAccessToken,
-      user: {
-        id: tokenData.id_usuario,
-        correo: tokenData.correo,
-        rol: tokenData.rol,
-      },
-    };
-  } catch (error) {
-    throw error;
-  }
+  const newAccessToken = tokenUtils.generateAccessToken(userData);
+  return { accessToken: newAccessToken, user: userData };
 };
 
 /**
  * @async
  * @function logoutUser
- * @description Revoca (elimina) el Refresh Token de la base de datos, cerrando la sesión de manera efectiva.
- * @param {string} refreshToken - El token de refresco a revocar.
- * @returns {Promise<object>} Promesa que resuelve con un mensaje de éxito.
+ * @description Cierra la sesión de un usuario revocando su refreshToken.
+ * @param {string} refreshToken - El token de refresco a invalidar.
+ * @returns {Promise<object>}
  */
 export const logoutUser = async (refreshToken) => {
-  try {
-    if (refreshToken) {
-      await refreshTokenModel.revokeRefreshToken(refreshToken);
-    }
-    return { message: "Logout exitoso" };
-  } catch (error) {
-    throw error;
+  if (refreshToken) {
+    await refreshTokenRepository.revokeToken(refreshToken);
+    logger.info("Refresh token revocado durante el logout.");
   }
+  return { message: "Logout exitoso" };
 };
 
 /**
  * @async
  * @function handleOauthLogin
- * @description Maneja el proceso de inicio de sesión/registro a través de OAuth (Google/Microsoft).
- * Crea el usuario si no existe, vincula la cuenta si el correo existe, y genera el par de tokens de sesión.
- * @param {object} oauthData - Objeto con los datos validados del proveedor OAuth.
- * @returns {Promise<object>} Promesa que resuelve con el Access Token, Refresh Token y los datos del usuario.
- * @throws {UserAlreadyExistsError} Si la cuenta está vinculada a un proveedor diferente.
+ * @description Maneja el flujo de login/registro para proveedores OAuth.
+ * @param {object} oauthData - Datos del perfil obtenidos del proveedor OAuth.
+ * @returns {Promise<object>} Objeto con los tokens y los datos del usuario.
+ * @throws {UserAlreadyExistsError} Si el correo ya está vinculado a otro proveedor OAuth.
  */
 export const handleOauthLogin = async (oauthData) => {
-  try {
-    const { nombre, apellido, correo, id_oauth, proveedor_oauth } = oauthData;
+  const { nombre, apellido, correo, id_oauth, proveedor_oauth } = oauthData;
+  let userDb = await userRepository.findByEmail(correo);
 
-    let userDb = await userModel.findByEmail(correo);
-
-    if (!userDb) {
-      // 1. USUARIO NUEVO: Se crea el usuario con los datos de OAuth.
-      userDb = await userModel.createUser({
-        nombre,
-        apellido,
-        correo,
-        id_oauth,
-        proveedor_oauth,
-      });
-    } else if (!userDb.id_oauth) {
-      // 2. USUARIO EXISTENTE SIN VINCULACIÓN: Se vincula la cuenta de la DB existente al proveedor OAuth.
-      const updateData = {
-        id_oauth: id_oauth,
-        proveedor_oauth: proveedor_oauth,
-      };
-      userDb = await userModel.updateUser(userDb.id_usuario, updateData);
-    } else if (userDb.id_oauth !== id_oauth) {
-      // 3. VALIDACIÓN DE CONFLICTO: Si la cuenta está vinculada a otro proveedor (ID diferente).
-      throw new UserAlreadyExistsError("Cuenta vinculada a otro proveedor.");
-    }
-
-    // 4. GENERACIÓN DE TOKENS (Flujo unificado para login/registro/vinculación)
-    const accessToken = tokenUtils.generateAccessToken(userDb);
-    const refreshToken = tokenUtils.generateRefreshToken();
-    const refreshTokenExpires = tokenUtils.getRefreshTokenExpiration();
-
-    await refreshTokenModel.saveRefreshToken(
-      userDb.id_usuario,
-      refreshToken,
-      refreshTokenExpires
+  if (!userDb) {
+    logger.info(
+      { email: correo, provider: proveedor_oauth },
+      "Creando nuevo usuario vía OAuth."
     );
-
-    await userModel.updateLastLogin(userDb.id_usuario);
-
-    return {
-      accessToken,
-      refreshToken,
-      user: {
-        id: userDb.id_usuario,
-        nombre: userDb.nombre,
-        apellido: userDb.apellido,
-        correo: userDb.correo,
-        rol: userDb.rol,
+    userDb = await userRepository.create({
+      nombre,
+      apellido,
+      correo,
+      id_oauth,
+      proveedor_oauth,
+      rol: "portero",
+      activo: true, // Los usuarios OAuth se activan por defecto
+    });
+  } else if (!userDb.id_oauth) {
+    logger.info(
+      { email: correo, provider: proveedor_oauth },
+      "Vinculando cuenta existente a proveedor OAuth."
+    );
+    userDb = await userRepository.update(userDb.id_usuario, {
+      id_oauth,
+      proveedor_oauth,
+    });
+  } else if (userDb.id_oauth !== id_oauth) {
+    logger.warn(
+      {
+        email: correo,
+        provider: proveedor_oauth,
+        existingProvider: userDb.proveedor_oauth,
       },
-    };
-  } catch (error) {
-    throw error;
+      "Conflicto de proveedores OAuth."
+    );
+    throw new UserAlreadyExistsError(
+      "Esta cuenta de correo ya está vinculada a otro proveedor de inicio de sesión."
+    );
   }
+
+  logger.info(
+    { userId: userDb.id_usuario, email: correo, provider: proveedor_oauth },
+    "Inicio de sesión OAuth exitoso."
+  );
+
+  const { accessToken, refreshToken, userPayload } =
+    await _generateAndSaveTokens(userDb);
+
+  return { accessToken, refreshToken, user: userPayload };
 };

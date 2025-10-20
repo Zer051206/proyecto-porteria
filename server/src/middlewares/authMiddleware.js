@@ -3,12 +3,12 @@
  * @module authMiddleware
  * @description Middleware de autenticación principal. Se encarga de verificar el Access Token,
  * y en caso de que este haya expirado, intenta usar el Refresh Token para generar uno nuevo
- * (renovación silenciosa). También verifica que el usuario asociado esté activo.
+ * también verifica que el usuario asociado esté activo.
  */
 
 import { verifyAccessToken, generateAccessToken } from "../utils/tokenUtils.js";
-import * as userModel from "../models/userModel.js";
-import * as refreshTokenModel from "../models/refreshTokenModel.js";
+import * as userModel from "../repositories/userRepository.js";
+import * as refreshTokenModel from "../repositories/refreshTokenRepository.js";
 import {
   InvalidTokenError,
   AccountDisabledError,

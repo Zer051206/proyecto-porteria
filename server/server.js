@@ -1,112 +1,122 @@
 /**
  * @file server.js
  * @module AppServer
- * @description Punto de entrada principal para el backend. Configura e inicia el servidor Express,
- * aplicando middlewares de seguridad, manejo de CORS, límites de peticiones (rate limiting)
- * y enrutamiento para la API, autenticación, visitas y paquetes.
+ * @description Punto de entrada principal para el backend del sistema de portería.
+ * Configura e inicia el servidor Express, aplicando middlewares, enrutamiento y
+ * asegurando la conexión con la base de datos.
+ * @requires ./envLoader.js - ¡Importante que sea la primera importación!
  */
-import dotenv from "dotenv";
-dotenv.config({ path: "../.env" });
 
+// 1. Carga de Variables de Entorno
+import "./envLoader.js";
+
+// 2. Importaciones de Módulos y Frameworks
 import express from "express";
-import path from "path";
-import rateLimit from "express-rate-limit";
-import helmet from "helmet";
 import cors from "cors";
-import passport from "passport";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import cookieParser from "cookie-parser";
+import path from "path";
+import { fileURLToPath } from "url";
+import db from "./src/models/index.js";
+import logger from "./src/config/logger.js";
+
+// 3. Importaciones de Rutas de la Aplicación
 import authRoutes from "./src/routes/authRoutes.js";
-import apiRoutes from "./src/routes/apiRoutes.js";
 import visitRoutes from "./src/routes/visitRoutes.js";
 import packageRoutes from "./src/routes/packageRoutes.js";
-import cookieParser from "cookie-parser";
+import apiRoutes from "./src/routes/apiRoutes.js";
+
+// 4. Importaciones de Middlewares Personalizados
 import authMiddleware from "./src/middlewares/authMiddleware.js";
 import errorHandler from "./src/middlewares/errorMiddleware.js";
-import csrfMiddleware from "./src/middlewares/csrfMiddleware.js";
 
-/**
- * @const {Array<string>} allowedOrigins
- * @description Lista de orígenes permitidos para la configuración de CORS.
- */
+// --- CONFIGURACIÓN INICIAL ---
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const app = express();
+
+// --- APLICACIÓN DE MIDDLEWARES GLOBALES ---
+
 const allowedOrigins = [
   "http://localhost:5173",
   "http://127.0.0.1:5173",
   process.env.CLIENT_ORIGIN,
 ].filter(Boolean);
 
-const app = express();
-
-// --- CONFIGURACIÓN DE MIDDLEWARES ---
-
-/**
- * Middleware de CORS
- * @description Configura la política de intercambio de recursos de origen cruzado, permitiendo
- * peticiones solo desde los orígenes seguros y configurando la manipulación de cookies.
- */
 app.use(
   cors({
     origin: allowedOrigins,
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-CSRF-Token"],
-    exposedHeaders: ["set-cookie"],
   })
 );
 
-/**
- * Middleware de Rate Limiting
- * @description Limita el número de peticiones por ventana de tiempo para prevenir ataques de fuerza bruta o DDoS.
- * Configuración: 100 solicitudes por 15 minutos por IP.
- */
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100, // Limita cada IP a 100 solicitudes por ventana
+  max: process.env.NODE_ENV === "production" ? 100 : 2000,
   message:
-    "Demasiadas solicitudes desde esta IP, por favor intenta de nuevo más tarde.",
+    "Demasiadas peticiones desde esta IP, por favor intenta de nuevo más tarde.",
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
-// Middleware para parsear el cuerpo de la petición (JSON y URL-encoded) y cookies.
+app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-
-// Middleware CSRF: Genera y verifica tokens CSRF para peticiones seguras.
-app.use(csrfMiddleware);
-
-// Middleware Helmet: Colección de middlewares de seguridad para HTTP Headers.
-app.use(helmet());
-
-// Confía en el primer proxy para obtener la IP real (necesario para rate limiting en entornos de producción).
-app.set("trust proxy", true);
-
-// Deshabilita el header X-Powered-By por seguridad.
+app.set("trust proxy", 1);
 app.disable("x-powered-by");
 
-/**
- * Servidor de archivos estáticos para firmas digitales.
- * @description Expone la carpeta donde se guardan las firmas de los visitantes.
- */
 app.use(
   "/signatures",
-  express.static(path.join(process.cwd(), "public", "signatures"))
+  express.static(path.join(__dirname, "public", "signatures"))
 );
 
 // --- ENRUTAMIENTO DE LA API ---
 
-// Ruta de Autenticación (incluye login, logout, refresh, etc.)
+/**
+ * @section Rutas Públicas
+ * @description Rutas que no requieren autenticación.
+ */
 app.use("/auth", authRoutes);
 
-// Rutas protegidas con Rate Limiting y Auth Middleware.
-app.use("/visitas", apiLimiter, authMiddleware, visitRoutes);
-app.use("/api", apiLimiter, authMiddleware, apiRoutes);
-app.use("/paquetes", apiLimiter, authMiddleware, packageRoutes);
-app.use("/historial", apiLimiter, authMiddleware, apiRoutes);
+/**
+ * @section Rutas Privadas
+ * @description Todas las rutas bajo '/api' requieren un token de acceso válido.
+ * Se aplica el rate limiter y el middleware de autenticación.
+ */
+app.use("/api", apiLimiter, authMiddleware);
+
+// Rutas específicas para cada recurso, ya protegidas por el middleware anterior
+app.use("/api/visits", visitRoutes);
+app.use("/api/packages", packageRoutes);
+app.use("/api", apiRoutes); // Para rutas generales como el historial
+
+// --- MANEJADOR DE ERRORES ---
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
 
-// Middleware de manejo de errores global (debe ser el último en definirse).
-app.use(errorHandler);
+/**
+ * @async
+ * @function startServer
+ * @description Inicia la aplicación: verifica la conexión a la DB y luego arranca el servidor Express.
+ */
+async function startServer() {
+  try {
+    await db.sequelize.authenticate();
+    logger.info("✅ Conexión a MariaDB establecida exitosamente.");
 
-// Inicia el servidor.
-app.listen(PORT, () => {
-  console.log(`Server is listening on port: ${PORT}`);
-});
+    app.listen(PORT, () => {
+      logger.info(`🚀 Servidor Express iniciado en http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    logger.fatal(
+      error,
+      "❌ Error fatal al iniciar la aplicación o conectar a la base de datos."
+    );
+    process.exit(1);
+  }
+}
+
+startServer();

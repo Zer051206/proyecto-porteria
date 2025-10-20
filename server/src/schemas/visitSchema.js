@@ -1,125 +1,94 @@
 /**
  * @file visitSchema.js
- * @module visitSchema
- * @description Define el esquema de validación (usando Zod) para el registro de una
- * nueva visita (entrada), incluyendo la validación estricta de datos personales,
- * destino y motivo.
+ * @module Schemas
+ * @description Define los esquemas de validación (usando Zod) para las operaciones de gestión de visitas.
+ * @requires zod
  */
 import { z } from "zod";
 
 /**
  * @const {z.ZodObject} visitEntrySchema
- * @description Esquema de validación para el formulario de registro de entrada de un visitante.
- * Realiza una transformación final para concatenar 'nombre_visitante' y 'apellido'
- * en el campo 'nombre_visitante' y eliminar el campo 'apellido' antes de ser pasado
- * al controlador.
+ * @description Esquema para la validación del registro de entrada de un visitante.
+ * Realiza una transformación para unificar `nombre_visitante` y `apellido` en un solo campo.
  */
 export const visitEntrySchema = z
   .object({
     nombre_visitante: z
-      .string({
-        required_error: "El nombre completo del visitante es obligatorio",
-        invalid_type_error: "El nombre completo debe ser una cadena de texto",
-      })
+      .string({ required_error: "El nombre es obligatorio." })
       .trim()
-      .min(3, {
-        message: "El nombre completo debe tener al menos 3 caracteres",
-      })
-      .max(100, {
-        message: "El nombre completo no puede tener más de 100 caracteres",
-      }),
+      .min(3, { message: "El nombre debe tener al menos 3 caracteres." })
+      .max(100, { message: "El nombre no puede tener más de 100 caracteres." }),
 
     apellido: z
-      .string({
-        required_error: "El apellido del visitante es obligatorio",
-        invalid_type_error: "El apellido debe ser una cadena de texto",
-      })
+      .string({ required_error: "El apellido es obligatorio." })
       .trim()
-      .min(3, { message: "El apellido debe tener al menos 3 caracteres" })
+      .min(3, { message: "El apellido debe tener al menos 3 caracteres." })
       .max(100, {
-        message: "El apellido no puede tener más de 100 caracteres",
+        message: "El apellido no puede tener más de 100 caracteres.",
       }),
 
     telefono: z.coerce
-      .string({
-        required_error: "El teléfono es obligatorio",
-        invalid_type_error: "El teléfono debe ser una cadena de texto",
-      })
+      .string({ required_error: "El teléfono es obligatorio." })
       .trim()
-      .min(7, { message: "El teléfono debe tener al menos 7 caracteres" })
-      .max(15, { message: "El teléfono no puede tener más de 15 caracteres" }),
+      .min(7, { message: "El teléfono debe tener al menos 7 caracteres." })
+      .max(15, { message: "El teléfono no puede tener más de 15 caracteres." }),
 
     identificacion: z.coerce
-      .string({
-        required_error: "La identificación es obligatoria",
-        invalid_type_error: "La identificación debe ser una cadena de texto",
-      })
-      .min(1, { message: "La identificación debe ser un número positivo" }),
+      .string({ required_error: "La identificación es obligatoria." })
+      .min(1, { message: "La identificación es obligatoria." }),
 
     id_tipo_identificacion: z.coerce
-      .number({
-        required_error: "El tipo de identificación es obligatorio",
-        invalid_type_error: "El tipo de identificación debe ser un número",
-      })
-      .min(1, {
-        message: "El tipo de identificación debe ser un número positivo",
-      }),
+      .number({ required_error: "El tipo de ID es obligatorio." })
+      .int()
+      .positive("Debe seleccionar un tipo de ID."),
 
     empresa: z
-      .string({
-        invalid_type_error: "La empresa debe ser una cadena de texto",
-      })
+      .string()
       .trim()
-      .max(100, {
-        message: "El nombre de la empresa no puede tener más de 100 caracteres",
-      })
+      .max(100, { message: "La empresa no puede tener más de 100 caracteres." })
       .optional(),
 
     nombre_destinatario: z
       .string({
-        required_error: "El nombre de la persona a visitar es obligatoria",
-        invalid_type_error:
-          "El nombre de la persona a visitar debe ser una cadena de texto",
+        required_error: "El nombre de la persona a visitar es obligatorio.",
       })
       .trim()
       .min(3, {
-        message:
-          "El nombre de la persona a visitar debe tener al menos 3 caracteres",
+        message: "El nombre del destinatario debe tener al menos 3 caracteres.",
       })
       .max(100, {
         message:
-          "El nombre de la persona a visitar no puede tener más de 100 caracteres",
+          "El nombre del destinatario no puede tener más de 100 caracteres.",
       }),
 
     id_area: z.coerce
-      .number({
-        required_error: "El área a visitar es obligatoria",
-        invalid_type_error: "El área a visitar debe ser un número",
-      })
-      .min(1, { message: "El área a visitar debe ser un número positivo" }),
+      .number({ required_error: "El área a visitar es obligatoria." })
+      .int()
+      .positive("Debe seleccionar un área."),
 
     motivo: z
-      .string({
-        required_error: "El motivo de la visita es obligatorio",
-        invalid_type_error:
-          "El motivo de la visita debe ser una cadena de texto",
-      })
+      .string({ required_error: "El motivo de la visita es obligatorio." })
       .trim()
       .min(10, {
-        message: "El motivo de la visita debe tener al menos 10 caracteres",
+        message: "El motivo de la visita debe tener al menos 10 caracteres.",
       })
-      .max(255, {
-        message: "El motivo de la visita no puede tener más de 255 caracteres",
-      }),
+      .max(255, { message: "El motivo no puede tener más de 255 caracteres." }),
 
-    observaciones: z
-      .string({
-        invalid_type_error: "Las observaciones deben ser una cadena de texto",
-      })
-      .optional(),
+    observaciones: z.string().optional(),
   })
-  .transform((data) => ({
-    nombre_visitante: `${data.nombre_visitante} ${data.apellido}`,
-    ...data,
-    apellido: undefined,
-  }));
+  .transform((data) => {
+    return {
+      ...data,
+      nombre_visitante: `${data.nombre_visitante} ${data.apellido}`.trim(),
+      apellido: undefined, // Se elimina el campo 'apellido' del objeto final.
+    };
+  });
+
+/**
+ * @const {z.ZodObject} visitExitSchema
+ * @description Esquema para la validación de la finalización (salida) de una visita.
+ * Solo requiere el ID de la visita a finalizar.
+ */
+export const visitExitSchema = z.object({
+  visitId: z.coerce.number().int().positive("El ID de la visita es inválido."),
+});

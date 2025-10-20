@@ -49,27 +49,27 @@ export const loginUser = async (req, res, next) => {
     const validatedData = loginSchema.parse(req.body);
     const result = await authService.loginUser(validatedData);
 
-    // Establecer Access Token (15 minutos)
-    res.cookie("accessToken", result.accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 15 * 60 * 1000,
-      path: "/",
-    });
+      // Establecer Access Token (15 minutos)
+      res.cookie("accessToken", result.accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 15 * 60 * 1000,
+        path: "/",
+      });
 
-    // Establecer Refresh Token (7 días)
-    res.cookie("refreshToken", result.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-      path: "/",
-    });
+      // Establecer Refresh Token (7 días)
+      res.cookie("refreshToken", result.refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        path: "/",
+      });
 
-    res.status(200).json({
-      message: "Inicio de sesión exitoso",
-      user: result.user,
+      res.status(200).json({
+        message: "Inicio de sesión exitoso",
+        user: result.user,
     });
   } catch (error) {
     next(error);
