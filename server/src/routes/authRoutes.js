@@ -10,6 +10,7 @@ import * as refreshTokenModel from "../repositories/refreshTokenRepository.js";
 import * as authController from "../controllers/authController.js";
 import rateLimit from "express-rate-limit";
 import { InvalidTokenError } from "../utils/customErrors.js";
+import authMiddleware from "../middlewares/authMiddleware.js";
 
 const router = Router();
 
@@ -73,32 +74,7 @@ router.post("/logout", authController.logoutUser);
  * @middleware Maneja la verificación de token y base de datos directamente en la ruta.
  * @throws {InvalidTokenError} Si el Refresh Token no existe o es inválido/expirado.
  */
-router.get("/me", async (req, res) => {
-  const refreshToken = req.cookies.refreshToken;
-
-  if (!refreshToken) {
-    throw new InvalidTokenError("El token de refresco es requerido.");
-  }
-
-  /**
-   * @description Busca el token de refresco en la base de datos para verificar su validez y obtener datos del usuario.
-   * @type {object | null}
-   */
-  const tokenData = await refreshTokenModel.findValidRefreshToken(refreshToken);
-
-  if (!tokenData) {
-    throw new InvalidTokenError("Sesión expirada o token inválido.");
-  }
-
-  res.json({
-    authenticated: true,
-    user: {
-      id: tokenData.id_usuario,
-      correo: tokenData.correo,
-      rol: tokenData.rol,
-    },
-  });
-});
+router.get("/me", authMiddleware, authController.getMe);
 
 /**
  * @description Exporta el enrutador de Express configurado con las rutas de autenticación.

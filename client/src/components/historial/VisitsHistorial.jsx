@@ -12,7 +12,6 @@
  * @requires @fortawesome/free-solid-svg-icons - Íconos utilizados.
  */
 import React from "react";
-import { useGoBackDashboard } from "../../hooks/useGoBackDashboard.js";
 import useVisitsHistorial from "../../hooks/historial/useVisitsHistorial.js";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -21,6 +20,7 @@ import {
   faSignOutAlt,
   faExclamationTriangle,
 } from "@fortawesome/free-solid-svg-icons";
+import { useNavigate } from "react-router-dom";
 
 /**
  * @function VisitsHistorial
@@ -49,7 +49,8 @@ export default function VisitsHistorial() {
   } = useVisitsHistorial();
 
   /** @type {Function} Hook para navegar de vuelta al dashboard o a la página anterior. */
-  const goBack = useGoBackDashboard();
+  const navigate = useNavigate();
+  const goBack = navigate(-1);
 
   return (
     <div className="flex flex-col items-center w-full h-screen mb-[50px] p-4 text-blue-700">

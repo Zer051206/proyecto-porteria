@@ -7,15 +7,15 @@
  */
 import * as packageService from "../services/packageService.js";
 import {
-  packageSchemaReceive,
-  packageSchemaSend,
+  createReceivePackageSchema,
+  createSendPackageSchema,
 } from "../schemas/packageSchema.js";
 
 /**
  * @async
  * @function receivePackage
  * @description Registra la recepción de un nuevo paquete. Valida el cuerpo de la solicitud
- * utilizando `packageSchemaReceive`. Adjunta el ID del usuario autenticado y su IP.
+ * utilizando `createReceivePackageSchema`. Adjunta el ID del usuario autenticado y su IP.
  * @param {object} req - Objeto de solicitud de Express (contiene req.body, req.user, req.ip).
  * @param {object} res - Objeto de respuesta de Express.
  * @param {function} next - Función para pasar errores al middleware global.
@@ -23,7 +23,7 @@ import {
  */
 export const receivePackage = async (req, res, next) => {
   try {
-    const validateData = packageSchemaReceive.safeParse(req.body);
+    const validateData = createReceivePackageSchema.safeParse(req.body);
 
     if (!validateData.success) {
       // Manejo detallado de errores de validación de Zod
@@ -60,7 +60,7 @@ export const receivePackage = async (req, res, next) => {
  * @async
  * @function sendPackage
  * @description Registra el envío o despacho de un paquete. Valida el cuerpo de la solicitud
- * utilizando `packageSchemaSend`. Adjunta el ID del usuario autenticado y su IP.
+ * utilizando `createSendPackageSchema`. Adjunta el ID del usuario autenticado y su IP.
  * @param {object} req - Objeto de solicitud de Express (contiene req.body, req.user, req.ip).
  * @param {object} res - Objeto de respuesta de Express.
  * @param {function} next - Función para pasar errores al middleware global.
@@ -68,7 +68,7 @@ export const receivePackage = async (req, res, next) => {
  */
 export const sendPackage = async (req, res, next) => {
   try {
-    const validateData = packageSchemaSend.safeParse(req.body);
+    const validateData = createSendPackageSchema.safeParse(req.body);
 
     if (!validateData.success) {
       // Manejo detallado de errores de validación de Zod

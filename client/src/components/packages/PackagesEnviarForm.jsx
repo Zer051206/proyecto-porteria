@@ -11,8 +11,7 @@
  * @requires @fortawesome/react-fontawesome/FontAwesomeIcon
  * @requires @fortawesome/free-solid-svg-icons/faUpload, faBroom, faCheckCircle, faExclamationTriangle, faSignOutAlt
  */
-import React from "react";
-import { useGoBackDashboard } from "../../hooks/useGoBackDashboard.js"; // Asumo el nombre del hook
+import React from "react"; // Asumo el nombre del hook
 import { useNavigate } from "react-router-dom";
 import usePackageEnviarForm from "../../hooks/packages/usePackagesEnviar.js";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -41,7 +40,7 @@ export default function EnviarPaqueteForm() {
    * @const {Function} goBack
    * @description Función que redirige al usuario al dashboard principal.
    */
-  const goBack = useGoBackDashboard(); // Usando el hook específico para dashboard
+  const goBack = navigate(-1); // Usando el hook específico para dashboard
 
   /**
    * @const {object} formLogic

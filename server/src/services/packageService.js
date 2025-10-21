@@ -14,7 +14,7 @@
 import db from "../models/index.js";
 import * as packageRepository from "../repositories/packageRepository.js";
 import * as logRepository from "../repositories/logRepository.js";
-import { DuplicateGuideError, BadRequestError } from "../utils/customErrors.js";
+import { DuplicateError, BadRequestError } from "../utils/customErrors.js";
 import logger from "../config/logger.js";
 
 /**
@@ -26,7 +26,7 @@ import logger from "../config/logger.js";
  * @param {object} user - El objeto del usuario autenticado que realiza la acción.
  * @param {string} ipAddress - La dirección IP del usuario.
  * @returns {Promise<Array<object>>} Un array con los nuevos paquetes creados.
- * @throws {DuplicateGuideError} Si uno de los números de guía ya existe para el mismo tipo de operación.
+ * @throws {DuplicateError} Si uno de los números de guía ya existe para el mismo tipo de operación.
  */
 export const createPackage = async (packagesData, user, ip_usuario) => {
   return db.sequelize.transaction(async (t) => {
@@ -45,8 +45,8 @@ export const createPackage = async (packagesData, user, ip_usuario) => {
             { userId: user.id_usuario, guide: guia, operation: tipo_operacion },
             "Intento de registrar paquete con guía duplicada."
           );
-          throw new DuplicateGuideError(
-            `La guía '${guia}' ya fue registrada para una operación de '${tipo_operacion}'.`
+          throw new DuplicateError(
+            `La guía '${guia}' ya fue registrada para la misma operación'.`
           );
         }
       }

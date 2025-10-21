@@ -13,7 +13,6 @@
  * @requires ../../hooks/packages/usePackagesRecibir - Hook de lógica del formulario.
  */
 import React from "react";
-import { useGoBackDashboard } from "../../hooks/useGoBackDashboard.js";
 import { useNavigate } from "react-router-dom";
 import usePackagesRecibir from "../../hooks/packages/usePackagesRecibir.js";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -33,10 +32,10 @@ import {
  * @returns {JSX.Element} La interfaz del formulario de recepción.
  */
 export default function RecibirPaqueteForm() {
-  /** @type {Function} Función para navegar de vuelta al dashboard. */
-  const goBack = useGoBackDashboard();
   /** @type {Function} Función de navegación de React Router DOM. */
   const navigate = useNavigate();
+
+  const goBack = navigate(-1);
 
   /**
    * @constant {object} formHookData

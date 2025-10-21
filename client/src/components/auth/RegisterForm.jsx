@@ -9,11 +9,10 @@
  * @requires ../../hooks/useGoBackHome
  * @requires ../../hooks/usePasswordToggle
  */
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useRegisterForm } from "../../hooks/auth/useRegisterForm.js";
-import { useGoBackHome } from "../../hooks/useGoBackHome.js";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faSignOutAlt } from "@fortawesome/free-solid-svg-icons";
+import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import { usePasswordToggle } from "../../hooks/utils/usePasswordToggle.js";
 
 /**
@@ -24,154 +23,160 @@ import { usePasswordToggle } from "../../hooks/utils/usePasswordToggle.js";
  * @returns {JSX.Element} El elemento JSX que representa el formulario de registro.
  */
 export default function RegisterForm() {
-  // Hook para la funcionalidad del botón "Volver"
-  const goBack = useGoBackHome();
-
-  // Hook para alternar la visibilidad de la contraseña
+  const navigate = useNavigate();
+  const goBack = () => navigate("/");
   const [inputType, Icon, toggleVisibility] = usePasswordToggle();
+  const [inputTypeConfirm, IconConfirm, toggleVisibilityConfirm] =
+    usePasswordToggle();
+  const formik = useRegisterForm();
 
-  // Hook principal que provee el estado, los manejadores de eventos y la función de registro
-  const {
-    nombre,
-    correo,
-    password,
-    apellido,
-    handleRegister,
-    handleClickNombre,
-    handleClickCorreo,
-    handleClickApellido,
-    handleClickPassword,
-    error,
-    handleKeyTextDown,
-  } = useRegisterForm();
+  const inputClasses =
+    "mt-2 block w-full rounded-md font-semibold border-2 border-gray-300 p-2 outline-none bg-gray-50 focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition-all";
 
   return (
-    <div className="flex flex-col justify-center items-center h-full w-full">
-      {/* Botón de navegación para volver a la página principal */}
+    <div className="flex flex-col justify-center items-center w-full min-h-screen bg-gray-100 p-4">
       <button
         type="button"
         onClick={goBack}
-        className="
-            absolute top-1 right-4 
-            bg-red-600 hover:bg-red-700 
-            text-white font-bold 
-            p-4 rounded-lg 
-            flex flex-col items-center justify-center 
-            transition-colors duration-300
-            text-sm w-16 h-16 sm:w-20 sm:h-20
-          "
+        className="absolute top-4 left-4 bg-white text-gray-700 font-bold p-3 rounded-full shadow-md hover:bg-gray-200 transition-colors"
+        aria-label="Volver a la página de inicio"
       >
-        <FontAwesomeIcon icon={faSignOutAlt} className="text-xl sm:text-xl" />
-        <span className="text-xs sm:text-sm mt-1">Volver</span>
+        <FontAwesomeIcon icon={faArrowLeft} className="text-xl" />
       </button>
 
       <form
-        className="bg-white p-6 rounded-lg shadow-lg w-[90%] h-[95%] max-w-sm mt-[100px] md:mt-[40px] mb-5 sm:w-full sm:mt-[30px] shadow-black"
-        onSubmit={handleRegister}
+        onSubmit={formik.handleSubmit}
+        className="bg-white p-8 rounded-xl shadow-lg mt-16 md:mt-0 mb-10 md:mb-0 w-full max-w-2xl border border-gray-200 animate-fade-in"
+        noValidate
       >
-        <h2 className="text-2xl font-bold mb-[10px] text-center text-blue-900">
-          Registro
+        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
+          Crear Nueva Cuenta
         </h2>
 
-        {/* Fieldset: Información personal */}
-        <fieldset className="p-4 rounded-md mb-[20px] border border-gray-400 shadow-lg shadow-black">
-          <legend className="px-2 text-md font-semibold bg-white text-blue-900">
-            Información personal
-          </legend>
-          <div className="space-y-4">
-            {/* Input Nombre */}
-            <label className="block">
-              <span className="text-gray-700 text-md">Nombre:</span>
-              <input
-                name="nombre"
-                type="text"
-                onKeyDown={handleKeyTextDown} // Utilidad para prevenir caracteres no válidos
-                value={nombre}
-                onChange={handleClickNombre}
-                className="mt-1 block w-full rounded-md font-semibold border-2 p-[5px] outline-0 border-gray-400 bg-gray-50 shadow-lg focus:border-blue-700 transition-all duration-200 hover:border-blue-500"
-                autoComplete="off"
-                required
-              />
-            </label>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+          {/* Campo Nombre */}
+          <label className="block">
+            <span className="text-gray-700 font-semibold">Nombre:</span>
+            <input
+              className={inputClasses}
+              type="text"
+              autoComplete="off"
+              {...formik.getFieldProps("nombre")}
+            />
+            {formik.touched.nombre && formik.errors.nombre ? (
+              <div className="text-red-600 text-sm mt-1">
+                {formik.errors.nombre}
+              </div>
+            ) : null}
+          </label>
 
-            {/* Input Apellido */}
+          {/* Campo Apellido */}
+          <label className="block">
+            <span className="text-gray-700 font-semibold">Apellido:</span>
+            <input
+              className={inputClasses}
+              type="text"
+              autoComplete="off"
+              {...formik.getFieldProps("apellido")}
+            />
+            {formik.touched.apellido && formik.errors.apellido ? (
+              <div className="text-red-600 text-sm mt-1">
+                {formik.errors.apellido}
+              </div>
+            ) : null}
+          </label>
+
+          {/* Campo Correo Electrónico */}
+          <div className="md:col-span-2">
             <label className="block">
-              <span className="text-gray-700 text-md">Apellido:</span>
+              <span className="text-gray-700 font-semibold">
+                Correo Electrónico:
+              </span>
               <input
-                name="apellido"
-                type="text"
-                onKeyDown={handleKeyTextDown}
-                value={apellido}
-                onChange={handleClickApellido}
-                className="mt-1 block w-full rounded-md font-semibold border-2 p-[5px] outline-0 border-gray-400 bg-gray-50 shadow-lg focus:border-blue-700 focus:ring-2 focus:ring-blue-300 transition-all duration-200 ease-in-out hover:border-blue-500"
+                className={inputClasses}
+                type="email"
                 autoComplete="off"
-                required
+                {...formik.getFieldProps("correo")}
               />
+              {formik.touched.correo && formik.errors.correo ? (
+                <div className="text-red-600 text-sm mt-1">
+                  {formik.errors.correo}
+                </div>
+              ) : null}
             </label>
           </div>
-        </fieldset>
 
-        {/* Fieldset: Datos de la cuenta */}
-        <fieldset className="p-4 rounded-md mb-3 border border-gray-400 shadow-lg shadow-black">
-          <legend className="px-2 text-md font-semibold bg-white text-blue-900">
-            Datos de la cuenta
-          </legend>
-          <div className="space-y-4">
-            {/* Input Correo Electrónico */}
+          {/* Campo Contraseña */}
+          <div className="relative">
             <label className="block">
-              <span className="text-gray-700 text-md">Correo electrónico:</span>
+              <span className="text-gray-700 font-semibold">Contraseña:</span>
               <input
-                name="correo"
-                type="email"
-                value={correo}
-                onChange={handleClickCorreo}
-                className="mt-1 block w-full rounded-md font-semibold border-2 p-[5px] outline-0 border-gray-400 bg-gray-50 shadow-lg focus:border-blue-700 focus:ring-2 focus:ring-blue-300 transition-all duration-200 ease-in-out hover:border-blue-500"
-                autoComplete="off"
-                required
-              />
-            </label>
-
-            {/* Input Contraseña con alternador de visibilidad */}
-            <label className="block relative">
-              <span className="text-gray-700 text-md">Contraseña:</span>
-              <input
-                name="password"
                 type={inputType}
-                value={password}
-                onChange={handleClickPassword}
-                className="mt-1 block w-full rounded-md font-semibold p-[5px] outline-0 border-2 border-gray-400 bg-gray-50 shadow-lg focus:border-blue-700 focus:ring-2 focus:ring-blue-300 transition-all duration-200 ease-in-out hover:border-blue-500 pr-10"
-                autoComplete="off"
+                autoComplete="new-password"
+                className={`${inputClasses} pr-10`}
+                {...formik.getFieldProps("password")}
               />
               <button
                 type="button"
                 onClick={toggleVisibility}
-                className="absolute inset-y-0 right-[-8px] top-7 flex items-center pr-3 text-gray-400 outline-none"
+                className="absolute right-[-8px] top-[35px] flex items-center pr-3 text-gray-400"
               >
-                <Icon />
+                <FontAwesomeIcon icon={Icon} />
               </button>
+              {formik.touched.password && formik.errors.password ? (
+                <div className="text-red-600 text-sm mt-1">
+                  {formik.errors.password}
+                </div>
+              ) : null}
             </label>
           </div>
-        </fieldset>
 
-        {/* Mensaje de error (si existe) */}
-        {error && (
+          {/* Campo Confirmar Contraseña */}
+          <div className="relative">
+            <label className="block">
+              <span className="text-gray-700 font-semibold">
+                Confirmar Contraseña:
+              </span>
+              <input
+                type={inputTypeConfirm}
+                autoComplete="new-password"
+                className={`${inputClasses} pr-10`}
+                {...formik.getFieldProps("confirmPassword")}
+              />
+              <button
+                type="button"
+                onClick={toggleVisibilityConfirm}
+                className="absolute right-[-8px] top-[35px] flex items-center pr-3 text-gray-400"
+              >
+                <FontAwesomeIcon icon={IconConfirm} />
+              </button>
+              {formik.touched.confirmPassword &&
+              formik.errors.confirmPassword ? (
+                <div className="text-red-600 text-sm mt-1">
+                  {formik.errors.confirmPassword}
+                </div>
+              ) : null}
+            </label>
+          </div>
+        </div>
+
+        {formik.errors.apiError && (
           <div
-            className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md relative text-center mb-4"
+            className="mt-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md text-center"
             role="alert"
           >
-            <span className="block sm:inline">{error}</span>
+            <span>{formik.errors.apiError}</span>
           </div>
         )}
 
-        {/* Botón de envío */}
         <button
           type="submit"
-          className="mt-4 w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors text-sm"
+          disabled={formik.isSubmitting}
+          className="mt-6 w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-md hover:bg-blue-700 transition-colors disabled:bg-blue-300"
         >
-          Registrarse
+          {formik.isSubmitting ? "Registrando..." : "Crear Cuenta"}
         </button>
 
-        {/* Enlace a la página de inicio de sesión */}
         <div className="mt-4 text-center text-sm">
           <span className="text-gray-600">¿Ya tienes una cuenta?</span>{" "}
           <Link to="/auth/login" className="text-blue-600 hover:underline">

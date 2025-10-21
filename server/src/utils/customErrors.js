@@ -138,3 +138,9 @@ export class BadRequestError extends AppError {
     super(message, 400);
   }
 }
+
+export class InvalidIdError extends AppError {
+  constructor(message = "El ID proporcionado no es válido.") {
+    super(message, 400);
+  }
+}

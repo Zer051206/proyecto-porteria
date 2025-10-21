@@ -16,11 +16,7 @@ import db from "../models/index.js";
 import * as visitRepository from "../repositories/visitRepository.js";
 import * as logRepository from "../repositories/logRepository.js";
 import * as areaRepository from "../repositories/areaRepository.js";
-import {
-  VisitExistsError,
-  NotFoundError,
-  ActiveVisitDontExistsError,
-} from "../utils/customErrors.js";
+import { NotFoundError } from "../utils/customErrors.js";
 import logger from "../config/logger.js";
 
 /**
@@ -29,14 +25,15 @@ import logger from "../config/logger.js";
  * @description Registra la entrada de un nuevo visitante en una transacción.
  * @param {object} visitData - Datos de la visita a registrar.
  * @param {object} user - El usuario (portero) que registra la entrada.
- * @param {string} ipAddress - La dirección IP del usuario.
+ * @param {string} ip_usuario - La dirección IP del usuario.
  * @returns {Promise<object>} El objeto de la visita recién creada.
  * @throws {VisitExistsError} Si ya existe una visita activa para la misma identificación.
  * @throws {NotFoundError} Si el ID de área proporcionado no es válido.
  */
-export const createVisit = async (visitData, user, ipAddress) => {
+export const createVisit = async (visitData) => {
   return db.sequelize.transaction(async (t) => {
-    const { identificacion, id_area, ...restOfData } = visitData;
+    const { identificacion, id_area, id_usuario, ip_usuario, ...restOfData } =
+      visitData;
 
     // 1. Verificar que no exista una visita activa para la misma identificación.
     const activeVisit = await visitRepository.findActiveByIdentification(
@@ -45,7 +42,7 @@ export const createVisit = async (visitData, user, ipAddress) => {
     );
     if (activeVisit) {
       logger.warn(
-        { userId: user.id_usuario, visitorId: identificacion },
+        { userId: id_usuario, visitorId: identificacion },
         "Intento de registrar una visita duplicada activa."
       );
       throw new VisitExistsError();
@@ -57,7 +54,7 @@ export const createVisit = async (visitData, user, ipAddress) => {
     });
     if (!areaExists) {
       logger.warn(
-        { userId: user.id_usuario, areaId: id_area },
+        { userId: id_usuario, areaId: id_area },
         "Intento de registrar visita a un área inexistente."
       );
       throw new NotFoundError(`El área con ID ${id_area} no existe.`);
@@ -68,7 +65,7 @@ export const createVisit = async (visitData, user, ipAddress) => {
       ...restOfData,
       identificacion,
       id_area,
-      id_usuario_entrada: user.id_usuario,
+      id_usuario_entrada: id_usuario,
       fecha_entrada: new Date(),
       estado: true, // Se establece explícitamente el estado activo.
     };
@@ -81,16 +78,16 @@ export const createVisit = async (visitData, user, ipAddress) => {
     await logRepository.create(
       {
         accion: "REGISTRAR_ENTRADA_VISITA",
-        id_usuario: user.id_usuario,
+        id_usuario: id_usuario,
         descripcion: `Se registró la entrada del visitante '${newVisit.nombre_visitante}' (ID Visita: ${newVisit.id_visita}).`,
-        ip_usuario: ipAddress,
-        id_visita: newVisit.id_visita, // Enlazamos el log con la visita.
+        ip_usuario: ip_usuario,
+        id_visita: newVisit.id_visita,
       },
       { transaction: t }
     );
 
     logger.info(
-      { userId: user.id_usuario, visitId: newVisit.id_visita },
+      { userId: id_usuario, visitId: newVisit.id_visita },
       "Nueva visita registrada exitosamente."
     );
 
@@ -104,9 +101,9 @@ export const createVisit = async (visitData, user, ipAddress) => {
  * @description Registra la salida de una visita activa en una transacción.
  * @param {number} visitId - El ID de la visita a finalizar.
  * @param {object} user - El usuario (portero) que registra la salida.
- * @param {string} ipAddress - La dirección IP del usuario.
+ * @param {string} ip_usuario - La dirección IP del usuario.
  * @returns {Promise<object>} El objeto de la visita actualizada.
- * @throws {ActiveVisitDontExistsError} Si la visita no se encuentra o ya está finalizada.
+ * @throws {NotFoundError} Si la visita no se encuentra o ya está finalizada.
  */
 export const updateVisitExit = async (visitId, user, ip_usuario) => {
   return db.sequelize.transaction(async (t) => {
@@ -118,7 +115,9 @@ export const updateVisitExit = async (visitId, user, ip_usuario) => {
         { userId: user.id_usuario, visitId },
         "Intento de finalizar una visita inexistente o ya finalizada."
       );
-      throw new ActiveVisitDontExistsError();
+      throw new NotFoundError(
+        "No se encontró una visita activa con el ID proporcionado"
+      );
     }
 
     // 2. Preparar y ejecutar la actualización.

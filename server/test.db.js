@@ -1,41 +1,44 @@
 /**
- * @file testPoolConnection.js
- * @module testPoolConnection
- * @description Script independiente para probar la conexión con el pool de la base de datos
- * usando la configuración de 'db.config.js'. Ejecuta una consulta simple para verificar
- * el estado de la conexión.
+ * @file test.db.js
+ * @module Test
+ * @description Script para probar la conexión y la inicialización de Sequelize.
+ * @requires ./envLoader.js
+ * @requires ./src/models/index.js
+ * @requires ./src/config/logger.js
  */
-import dotenv from "dotenv";
-dotenv.config({ path: "../.env" });
 
-import { getPool } from "./src/config/db.config.js";
+import "./envLoader.js";
+import db from "./src/models/index.js";
+import logger from "./src/config/logger.js";
 
 /**
  * @async
- * @function testPoolConnection
- * @description Función principal asíncrona que intenta obtener una conexión del pool,
- * ejecuta una consulta de prueba ('SELECT 1+1'), y libera la conexión.
- * Muestra el éxito o fracaso de la conexión y la consulta en la consola.
- * @returns {void}
+ * @function testSequelizeConnection
+ * @description Verifica la conexión, la carga de modelos y la capacidad de ejecutar una consulta simple a través de un modelo.
+ * @returns {Promise<void>}
  */
-async function testPoolConnection() {
-  let conn;
+async function testSequelizeConnection() {
   try {
-    console.log("Intentando obtener una conexión del pool...");
+    logger.info("Intentando autenticar la conexión de Sequelize a MariaDB...");
+    await db.sequelize.authenticate();
+    logger.info("✅ Conexión a MariaDB establecida exitosamente.");
 
-    // Obtiene la conexión usando la nueva función getPool()
-    const pool = getPool();
-    conn = await pool.getConnection();
-
-    console.log("¡Conexión del pool exitosa!");
-    const rows = await conn.query("SELECT 1+1 as result");
-    console.log("Resultado de la consulta:", rows[0].result);
+    // En lugar de una consulta cruda, usamos un modelo para una prueba más realista.
+    // Esto verifica que los modelos se cargaron y las tablas existen.
+    logger.info("Ejecutando consulta de prueba con el modelo 'User'...");
+    const userCount = await db.User.count();
+    logger.info(
+      { userCount },
+      `Consulta de prueba exitosa. Se encontraron ${userCount} usuarios.`
+    );
   } catch (err) {
-    console.error("Error de conexión:", err.message);
-    console.error("Detalles del error:", err);
+    logger.error(err, "❌ Falló la prueba de conexión a la base de datos");
   } finally {
-    if (conn) conn.release();
+    if (db.sequelize) {
+      await db.sequelize.close();
+      logger.info("Conexión de Sequelize cerrada.");
+    }
   }
 }
 
-testPoolConnection();
+testSequelizeConnection();

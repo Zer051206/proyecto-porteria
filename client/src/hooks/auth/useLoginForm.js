@@ -1,91 +1,71 @@
 /**
  * @file useLoginForm.js
- * @module Hooks
- * @description Hook personalizado que maneja el estado del formulario de inicio de sesión,
- * incluyendo la validación, la comunicación con el endpoint de login de la API, y la navegación
- * post-autenticación.
- * @requires react/useState
- * @requires ../../axiosClient
- * @requires react-router-dom/useNavigate
+ * @module Hooks/Auth
+ * @description Hook que encapsula la lógica del formulario de inicio de sesión, integrándose con Formik, Yup y el authStore.
+ * @requires formik
+ * @requires yup
+ * @requires react-router-dom
+ * @requires ../../config/axios.js
+ * @requires ../../stores/authStore.js
  */
-import { useState } from "react";
-import axiosClient from "../../axiosClient.js";
+import { useFormik } from "formik";
+import * as Yup from "yup";
 import { useNavigate } from "react-router-dom";
+import api from "../../config/axios.js";
+import { useAuthStore } from "../../stores/authStore.js";
+
+/**
+ * @const {Yup.ObjectSchema} validationSchema
+ * @description Define el esquema de validación para los campos del formulario de login.
+ */
+const validationSchema = Yup.object({
+  correo: Yup.string()
+    .email("El formato del correo no es válido.")
+    .required("El correo es obligatorio."),
+  password: Yup.string()
+    .min(6, "La contraseña debe tener al menos 6 caracteres.")
+    .required("La contraseña es obligatoria."),
+});
 
 /**
  * @function useLoginForm
- * @description Hook para gestionar el formulario de inicio de sesión.
- * Mantiene el estado del correo, contraseña, errores y el estado de carga,
- * y proporciona la función `handleLogin` para comunicarse con la API.
- *
- * @returns {object} Un objeto que contiene el estado de los campos, el manejador de envío y las funciones de actualización.
- *
- * @property {string} email - Estado actual del campo de correo electrónico.
- * @property {string} password - Estado actual del campo de contraseña.
- * @property {Function} handleLogin - Función asíncrona que maneja el envío del formulario a la API.
- * @property {Function} handleEmailChange - Manejador de cambio para el input de correo.
- * @property {Function} handlePasswordChange - Manejador de cambio para el input de contraseña.
- * @property {string | null} error - Mensaje de error a mostrar al usuario si la autenticación falla.
- * @property {boolean} isLoading - Indicador de estado de carga mientras se espera la respuesta de la API.
+ * @description Proporciona la lógica y el estado para el LoginForm.
+ * @returns {object} La instancia de Formik.
  */
 export const useLoginForm = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  // Obtenemos la acción 'login' de nuestro store global.
+  const loginAction = useAuthStore((state) => state.login);
 
-  const handleEmailChange = (e) => setEmail(e.target.value);
+  const formik = useFormik({
+    initialValues: {
+      correo: "",
+      password: "",
+    },
+    validationSchema,
+    onSubmit: async (values, { setFieldError, setSubmitting }) => {
+      try {
+        const response = await api.post("/auth/login", values);
 
-  const handlePasswordChange = (e) => setPassword(e.target.value);
-
-  /**
-   * @async
-   * @description Función que se ejecuta al enviar el formulario.
-   * Envía las credenciales al endpoint de login.
-   * Si tiene éxito, redirige al usuario al dashboard.
-   * @param {Event} e - El evento del formulario (utilizado para prevenir el comportamiento por defecto).
-   * @returns {void}
-   */
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      // Se utiliza withCredentials: true para asegurar que las cookies (tokens) sean enviadas y recibidas
-      await axiosClient.post(
-        "/auth/login",
-        {
-          correo: email,
-          password,
-        },
-        { withCredentials: true }
-      );
-
-      // Navegar a la página principal de la aplicación
-      navigate("/dashboard");
-    } catch (err) {
-      // Manejo de errores de respuesta de la API
-      if (err.response && err.response.data && err.response.data.message) {
-        setError(err.response.data.message);
-      } else {
-        setError(
-          "Error al iniciar sesión. Por favor, verifica tus credenciales."
+        // Al tener éxito, llamamos a la acción del store para actualizar el estado global
+        // y guardar los tokens en localStorage.
+        loginAction(
+          response.data.user,
+          response.data.accessToken,
+          response.data.refreshToken
         );
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
-  return {
-    email,
-    password,
-    handleLogin,
-    handleEmailChange,
-    handlePasswordChange,
-    error,
-    isLoading,
-  };
+        // Una vez actualizado el estado, navegamos al dashboard.
+        navigate("/dashboard");
+      } catch (err) {
+        const errorMessage =
+          err.response?.data?.message || "Ha ocurrido un error inesperado.";
+        setFieldError("apiError", errorMessage);
+      } finally {
+        setSubmitting(false);
+      }
+    },
+  });
+
+  return formik;
 };

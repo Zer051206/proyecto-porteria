@@ -38,6 +38,8 @@ const jwtConfig = {
    * Usualmente tiene una duración mucho más larga que el Access Token.
    */
   refreshExpiresIn: "7d",
+
+  refreshExpiresInDays: 7,
 };
 
 export default jwtConfig;

@@ -55,6 +55,6 @@ export const generateRefreshToken = () => {
 export const getRefreshTokenExpiration = () => {
   const expiration = new Date();
   // Se utiliza el número de días definido en la configuración central.
-  expiration.setDate(expiration.getDate() + jwtConfig.refreshExpiresIn);
+  expiration.setDate(expiration.getDate() + jwtConfig.refreshExpiresInDays);
   return expiration;
 };

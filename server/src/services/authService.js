@@ -16,7 +16,7 @@ import * as userRepository from "../repositories/userRepository.js";
 import * as refreshTokenRepository from "../repositories/refreshTokenRepository.js";
 import * as tokenUtils from "../utils/tokenUtils.js";
 import {
-  UserAlreadyExistsError,
+  DuplicateError,
   UserNotFoundOrInvalidPasswordError,
   AccountDisabledError,
   InvalidTokenError,
@@ -28,7 +28,7 @@ import logger from "../config/logger.js";
  * @async
  * @function _generateAndSaveTokens
  * @description Función auxiliar interna para generar y guardar el par de tokens (acceso y refresco).
- * @param {object} user - El objeto del usuario para el cual se generarán los tokens.
+ * @param {object} user - El objeto de usuario para el cual se generarán los tokens.
  * @returns {Promise<{accessToken: string, refreshToken: string, userPayload: object}>}
  */
 const _generateAndSaveTokens = async (user) => {
@@ -58,8 +58,8 @@ const _generateAndSaveTokens = async (user) => {
  * @function registerUser
  * @description Registra un nuevo usuario en el sistema.
  * @param {object} validatedData - Datos validados del usuario.
- * @returns {Promise<object>} Información del usuario creado.
- * @throws {UserAlreadyExistsError} Si el correo ya está registrado.
+ * @returns {Promise<object>} Información del usuario creado (sin contraseña).
+ * @throws {DuplicateError} Si el correo ya está registrado.
  */
 export const registerUser = async (validatedData) => {
   const { correo, password, ...restOfData } = validatedData;
@@ -67,11 +67,11 @@ export const registerUser = async (validatedData) => {
   const existingUser = await userRepository.findByEmail(correo);
   if (existingUser) {
     logger.warn({ email: correo }, "Intento de registro con correo duplicado.");
-    throw new UserAlreadyExistsError();
+    throw new DuplicateError("Ya existe una cuenta registrada a este correo.");
   }
 
   const contrasena_hash = await bcrypt.hash(password, 10);
-  const userForDB = { ...restOfData, correo, contrasena_hash, rol: "portero" }; // rol por defecto
+  const userForDB = { ...restOfData, correo, contrasena_hash, rol: "portero" };
 
   const userCreated = await userRepository.create(userForDB);
 
@@ -90,7 +90,6 @@ export const registerUser = async (validatedData) => {
  * @description Autentica a un usuario y genera sus tokens de sesión.
  * @param {object} validatedData - Datos de login validados (correo y password).
  * @returns {Promise<object>} Objeto con los tokens y los datos del usuario.
- * @throws {UserNotFoundOrInvalidPasswordError|AccountDisabledError}
  */
 export const loginUser = async (validatedData) => {
   const { correo, password } = validatedData;
@@ -141,11 +140,11 @@ export const loginUser = async (validatedData) => {
  * @description Renueva un accessToken utilizando un refreshToken válido.
  * @param {string} refreshToken - El token de refresco.
  * @returns {Promise<object>} Objeto con el nuevo accessToken y los datos del usuario.
- * @throws {InvalidTokenError} Si el refreshToken es inválido.
  */
 export const refreshAccessToken = async (refreshToken) => {
-  if (!refreshToken)
+  if (!refreshToken) {
     throw new InvalidTokenError("El refresh token es requerido.");
+  }
 
   const userData = await refreshTokenRepository.findValidToken(refreshToken);
   if (!userData)
@@ -181,7 +180,6 @@ export const logoutUser = async (refreshToken) => {
  * @description Maneja el flujo de login/registro para proveedores OAuth.
  * @param {object} oauthData - Datos del perfil obtenidos del proveedor OAuth.
  * @returns {Promise<object>} Objeto con los tokens y los datos del usuario.
- * @throws {UserAlreadyExistsError} Si el correo ya está vinculado a otro proveedor OAuth.
  */
 export const handleOauthLogin = async (oauthData) => {
   const { nombre, apellido, correo, id_oauth, proveedor_oauth } = oauthData;
@@ -199,7 +197,7 @@ export const handleOauthLogin = async (oauthData) => {
       id_oauth,
       proveedor_oauth,
       rol: "portero",
-      activo: true, // Los usuarios OAuth se activan por defecto
+      activo: true,
     });
   } else if (!userDb.id_oauth) {
     logger.info(
@@ -219,8 +217,8 @@ export const handleOauthLogin = async (oauthData) => {
       },
       "Conflicto de proveedores OAuth."
     );
-    throw new UserAlreadyExistsError(
-      "Esta cuenta de correo ya está vinculada a otro proveedor de inicio de sesión."
+    throw new DuplicateError(
+      "Esta cuenta de correo ya está vinculada a otro proveedor."
     );
   }
 

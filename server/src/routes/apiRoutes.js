@@ -8,16 +8,8 @@
 import { Router } from "express";
 import * as apiController from "../controllers/apiController.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
-import { csrfTokenMiddleware } from "../middlewares/csrfMiddleware.js";
 
 const router = Router();
-
-/**
- * @route GET /api/csrf-token
- * @description Endpoint para obtener el token CSRF, necesario para las peticiones POST, PUT y DELETE.
- * @access Public
- */
-router.get("/csrf-token", csrfTokenMiddleware);
 
 /**
  * @route GET /api/status
@@ -43,12 +35,12 @@ router.get("/areas", authMiddleware, apiController.getAreas);
  * @description Obtiene el listado de tipos de identificación válidos.
  * @access Private
  * @middleware authMiddleware - Requiere autenticación.
- * @handler apiController.getTiposIdentificacion
+ * @handler apiController.getIdentificationTypes
  */
 router.get(
   "/tipos-identificacion",
   authMiddleware,
-  apiController.getTiposIdentificacion
+  apiController.getIdentificationTypes
 );
 
 /**
@@ -65,9 +57,9 @@ router.get("/visitas-activas", authMiddleware, apiController.getActiveVisits);
  * @description Obtiene el listado de los tipos de paquetes.
  * @access Private
  * @middleware authMiddleware - Requiere autenticación.
- * @handler apiController.getTiposPaquetes
+ * @handler apiController.getPackageTypes
  */
-router.get("/tipos-paquetes", authMiddleware, apiController.getTiposPaquetes);
+router.get("/tipos-paquetes", authMiddleware, apiController.getPackageTypes);
 
 /**
  * @route GET /api/visitas

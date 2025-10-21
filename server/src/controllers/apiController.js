@@ -27,16 +27,16 @@ export const getAreas = async (req, res, next) => {
 
 /**
  * @async
- * @function getTiposIdentificacion
+ * @function getIdentificationTypes
  * @description Obtiene el listado de tipos de identificación válidos.
  * @param {object} req - Objeto de solicitud de Express.
  * @param {object} res - Objeto de respuesta de Express.
  * @param {function} next - Función para pasar errores al middleware global.
  * @returns {Promise<void>} Responde con un estado 200 y la lista de tipos de identificación.
  */
-export const getTiposIdentificacion = async (req, res, next) => {
+export const getIdentificationTypes = async (req, res, next) => {
   try {
-    const tiposIdentificacion = await apiService.getTiposIdentificacion();
+    const tiposIdentificacion = await apiService.getIdentificationTypes();
     return res.status(200).json(tiposIdentificacion);
   } catch (error) {
     next(error);
@@ -63,16 +63,16 @@ export const getActiveVisits = async (req, res, next) => {
 
 /**
  * @async
- * @function getTiposPaquetes
+ * @function getPackageTypes
  * @description Obtiene el listado de tipos de paquetes disponibles.
  * @param {object} req - Objeto de solicitud de Express.
  * @param {object} res - Objeto de respuesta de Express.
  * @param {function} next - Función para pasar errores al middleware global.
  * @returns {Promise<void>} Responde con un estado 200 y la lista de tipos de paquetes.
  */
-export const getTiposPaquetes = async (req, res, next) => {
+export const getPackageTypes = async (req, res, next) => {
   try {
-    const tiposPaquetes = await apiService.getTiposPaquetes();
+    const tiposPaquetes = await apiService.getPackageTypes();
     return res.status(200).json(tiposPaquetes);
   } catch (error) {
     next(error);
@@ -94,7 +94,7 @@ export const getVisitsHistorial = async (req, res, next) => {
      * @const {string | undefined} searchTerm - Término de búsqueda extraído de los query parameters (req.query).
      */
     const searchTerm = req.query.search;
-    const visitsHistorial = await apiService.getVisitsHistorial(searchTerm);
+    const visitsHistorial = await apiService.getVisitsHistory(searchTerm);
     return res.status(200).json(visitsHistorial);
   } catch (error) {
     next(error);
@@ -116,7 +116,7 @@ export const getPackagesHistorial = async (req, res, next) => {
      * @const {string | undefined} searchTerm - Término de búsqueda extraído de los query parameters (req.query).
      */
     const searchTerm = req.query.search;
-    const packagesHistorial = await apiService.getPackagesHistorial(searchTerm);
+    const packagesHistorial = await apiService.getPackagesHistory(searchTerm);
     return res.status(200).json(packagesHistorial);
   } catch (error) {
     next(error);

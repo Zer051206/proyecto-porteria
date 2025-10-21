@@ -1,102 +1,83 @@
 /**
  * @file useRegisterForm.js
- * @module Hooks
- * @description Hook personalizado que maneja el estado del formulario de registro,
- * la comunicación con la API para crear un nuevo usuario y la navegación posterior.
- *
- * Utiliza el cliente base de Axios y la utilidad para restringir la entrada de texto.
- * @requires react/useState
- * @requires ../../axiosClient
- * @requires react-router-dom/useNavigate
- * @requires ../utils/inputUtilities
+ * @module Hooks/Auth
+ * @description Hook que encapsula la lógica del formulario de registro, integrando Formik y Yup.
+ * @requires formik
+ * @requires yup
+ * @requires react-router-dom
+ * @requires ../../config/axios.js
+ * @requires react-hot-toast
  */
-import { useState } from "react";
-import axiosClient from "../../axiosClient";
+import { useFormik } from "formik";
+import * as Yup from "yup";
 import { useNavigate } from "react-router-dom";
-import { handleKeyTextDown } from "../../utils/inputUtilities";
+import api from "../../config/axios.js";
+import { toast } from "react-hot-toast";
+
+/**
+ * @const {Yup.ObjectSchema} validationSchema
+ * @description Define el esquema de validación para los campos del formulario de registro.
+ */
+const validationSchema = Yup.object({
+  nombre: Yup.string()
+    .required("El nombre es obligatorio.")
+    .min(2, "Debe tener al menos 2 caracteres."),
+  apellido: Yup.string()
+    .required("El apellido es obligatorio.")
+    .min(2, "Debe tener al menos 2 caracteres."),
+  correo: Yup.string()
+    .email("El formato del correo no es válido.")
+    .required("El correo es obligatorio."),
+  password: Yup.string()
+    .min(8, "La contraseña debe tener al menos 8 caracteres.")
+    .matches(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+      "Debe contener mayúscula, minúscula y número."
+    )
+    .required("La contraseña es obligatoria."),
+  confirmPassword: Yup.string()
+    .oneOf([Yup.ref("password")], "Las contraseñas deben coincidir.")
+    .required("Debes confirmar la contraseña."),
+});
 
 /**
  * @function useRegisterForm
- * @description Hook para gestionar el formulario de registro de nuevos usuarios.
- * Mantiene el estado de los campos de entrada y maneja la lógica de envío del formulario.
- *
- * @returns {object} Un objeto que contiene el estado de los campos, el manejador de envío y las funciones de actualización.
- *
- * @property {string} nombre - Estado actual del campo nombre.
- * @property {string} apellido - Estado actual del campo apellido.
- * @property {string} correo - Estado actual del campo correo electrónico.
- * @property {string} password - Estado actual del campo contraseña.
- * @property {Function} handleRegister - Función asíncrona que maneja el envío del formulario a la API.
- * @property {Function} handleClickNombre - Manejador de cambio para el input nombre.
- * @property {Function} handleClickApellido - Manejador de cambio para el input apellido.
- * @property {Function} handleClickCorreo - Manejador de cambio para el input correo.
- * @property {Function} handleClickPassword - Manejador de cambio para el input contraseña.
- * @property {string} error - Mensaje de error a mostrar al usuario, si la petición falla.
- * @property {boolean} isLoading - Indicador de estado de carga (si la petición está en curso).
- * @property {Function} handleKeyTextDown - Utilidad de control de entrada de texto (importada).
+ * @description Proporciona la lógica y el estado para el RegisterForm.
+ * @returns {object} La instancia de Formik.
  */
-export function useRegisterForm() {
-  const [nombre, setNombre] = useState("");
-  const [apellido, setApellido] = useState("");
-  const [correo, setCorreo] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+export const useRegisterForm = () => {
   const navigate = useNavigate();
 
-  const handleClickNombre = (e) => setNombre(e.target.value);
-  const handleClickApellido = (e) => setApellido(e.target.value);
-  const handleClickCorreo = (e) => setCorreo(e.target.value);
-  const handleClickPassword = (e) => setPassword(e.target.value);
+  const formik = useFormik({
+    initialValues: {
+      nombre: "",
+      apellido: "",
+      correo: "",
+      password: "",
+      confirmPassword: "", // Nuevo campo añadido
+    },
+    validationSchema,
+    onSubmit: async (values, { setFieldError, setSubmitting, resetForm }) => {
+      try {
+        // Excluimos 'confirmPassword' antes de enviar a la API
+        const { confirmPassword, ...dataToSend } = values;
+        await api.post("/auth/register", dataToSend);
 
-  /**
-   * @async
-   * @description Función que se ejecuta al enviar el formulario.
-   * Envía los datos del nuevo usuario al endpoint de registro.
-   * Si tiene éxito, redirige al usuario a la página de login.
-   * @param {Event} e - El evento del formulario (utilizado para prevenir el comportamiento por defecto).
-   * @returns {void}
-   */
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError(""); // Limpiar errores anteriores
-
-    try {
-      await axiosClient.post("/auth/register", {
-        nombre,
-        correo,
-        apellido,
-        password,
-      });
-      alert(
-        "Usuario creado exitósamente, será enviado al formulario de inicio de sesión"
-      );
-      navigate("/auth/login");
-    } catch (err) {
-      // Manejo de errores de respuesta de la API
-      if (err.response && err.response.data && err.response.data.message) {
-        setError(err.response.data.message);
-      } else {
-        setError("Error al registrarse. Por favor, inténtalo de nuevo.");
+        toast.success(
+          "¡Usuario creado exitosamente! Ahora puedes iniciar sesión."
+        );
+        resetForm();
+        navigate("/auth/login");
+      } catch (error) {
+        const errorMessage =
+          error.response?.data?.message ||
+          "Error al registrarse. Por favor, inténtalo de nuevo.";
+        setFieldError("apiError", errorMessage);
+      } finally {
+        setSubmitting(false);
       }
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+  });
 
-  return {
-    nombre,
-    correo,
-    password,
-    apellido,
-    handleRegister,
-    handleClickNombre,
-    handleClickCorreo,
-    handleClickApellido,
-    handleClickPassword,
-    error,
-    isLoading,
-    handleKeyTextDown,
-  };
-}
+  return formik;
+};

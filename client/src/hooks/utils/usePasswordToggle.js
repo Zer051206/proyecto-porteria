@@ -1,53 +1,53 @@
 /**
  * @file usePasswordToggle.js
- * @module Hooks
- * @description Hook personalizado para gestionar la visibilidad de la contraseña en un campo de entrada.
- * Alterna el tipo de input entre 'password' y 'text' y el icono de visibilidad
- * para permitir al usuario ver u ocultar el texto que está escribiendo.
- * @requires react/useState
- * @requires react-icons/fa/FaRegEye, FaRegEyeSlash
+ * @module Hooks/Utils
+ * @description Hook personalizado para gestionar la visibilidad de la contraseña en campos de entrada.
+ * Alterna el tipo de input entre 'password' y 'text' y el icono de visibilidad.
+ * @requires react
+ * @requires @fortawesome/react-fontawesome
+ * @requires @fortawesome/free-solid-svg-icons
  */
 import { useState } from "react";
-import { FaRegEye, FaRegEyeSlash } from "react-icons/fa";
+import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 
 /**
  * @function usePasswordToggle
- * @description Proporciona el estado y las funciones para alternar la visibilidad de un campo de contraseña.
- *
- * @returns {Array} Un array que contiene tres elementos desestructurables en el componente:
- * 1. {string} inputType - El tipo actual del input ('password' o 'text').
- * 2. {React.Component} Icon - El componente de icono a mostrar (ojo abierto o cerrado).
- * 3. {Function} toggleVisibility - Función para cambiar el estado de visibilidad.
+ * @description Proporciona el estado y las funciones para alternar la visibilidad de dos campos de contraseña.
+ * @returns {Array} Un array que contiene los elementos para dos campos de contraseña.
  */
 export const usePasswordToggle = () => {
-  /**
-   * @const {boolean} showPassword
-   * @description Estado que indica si la contraseña debe mostrarse (true) u ocultarse (false).
-   */
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  /**
-   * @function toggleVisibility
-   * @description Alterna el estado de `showPassword`, cambiando la visibilidad del campo.
-   * @returns {void}
-   */
   const toggleVisibility = () => {
     setShowPassword(!showPassword);
   };
 
+  const toggleVisibilityConfirm = () => {
+    setShowConfirmPassword(!showConfirmPassword);
+  };
+
   /**
    * @const {React.Component} Icon
-   * @description Selecciona el icono a mostrar: ojo cerrado (`FaRegEye`) si la contraseña está oculta,
-   * o ojo abierto (`FaRegEyeSlash`) si está visible.
+   * @description Componente de icono para el primer campo de contraseña.
    */
-  const Icon = showPassword ? FaRegEyeSlash : FaRegEye;
+  const Icon = showPassword ? faEyeSlash : faEye;
 
   /**
-   * @const {string} inputType
-   * @description Determina el atributo `type` del campo de entrada: 'text' si visible, 'password' si oculto.
+   * @const {React.Component} IconConfirm
+   * @description Componente de icono para el segundo campo de contraseña.
    */
-  const inputType = showPassword ? "text" : "password";
+  const IconConfirm = showConfirmPassword ? faEyeSlash : faEye;
 
-  // Se devuelve un array para facilitar la desestructuración en el componente que lo consume.
-  return [inputType, Icon, toggleVisibility];
+  const inputType = showPassword ? "text" : "password";
+  const inputTypeConfirm = showConfirmPassword ? "text" : "password";
+
+  return [
+    inputType,
+    Icon,
+    toggleVisibility,
+    inputTypeConfirm,
+    IconConfirm,
+    toggleVisibilityConfirm,
+  ];
 };

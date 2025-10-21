@@ -86,12 +86,12 @@ export const getActiveVisits = async () => {
 
 /**
  * @async
- * @function getPackageHistory
+ * @function getPackagesHistory
  * @description Obtiene el historial de paquetes, filtrado por rol. La búsqueda por texto se delega al frontend.
  * @param {object} user - El usuario autenticado que realiza la solicitud.
  * @returns {Promise<Array<object>>}
  */
-export const getPackageHistory = async (user) => {
+export const getPackagesHistory = async (user) => {
   logger.info(
     { userId: user.id_usuario },
     "Solicitando historial de paquetes."
@@ -127,12 +127,12 @@ export const getPackageHistory = async (user) => {
 
 /**
  * @async
- * @function getVisitHistory
+ * @function getVisitsHistory
  * @description Obtiene el historial de visitas, filtrado por rol. La búsqueda por texto se delega al frontend.
  * @param {object} user - El usuario autenticado que realiza la solicitud.
  * @returns {Promise<Array<object>>}
  */
-export const getVisitHistory = async (user) => {
+export const getVisitsHistory = async (user) => {
   logger.info({ userId: user.id_usuario }, "Solicitando historial de visitas.");
 
   const options = {

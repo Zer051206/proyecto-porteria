@@ -7,12 +7,10 @@
  */
 import { visitEntrySchema } from "../schemas/visitSchema.js";
 import * as visitService from "../services/visitService.js";
-import {
-  SignatureDontExistsError,
-  VisitIdInvalidError,
-} from "../utils/customErrors.js";
+import { NotFoundError, InvalidIdError } from "../utils/customErrors.js";
 import fs from "fs/promises";
 import path from "path";
+import logger from "../config/logger.js";
 
 /**
  * @const {string} SIGNATURES_DIR
@@ -47,13 +45,13 @@ const ensureDirExists = async (dir) => {
  * @param {object} res - Objeto de respuesta de Express.
  * @param {function} next - Función para pasar errores al middleware global.
  * @returns {Promise<void>} Responde con un estado 201 y el objeto de la nueva visita.
- * @throws {SignatureDontExistsError} Si el campo `firma_base64` está ausente.
+ * @throws {NotFoundError} Si el campo `firma_base64` está ausente.
  */
 export const createVisit = async (req, res, next) => {
-  const { firma_base64, ...restBody } = req.body;
+  const { firma_base64 } = req.body;
 
   // 1. Validación de datos de visita (excluyendo la firma)
-  const validateVisitData = visitEntrySchema.safeParse(restBody);
+  const validateVisitData = visitEntrySchema.safeParse(req.body);
 
   if (!validateVisitData.success) {
     // Si falla la validación del esquema Zod, pasamos el error.
@@ -62,11 +60,11 @@ export const createVisit = async (req, res, next) => {
 
   // 2. Validación de la firma (obligatoria)
   if (!firma_base64) {
-    throw new SignatureDontExistsError();
+    throw new NotFoundError("No se encontró la firma");
   }
 
-  const userId = req.user.userId;
-  const userIp = req.ip;
+  const id_usuario = req.user.id_usuario;
+  const ip_usuario = req.ip;
 
   /**
    * @type {string | null}
@@ -92,8 +90,8 @@ export const createVisit = async (req, res, next) => {
     const visitData = {
       ...validateVisitData.data,
       path_firma: signaturePathDB,
-      id_usuario: userId,
-      ip_usuario: userIp,
+      id_usuario: id_usuario,
+      ip_usuario: ip_usuario,
     };
 
     // 5. Registro en la base de datos
@@ -127,7 +125,7 @@ export const createVisit = async (req, res, next) => {
  * @param {object} res - Objeto de respuesta de Express.
  * @param {function} next - Función para pasar errores al middleware global.
  * @returns {Promise<void>} Responde con un estado 200 y el objeto de la visita actualizada.
- * @throws {VisitIdInvalidError} Si el ID de la visita no es un número entero positivo.
+ * @throws {InvalidIdError} Si el ID de la visita no es un número entero positivo.
  */
 export const updateVisitExit = async (req, res, next) => {
   try {
@@ -138,7 +136,9 @@ export const updateVisitExit = async (req, res, next) => {
 
     // Validación del ID de la ruta
     if (isNaN(visitId) || visitId <= 0) {
-      throw new VisitIdInvalidError();
+      throw new InvalidIdError(
+        "El Id proporcionado de la visita no es válido."
+      );
     }
 
     const visitData = {

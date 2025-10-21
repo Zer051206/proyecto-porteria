@@ -1,49 +1,43 @@
 /**
  * @file PrivateRoute.jsx
- * @module PrivateRoute
- * @description Componente de orden superior (High-Order Component) utilizado para proteger rutas.
- * Este componente es el encargado de verificar el estado de autenticación de un usuario
- * antes de renderizar los componentes hijos (la ruta solicitada).
- * @component
+ * @module Components
+ * @description Componente de "guardia de ruta" que protege el acceso a las rutas privadas.
+ * Se integra con el store global de Zustand para leer el estado de autenticación.
  * @requires react
- * @requires ../hooks/auth/useAuthStatus - Hook que verifica si la sesión está activa y su estado de carga.
- * @requires ./AuthRedirect - Componente que muestra el mensaje de acceso denegado y redirige al login.
+ * @requires react-router-dom
+ * @requires ../stores/authStore.js
  */
 import React from "react";
-import useAuthStatus from "../hooks/auth/useAuthStatus.js";
-import AuthRedirect from "./AuthRedirect.jsx";
+import { Navigate, Outlet } from "react-router-dom";
+import { useAuthStore } from "../stores/authStore.js";
 
 /**
  * @function PrivateRoute
- * @description Implementa la lógica de protección de rutas:
- * 1. Muestra un estado de carga mientras se verifica el token.
- * 2. Si el usuario no está autenticado, renderiza el componente AuthRedirect.
- * 3. Si el usuario está autenticado, renderiza los componentes hijos (la ruta protegida).
- *
- * @param {object} props - Las propiedades del componente.
- * @param {React.ReactNode} props.children - Los componentes que se renderizarán si el usuario está autenticado.
- * @returns {JSX.Element} El elemento JSX del contenido protegido, la pantalla de redirección, o el mensaje de carga.
+ * @description Componente que envuelve las rutas privadas. Su comportamiento es:
+ * 1. Muestra un indicador de carga mientras se verifica la sesión inicial.
+ * 2. Si el usuario no está autenticado, lo redirige a la página de acceso denegado.
+ * 3. Si el usuario está autenticado, renderiza los componentes hijos (la página protegida).
+ * @param {object} props - Propiedades del componente.
+ * @param {React.ReactNode} props.children - El componente a renderizar si la autenticación es exitosa.
+ * @returns {JSX.Element}
  */
 const PrivateRoute = ({ children }) => {
-  // Obtiene el estado de autenticación y carga del hook personalizado
-  const { isAuthenticated, isLoading } = useAuthStatus();
+  const { isAuthenticated, isLoading } = useAuthStore();
 
-  // Si está cargando la verificación de autenticación, muestra un mensaje de espera.
   if (isLoading) {
     return (
-      <div className="text-xl text-black bg-white rounded-2xl px-6 py-4">
-        Cargando...
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-xl font-semibold">Verificando sesión...</div>
       </div>
     );
   }
 
-  // Si NO está autenticado, redirige forzosamente al componente de acceso denegado.
   if (!isAuthenticated) {
-    return <AuthRedirect />;
+    return <Navigate to="/auth-denegado" replace />;
   }
 
-  // Si la autenticación es exitosa, permite el acceso al contenido de la ruta.
-  return children;
+  // Si se pasan 'children', se renderizan. De lo contrario, se usa <Outlet /> para rutas anidadas.
+  return children ? children : <Outlet />;
 };
 
 export default PrivateRoute;
