@@ -35,7 +35,7 @@ export default function RecibirPaqueteForm() {
   /** @type {Function} Función de navegación de React Router DOM. */
   const navigate = useNavigate();
 
-  const goBack = navigate(-1);
+  const goBack = () => navigate(-1);
 
   /**
    * @constant {object} formHookData

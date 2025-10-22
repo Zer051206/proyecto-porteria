@@ -105,14 +105,16 @@ export const createVisit = async (visitData) => {
  * @returns {Promise<object>} El objeto de la visita actualizada.
  * @throws {NotFoundError} Si la visita no se encuentra o ya está finalizada.
  */
-export const updateVisitExit = async (visitId, user, ip_usuario) => {
+export const updateVisitExit = async (visitData) => {
   return db.sequelize.transaction(async (t) => {
+    const { visitId, id_usuario, ip_usuario } = visitData;
+
     // 1. Buscar la visita para asegurar que existe y está activa.
     const visitDb = await visitRepository.findById(visitId, { transaction: t });
 
     if (!visitDb || !visitDb.estado) {
       logger.warn(
-        { userId: user.id_usuario, visitId },
+        { userId: id_usuario, visitId },
         "Intento de finalizar una visita inexistente o ya finalizada."
       );
       throw new NotFoundError(
@@ -124,7 +126,7 @@ export const updateVisitExit = async (visitId, user, ip_usuario) => {
     const updateData = {
       fecha_salida: new Date(),
       estado: false,
-      id_usuario_salida: user.id_usuario,
+      id_usuario_salida: id_usuario,
     };
 
     const updatedVisit = await visitRepository.update(visitId, updateData, {
@@ -135,7 +137,7 @@ export const updateVisitExit = async (visitId, user, ip_usuario) => {
     await logRepository.create(
       {
         accion: "REGISTRAR_SALIDA_VISITA",
-        id_usuario: user.id_usuario,
+        id_usuario: id_usuario,
         descripcion: `Se registró la salida del visitante '${visitDb.nombre_visitante}' (ID Visita: ${visitId}).`,
         ip_usuario: ip_usuario,
         id_visita: visitId, // Enlazamos el log con la visita.
@@ -144,7 +146,7 @@ export const updateVisitExit = async (visitId, user, ip_usuario) => {
     );
 
     logger.info(
-      { userId: user.id_usuario, visitId },
+      { userId: id_usuario, visitId },
       "Salida de visita registrada exitosamente."
     );
 

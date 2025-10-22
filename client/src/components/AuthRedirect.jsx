@@ -25,7 +25,7 @@ const AuthRedirect = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen w-full p-4 bg-gray-100">
+    <div className="flex flex-col items-center justify-center min-h-screen w-full p-4 bg-background">
       <div className="bg-white p-8 rounded-xl shadow-lg text-center max-w-sm w-full border border-gray-200 animate-fade-in">
         <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
           <FontAwesomeIcon

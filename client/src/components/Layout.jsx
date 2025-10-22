@@ -27,7 +27,7 @@ const Header = ({ user, onLogout }) => (
     </div>
     <button
       onClick={onLogout}
-      className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors"
+      className="bg-error hover:bg-error-hover text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors"
     >
       <FontAwesomeIcon icon={faSignOutAlt} />
       <span className="hidden sm:inline">Cerrar Sesión</span>
@@ -45,7 +45,7 @@ export default function Layout() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-gray-50 flex flex-col items-center px-4">
+    <div className="w-full min-h-screen bg-background flex flex-col items-center px-4">
       <Header user={user} onLogout={handleLogout} />
       <div className="w-full max-w-5xl">
         {/* El componente <Outlet> renderiza aquí la ruta hija actual (ej. Dashboard, VisitEntryForm, etc.) */}

@@ -6,9 +6,14 @@
  * @requires ../../hooks/visits/useVisitEntryForm.js
  */
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import useVisitEntryForm from "../../hooks/visits/useVisitEntryForm.js";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBroom, faCheckCircle } from "@fortawesome/free-solid-svg-icons";
+import {
+  faBroom,
+  faCheckCircle,
+  faArrowLeft,
+} from "@fortawesome/free-solid-svg-icons";
 import SignatureCanvas from "react-signature-canvas";
 
 const FormSkeleton = () => (
@@ -40,9 +45,11 @@ export default function VisitEntryForm() {
     sigCanvas,
   } = useVisitEntryForm();
 
-  const inputClasses =
-    "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 transition-colors";
+  const navigate = useNavigate();
+  const goBack = () => navigate("/dashboard");
 
+  const inputClasses =
+    "mt-2 block w-full rounded-md font-semibold border-2 border-neutral-200 p-2 outline-none bg-background focus:border-secondary focus:ring-1 focus:ring-secondary-light transition-all";
   if (isLoadingCatalogs) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen w-full p-4 bg-gray-100">
@@ -55,11 +62,19 @@ export default function VisitEntryForm() {
     <div className="flex flex-col items-center w-full animate-fade-in">
       <form
         onSubmit={formik.handleSubmit}
-        className="bg-white p-8 rounded-xl shadow-lg w-full max-w-4xl"
+        className="bg-surface p-8 rounded-xl shadow-lg w-full mb-10 shadow-black max-w-4xl"
         noValidate
       >
-        <div className="mb-6 border-b border-gray-200 pb-4">
-          <h2 className="text-2xl font-bold text-gray-800">
+        <button
+          type="button"
+          onClick={goBack}
+          className="md:absolute md:left-[250px]  md:top-[130px] mb-5 bg-surface text-text-main font-bold p-3 rounded-full shadow-sm  shadow-black md:w-1/12 w-1/2 hover:bg-background transition-colors"
+          aria-label="Volver a la página de inicio"
+        >
+          <FontAwesomeIcon icon={faArrowLeft} className="text-xl" />
+        </button>
+        <div className="mb-6 border-b border-neutral-200 pb-4">
+          <h2 className="text-2xl font-bold text-text-main">
             Registro de Nueva Visita
           </h2>
         </div>
@@ -68,51 +83,55 @@ export default function VisitEntryForm() {
           {/* Columna Izquierda */}
           <div className="space-y-6">
             <label className="block">
-              <span className="text-gray-700 font-semibold">Nombre:</span>
+              <span className="text-text-main font-semibold">Nombre:</span>
               <input
                 type="text"
+                autoComplete="off"
                 className={inputClasses}
                 {...formik.getFieldProps("nombre_visitante")}
               />
               {formik.touched.nombre_visitante &&
                 formik.errors.nombre_visitante && (
-                  <div className="text-red-600 text-sm mt-1">
+                  <div className="text-error text-sm mt-1">
                     {formik.errors.nombre_visitante}
                   </div>
                 )}
             </label>
             <label className="block">
-              <span className="text-gray-700 font-semibold">Apellido:</span>
+              <span className="text-text-main font-semibold">Apellido:</span>
               <input
                 type="text"
+                autoComplete="off"
                 className={inputClasses}
                 {...formik.getFieldProps("apellido")}
               />
               {formik.touched.apellido && formik.errors.apellido && (
-                <div className="text-red-600 text-sm mt-1">
+                <div className="text-error text-sm mt-1">
                   {formik.errors.apellido}
                 </div>
               )}
             </label>
             <label className="block">
-              <span className="text-gray-700 font-semibold">Teléfono:</span>
+              <span className="text-text-main font-semibold">Teléfono:</span>
               <input
                 type="tel"
+                autoComplete="off"
                 className={inputClasses}
                 {...formik.getFieldProps("telefono")}
               />
               {formik.touched.telefono && formik.errors.telefono && (
-                <div className="text-red-600 text-sm mt-1">
+                <div className="text-error text-sm mt-1">
                   {formik.errors.telefono}
                 </div>
               )}
             </label>
             <label className="block">
-              <span className="text-gray-700 font-semibold">
+              <span className="text-text-main font-semibold">
                 Empresa (Opcional):
               </span>
               <input
                 type="text"
+                autoComplete="off"
                 className={inputClasses}
                 {...formik.getFieldProps("empresa")}
               />
@@ -122,7 +141,7 @@ export default function VisitEntryForm() {
           {/* Columna Derecha */}
           <div className="space-y-6">
             <label className="block">
-              <span className="text-gray-700 font-semibold">
+              <span className="text-text-main font-semibold">
                 Tipo de Identificación:
               </span>
               <select
@@ -143,45 +162,47 @@ export default function VisitEntryForm() {
               </select>
               {formik.touched.id_tipo_identificacion &&
                 formik.errors.id_tipo_identificacion && (
-                  <div className="text-red-600 text-sm mt-1">
+                  <div className="text-error text-sm mt-1">
                     {formik.errors.id_tipo_identificacion}
                   </div>
                 )}
             </label>
             <label className="block">
-              <span className="text-gray-700 font-semibold">
+              <span className="text-text-main font-semibold">
                 Número de Identificación:
               </span>
               <input
                 type="text"
+                autoComplete="off"
                 className={inputClasses}
                 {...formik.getFieldProps("identificacion")}
               />
               {formik.touched.identificacion &&
                 formik.errors.identificacion && (
-                  <div className="text-red-600 text-sm mt-1">
+                  <div className="text-error text-sm mt-1">
                     {formik.errors.identificacion}
                   </div>
                 )}
             </label>
             <label className="block">
-              <span className="text-gray-700 font-semibold">
+              <span className="text-text-main font-semibold">
                 Persona a Visitar:
               </span>
               <input
                 type="text"
+                autoComplete="off"
                 className={inputClasses}
                 {...formik.getFieldProps("nombre_destinatario")}
               />
               {formik.touched.nombre_destinatario &&
                 formik.errors.nombre_destinatario && (
-                  <div className="text-red-600 text-sm mt-1">
+                  <div className="text-error text-sm mt-1">
                     {formik.errors.nombre_destinatario}
                   </div>
                 )}
             </label>
             <label className="block">
-              <span className="text-gray-700 font-semibold">
+              <span className="text-text-main font-semibold">
                 Área de Destino:
               </span>
               <select
@@ -198,7 +219,7 @@ export default function VisitEntryForm() {
                 ))}
               </select>
               {formik.touched.id_area && formik.errors.id_area && (
-                <div className="text-red-600 text-sm mt-1">
+                <div className="text-error text-sm mt-1">
                   {formik.errors.id_area}
                 </div>
               )}
@@ -208,7 +229,7 @@ export default function VisitEntryForm() {
           {/* Campos que ocupan todo el ancho */}
           <div className="md:col-span-2">
             <label className="block">
-              <span className="text-gray-700 font-semibold">
+              <span className="text-text-main font-semibold">
                 Motivo de la Visita:
               </span>
               <textarea
@@ -217,7 +238,7 @@ export default function VisitEntryForm() {
                 {...formik.getFieldProps("motivo")}
               ></textarea>
               {formik.touched.motivo && formik.errors.motivo && (
-                <div className="text-red-600 text-sm mt-1">
+                <div className="text-error text-sm mt-1">
                   {formik.errors.motivo}
                 </div>
               )}
@@ -225,7 +246,7 @@ export default function VisitEntryForm() {
           </div>
           <div className="md:col-span-2">
             <label className="block">
-              <span className="text-gray-700 font-semibold">
+              <span className="text-text-main font-semibold">
                 Observaciones (Opcional):
               </span>
               <textarea
@@ -238,7 +259,7 @@ export default function VisitEntryForm() {
         </div>
 
         <div className="mt-6">
-          <label className="block mb-2 text-gray-700 font-semibold">
+          <label className="block mb-2 text-text-main font-semibold">
             Firma del Visitante (Obligatoria):
           </label>
           <div className="w-full border-2 border-dashed border-gray-300 rounded-md bg-gray-50">
@@ -252,7 +273,7 @@ export default function VisitEntryForm() {
 
         {formik.errors.apiError && (
           <div
-            className="mt-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md text-center"
+            className="mt-6 bg-red-100 border border-red-400 text-error px-4 py-3 rounded-md text-center"
             role="alert"
           >
             <span>{formik.errors.apiError}</span>
@@ -263,14 +284,14 @@ export default function VisitEntryForm() {
           <button
             type="button"
             onClick={handleClear}
-            className="flex items-center bg-gray-500 text-white font-bold py-2 px-4 rounded-md hover:bg-gray-600 transition-colors"
+            className="flex items-center bg-tertiary text-surface font-bold py-2 px-4 rounded-md hover:bg-tertiary-hover transition-colors"
           >
             <FontAwesomeIcon icon={faBroom} className="mr-2" /> Limpiar
           </button>
           <button
             type="submit"
             disabled={formik.isSubmitting}
-            className="flex items-center bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-blue-300 transition-colors"
+            className="flex items-center bg-primary text-surface font-bold py-2 px-4 rounded-md hover:bg-primary-hover disabled:bg-primary-light transition-colors"
           >
             {formik.isSubmitting ? (
               "Registrando..."

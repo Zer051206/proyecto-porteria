@@ -131,7 +131,7 @@ export const updateVisitExit = async (req, res, next) => {
   try {
     const visitId = parseInt(req.params.id, 10);
 
-    const userId = req.user.userId;
+    const userId = req.user.id_usuario;
     const userIp = req.ip;
 
     // Validación del ID de la ruta

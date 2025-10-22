@@ -22,7 +22,7 @@ const processQueue = (error, token = null) => {
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:3000",
-  withCredentials: true, // Se mantiene por si se usan cookies para otras cosas en el futuro
+  withCredentials: true,
   timeout: 10000,
 });
 
@@ -47,7 +47,17 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    const status = error.response?.status;
+    const url = originalRequest.url;
+    if (
+      status === 401 &&
+      (url.includes("/auth/login") || url.includes("/auth/register"))
+    ) {
+      return Promise.reject(error);
+    }
+
+    // --- Lógica de Renovación (Solo para usuarios ya logueados) ---
+    if (status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
         return new Promise(function (resolve, reject) {
           failedQueue.push({ resolve, reject });
@@ -68,8 +78,6 @@ api.interceptors.response.use(
       }
 
       try {
-        // --- ¡CORRECCIÓN CLAVE! ---
-        // Se envía el refreshToken en el cuerpo de la petición POST.
         const res = await api.post("/auth/refresh", { refreshToken });
         const { accessToken: newAccessToken } = res.data;
 

@@ -40,7 +40,7 @@ export default function EnviarPaqueteForm() {
    * @const {Function} goBack
    * @description Función que redirige al usuario al dashboard principal.
    */
-  const goBack = navigate(-1); // Usando el hook específico para dashboard
+  const goBack = () => navigate(-1); // Usando el hook específico para dashboard
 
   /**
    * @const {object} formLogic

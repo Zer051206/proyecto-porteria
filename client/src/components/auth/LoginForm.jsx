@@ -55,14 +55,14 @@ export default function LoginForm() {
   const [inputType, Icon, toggleVisibility] = usePasswordToggle();
   const formik = useLoginForm();
   const inputClasses =
-    "mt-2 block w-full rounded-md font-semibold border-2 border-gray-300 p-2 outline-none bg-gray-50 focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition-all";
+    "mt-2 block w-full rounded-md font-semibold border-2 border-neutral-200 p-2 outline-none bg-background focus:border-secondary focus:ring-1 focus:ring-secondary-light transition-all";
 
   return (
-    <div className="flex flex-col justify-center items-center w-full min-h-screen bg-gray-100 p-4">
+    <div className="flex flex-col justify-center items-center w-full min-h-screen bg-background p-4">
       <button
         type="button"
         onClick={goBack}
-        className="absolute top-4 left-4 bg-white text-gray-700 font-bold p-3 rounded-full shadow-md hover:bg-gray-200 transition-colors"
+        className="absolute top-4 left-4 bg-surface text-text-main font-bold p-3 rounded-full shadow-md w-1/5 md:w-1/12 hover:bg-background transition-colors"
         aria-label="Volver a la página de inicio"
       >
         <FontAwesomeIcon icon={faArrowLeft} className="text-xl" />
@@ -70,7 +70,7 @@ export default function LoginForm() {
 
       <form
         onSubmit={formik.handleSubmit}
-        className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md border border-gray-200 animate-fade-in"
+        className="bg-surface p-8 rounded-xl shadow-lg w-full max-w-md border border-surface animate-fade-in"
         noValidate
       >
         <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
@@ -86,11 +86,11 @@ export default function LoginForm() {
             <input
               type="email"
               className={inputClasses}
-              autoComplete="email"
+              autoComplete="off"
               {...formik.getFieldProps("correo")}
             />
             {formik.touched.correo && formik.errors.correo ? (
-              <div className="text-red-600 text-sm mt-1">
+              <div className="text-error text-sm mt-1">
                 {formik.errors.correo}
               </div>
             ) : null}
@@ -109,13 +109,13 @@ export default function LoginForm() {
               <button
                 type="button"
                 onClick={toggleVisibility}
-                className="absolute right-[-8px] top-[35px] flex items-center pr-3 text-gray-400"
+                className="absolute right-0 top-[46px] flex items-center pr-3 text-sm text-text-muted"
                 aria-label="Mostrar u ocultar contraseña"
               >
                 <FontAwesomeIcon icon={Icon} />
               </button>
               {formik.touched.password && formik.errors.password ? (
-                <div className="text-red-600 text-sm mt-1">
+                <div className="text-error text-sm mt-1">
                   {formik.errors.password}
                 </div>
               ) : null}
@@ -135,14 +135,14 @@ export default function LoginForm() {
         <button
           type="submit"
           disabled={formik.isSubmitting}
-          className="mt-6 w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-md hover:bg-blue-700 transition-colors disabled:bg-blue-300"
+          className="mt-6 w-full bg-primary text-text-main font-bold py-3 px-4 rounded-md hover:bg-primary-hover transition-colors disabled:bg-primary-light"
         >
           {formik.isSubmitting ? "Entrando..." : "Entrar al Sistema"}
         </button>
 
         <div className="mt-4 text-center text-sm">
-          <span className="text-gray-600">¿No tienes una cuenta?</span>{" "}
-          <Link to="/auth/register" className="text-blue-600 hover:underline">
+          <span className="text-text-main">¿No tienes una cuenta?</span>{" "}
+          <Link to="/auth/register" className="text-secondary hover:underline">
             Regístrate aquí
           </Link>
         </div>
