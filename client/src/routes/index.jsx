@@ -22,8 +22,6 @@ import DashboardPackage from "../components/packages/DashboardPackage.jsx";
 import PackagesRecibirForm from "../components/packages/PackagesRecibirForm.jsx";
 import PackagesEnviarForm from "../components/packages/PackagesEnviarForm.jsx";
 import DashboardHistorial from "../components/historial/DashboardHistorial.jsx";
-import VisitsHistorial from "../components/historial/VisitsHistorial.jsx";
-import PackagesHistorial from "../components/historial/PackagesHistorial.jsx";
 
 /**
  * @function AppRoutes
@@ -48,8 +46,6 @@ export function AppRoutes() {
           <Route path="/paquetes/recibir" element={<PackagesRecibirForm />} />
           <Route path="/paquetes/enviar" element={<PackagesEnviarForm />} />
           <Route path="/historial" element={<DashboardHistorial />} />
-          <Route path="/historial/visitas" element={<VisitsHistorial />} />
-          <Route path="/historial/paquetes" element={<PackagesHistorial />} />
         </Route>
       </Route>
     </Routes>

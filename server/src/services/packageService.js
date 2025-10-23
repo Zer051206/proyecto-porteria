@@ -94,3 +94,78 @@ export const createPackage = async (packageData) => {
     return newPackage;
   });
 };
+
+/**
+ * @async
+ * @function getRecentPackages
+ * @description Obtiene los últimos N logs relacionados con paquetes ('RECIBIR_PAQUETE', 'ENVIAR_PAQUETE'),
+ * aplicando el filtro de usuario directamente si el rol es 'portero'. Llama al repositorio de logs genérico `findRecent`.
+ * @param {object} user - Objeto del usuario autenticado (con id_usuario y rol).
+ * @param {number} limit - El número máximo de logs a obtener.
+ * @returns {Promise<Array<object>>} Un array con los logs recientes encontrados (incluyendo datos asociados),
+ * o un array vacío si no se encuentran o el rol no es válido.
+ * @throws {Error} Si ocurre un error durante la consulta a la base de datos.
+ */
+export const getRecentPackages = async (user, limit) => {
+  try {
+    // Define las asociaciones a incluir en la consulta
+    const includeOptions = [
+      {
+        model: db.Paquetes, // Modelo Paquetes
+        required: true, // INNER JOIN
+        include: [
+          {
+            model: db.TiposPaquetes,
+            attributes: ["descripcion"],
+          }, // Corregido: attributes
+          { model: db.Areas, attributes: ["nombre_area"] }, // Corregido: attributes
+        ],
+      },
+      {
+        model: db.Usuarios, // Modelo Usuarios
+        attributes: ["id_usuario", "nombre", "apellido", "rol"],
+      },
+    ];
+
+    // Define las condiciones base de la consulta
+    const baseWhere = {
+      accion: {
+        [db.Sequelize.Op.in]: ["RECIBIR_PAQUETE", "ENVIAR_PAQUETE"],
+      },
+      id_paquete: { [db.Sequelize.Op.ne]: null },
+    };
+
+    let queryOptions = {
+      limit: limit,
+      order: [["fecha_log", "DESC"]], // Ordenar por fecha del log
+      include: includeOptions,
+      where: baseWhere, // Inicia con las condiciones base
+    };
+
+    // Aplica el filtro de usuario SI es portero
+    if (user.rol === "portero") {
+      queryOptions.where.id_usuario = user.id_usuario; // Añade la condición al 'where'
+    } else if (user.rol !== "admin") {
+      // Si no es admin ni portero, no debería ver nada (o manejar según tu lógica)
+      logger.warn(
+        `Usuario con rol '${user.rol}' intentó acceder a paquetes recientes.`
+      );
+      return []; // Devuelve vacío si el rol no está permitido
+    }
+    // Si es admin, no se añade filtro de id_usuario, usa solo baseWhere
+
+    // Llama a la función genérica del repositorio pasando todas las opciones construidas
+    const recentLogs = await logRepository.findRecent(queryOptions);
+
+    logger.info(
+      `Se obtuvieron ${recentLogs.length} logs recientes de paquetes para el usuario ${user.id_usuario} (${user.rol}).`
+    );
+    return recentLogs;
+  } catch (error) {
+    logger.error(
+      { userId: user.id_usuario, limit: limit, error: error.message },
+      "Error al obtener logs recientes de paquetes en el servicio."
+    );
+    throw error; // Relanza el error
+  }
+};

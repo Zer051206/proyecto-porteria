@@ -21,14 +21,11 @@ import {
   handleAddressKeyDown,
 } from "../../utils/inputUtilities";
 import toast from "react-hot-toast";
+
 /**
  * @function usePackagesEnviar
  * @description Gestiona el estado, la validación y el envío del formulario para registrar
  * la salida de un paquete del almacén.
- *
- * @param {Function} navigate - Función para redirigir al usuario tras un envío exitoso.
- * @returns {object} Un objeto con todas las propiedades y métodos necesarios para el componente del formulario.
- *
  * @property {object} formik - Objeto completo devuelto por `useFormik` para enlazar con los campos del formulario.
  * @property {Array<object>} tiposPaquetes - Lista de opciones de tipos de paquetes cargada desde la API.
  * @property {Array<object>} areas - Lista de opciones de áreas cargada desde la API.
@@ -39,14 +36,12 @@ import toast from "react-hot-toast";
  * @property {Function} handleAddressKeyDown - Utilidad para restringir caracteres en entradas de dirección/destino.
  * @property {string | null} error - Mensaje de error general si falló la submission del formulario.
  */
-const usePackagesEnviar = (navigate) => {
+const usePackagesEnviar = (onSuccess) => {
   // Estados para la carga de datos iniciales
   const [tiposPaquetes, setTiposPaquetes] = useState([]);
   const [areas, setAreas] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorCarga, setErrorCarga] = useState(null);
-
-  // Estado para errores generales de la submission
   const [error, setError] = useState(null);
 
   /**
@@ -55,7 +50,6 @@ const usePackagesEnviar = (navigate) => {
    * @returns {void}
    */
   const handleClearForm = () => {
-    // Renombrado de handleClickClear
     formik.resetForm();
     setError(null); // Limpiar error general al resetear
   };
@@ -154,7 +148,9 @@ const usePackagesEnviar = (navigate) => {
         await api.post("/api/paquetes/enviar", payload);
         toast.success("¡Paquete recibido con éxito!");
         resetForm();
-        navigate("/dashboard");
+        if (onSuccess) {
+          onSuccess();
+        }
       } catch (error) {
         if (error.response?.data?.errors) {
           // Errores de validación de Zod
@@ -186,7 +182,7 @@ const usePackagesEnviar = (navigate) => {
     handleClearForm, // Renombrado y lógica ajustada
     handleKeyTextDown,
     handleAddressKeyDown,
-    error,
+    error: formik.errors.apiError,
   };
 };
 

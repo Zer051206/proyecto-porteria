@@ -68,7 +68,11 @@ router.get("/tipos-paquetes", authMiddleware, apiController.getPackageTypes);
  * @middleware authMiddleware - Requiere autenticación.
  * @handler apiController.getVisitsHistorial
  */
-router.get("/historial/visitas", authMiddleware, apiController.getVisitsHistorial);
+router.get(
+  "/historial/visitas",
+  authMiddleware,
+  apiController.getVisitsHistorial
+);
 
 /**
  * @route GET /api/paquetes
@@ -77,6 +81,10 @@ router.get("/historial/visitas", authMiddleware, apiController.getVisitsHistoria
  * @middleware authMiddleware - Requiere autenticación.
  * @handler apiController.getPackagesHistorial
  */
-router.get("/paquetes", authMiddleware, apiController.getPackagesHistorial);
+router.get(
+  "/historial/paquetes",
+  authMiddleware,
+  apiController.getPackagesHistorial
+);
 
 export default router;

@@ -29,6 +29,16 @@ router.post("/recibir", authMiddleware, packageController.receivePackage);
 router.post("/enviar", authMiddleware, packageController.sendPackage);
 
 /**
+ * @route GET /paquetes/recientes
+ * @description Obtiene una lista de los paquetes registrados más recientemente.
+ * Acepta un query parameter opcional `limit` para especificar cuántos obtener (ej. /paquetes/recientes?limit=5).
+ * @access Private
+ * @middleware authMiddleware - Requiere autenticación.
+ * @handler packageController.recentPackages
+ */
+router.get("/recientes", authMiddleware, packageController.recentPackages);
+
+/**
  * @description Exporta el enrutador de Express configurado con las rutas de gestión de paquetes.
  * @type {Router}
  */

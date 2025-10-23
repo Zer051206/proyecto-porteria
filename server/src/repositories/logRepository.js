@@ -49,3 +49,19 @@ export const findByUserId = async (id_usuario) => {
 export const create = async (logData, options = {}) => {
   return Log.create(logData, options);
 };
+
+/**
+ * @async
+ * @function findRecent
+ * @description Función genérica para buscar los últimos logs según las opciones proporcionadas.
+ * Típicamente se usa pasando `limit` y `order` en las opciones.
+ * @param {object} [options={}] - Opciones de Sequelize (where, include, order, limit, etc.).
+ * @returns {Promise<Array<Log>>} Un array con los logs encontrados según las opciones.
+ */
+export const findRecent = async (options = {}) => {
+  const finalOptions = {
+    order: [["fecha_log", "DESC"]], // Orden por defecto
+    ...options,
+  };
+  return Log.findAll(finalOptions);
+};
