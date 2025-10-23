@@ -50,7 +50,7 @@ export const DashboardPackageSkeleton = () => (
 export default function DashboardPackage() {
   const navigate = useNavigate();
   const goBack = () => navigate("/dashboard");
-  const [isLoading] = useAuthStore;
+  const { isLoading } = useAuthStore;
 
   if (isLoading) {
     return <DashboardPackageSkeleton />;

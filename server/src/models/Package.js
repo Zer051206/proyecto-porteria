@@ -12,8 +12,8 @@ import { DataTypes } from "sequelize";
 /**
  * @function definePackageModel
  * @description Define y devuelve el modelo 'Package' de Sequelize.
- * @param {import('sequelize').Sequelize} sequelize - La instancia de Sequelize.
- * @returns {import('sequelize').ModelCtor<Model>} El modelo 'Package' definido.
+ * @param {Sequelize} sequelize - La instancia de Sequelize.
+ * @returns {Model} El modelo 'Package' definido.
  */
 export default (sequelize) => {
   /**
@@ -78,13 +78,13 @@ export default (sequelize) => {
 
     // Asociación con el usuario que RECIBE
     Package.belongsTo(models.User, {
-      as: "ReceivingUser",
+      as: "PackagesReceived",
       foreignKey: "id_usuario_recibir",
     });
 
     // Asociación con el usuario que ENVÍA
     Package.belongsTo(models.User, {
-      as: "SendingUser",
+      as: "PackagesSent",
       foreignKey: "id_usuario_enviar",
     });
 

@@ -20,7 +20,7 @@ import {
   handleKeyTextDown,
   handleAddressKeyDown,
 } from "../../utils/inputUtilities";
-
+import toast from "react-hot-toast";
 /**
  * @function usePackagesEnviar
  * @description Gestiona el estado, la validación y el envío del formulario para registrar
@@ -144,41 +144,35 @@ const usePackagesEnviar = (navigate) => {
      * @param {object} values - Valores validados del formulario.
      * @returns {void}
      */
-    onSubmit: async (values) => {
-      setError(null); // Limpiar error general antes del intento
-
+    onSubmit: async (values, { setErrors, resetForm, setSubmitting }) => {
       try {
-        await api.post("/paquetes/enviar", {
-          ...values,
-          // Asegura que los campos opcionales sean null si están vacíos
-          guia: values.conGuia ? values.guia : null,
-          destino_salida: values.destino_salida || null,
-          empresa_transporte: values.empresa_transporte || null,
-          mensajero_nombre: values.mensajero_nombre || null,
-        });
+        const payload = { ...values };
+        if (!payload.conGuia) {
+          payload.guia = null; // Asegura que la guía sea nula si no se marca
+        }
 
-        alert("✅ ¡Paquete enviado con éxito!");
-        formik.resetForm(); // Limpiar el formulario después del éxito
+        await api.post("/api/paquetes/enviar", payload);
+        toast.success("¡Paquete recibido con éxito!");
+        resetForm();
         navigate("/dashboard");
       } catch (error) {
-        const serverErrors = error.response?.data?.errors;
-        if (serverErrors) {
+        if (error.response?.data?.errors) {
+          // Errores de validación de Zod
           const formikErrors = {};
-          serverErrors.forEach((e) => {
-            if (e.path) {
-              const path = e.path.split(".");
-              // Mapeamos el error a la propiedad de Formik
-              formikErrors[path[path.length - 1]] = e.message;
-            }
+          error.response.data.errors.forEach((e) => {
+            const path = e.path[0];
+            formikErrors[path] = e.message;
           });
-          formik.setErrors(formikErrors);
-          setError(null); // Aseguramos que el error general esté vacío
+          setErrors(formikErrors);
+          toast.error("Por favor, corrige los errores en el formulario.");
         } else {
-          // Si no hay errores de validación de campo, mostramos el mensaje general del servidor
-          setError(
+          // Error general (ej. guía duplicada)
+          toast.error(
             error.response?.data?.message || "Ha ocurrido un error inesperado."
           );
         }
+      } finally {
+        setSubmitting(false);
       }
     },
   });

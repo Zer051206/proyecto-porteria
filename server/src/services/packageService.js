@@ -23,84 +23,74 @@ import logger from "../config/logger.js";
  * @description Crea uno o más registros de paquetes (de tipo 'enviar' o 'recibir') en una transacción.
  * Verifica la unicidad del número de guía para cada tipo de operación.
  * @param {Array<object>} packagesData - Array de objetos con los datos de los paquetes a crear.
- * @param {object} user - El objeto del usuario autenticado que realiza la acción.
- * @param {string} ipAddress - La dirección IP del usuario.
  * @returns {Promise<Array<object>>} Un array con los nuevos paquetes creados.
  * @throws {DuplicateError} Si uno de los números de guía ya existe para el mismo tipo de operación.
  */
-export const createPackage = async (packagesData, user, ip_usuario) => {
+export const createPackage = async (packageData) => {
   return db.sequelize.transaction(async (t) => {
-    const creationPromises = packagesData.map(async (packageData) => {
-      const { guia, tipo_operacion, ...restOfData } = packageData;
+    const { guia, tipo_operacion, id_usuario, ip_usuario, ...restOfData } =
+      packageData;
 
-      // 1. Verificación de Lógica de Negocio: Guía duplicada
-      if (guia) {
-        const existingPackage = await packageRepository.findByGuide(
-          guia,
-          tipo_operacion,
-          { transaction: t }
-        );
-        if (existingPackage) {
-          logger.warn(
-            { userId: user.id_usuario, guide: guia, operation: tipo_operacion },
-            "Intento de registrar paquete con guía duplicada."
-          );
-          throw new DuplicateError(
-            `La guía '${guia}' ya fue registrada para la misma operación'.`
-          );
-        }
-      }
-
-      // 2. Preparación de los datos para la base de datos
-      const packageForDb = {
-        ...restOfData,
+    // 1. Verificación de Lógica de Negocio: Guía duplicada
+    if (guia) {
+      const existingPackage = await packageRepository.findByGuide(
         guia,
         tipo_operacion,
-      };
-
-      if (tipo_operacion === "recibir") {
-        packageForDb.id_usuario_recibir = user.id_usuario;
-        packageForDb.fecha_recibido = new Date();
-      } else if (tipo_operacion === "enviar") {
-        packageForDb.id_usuario_enviar = user.id_usuario;
-        packageForDb.fecha_envio = new Date();
-      } else {
-        throw new BadRequestError(
-          `El tipo de operación '${tipo_operacion}' no es válido.`
-        );
-      }
-
-      // 3. Creación del registro del paquete
-      const newPackage = await packageRepository.create(packageForDb, {
-        transaction: t,
-      });
-
-      // 4. Creación del registro de auditoría (log)
-      const logAction =
-        tipo_operacion === "recibir" ? "RECIBIR_PAQUETE" : "ENVIAR_PAQUETE";
-      const logDescription = `Se registró un paquete (${tipo_operacion}) con guía '${
-        guia || "N/A"
-      }' (ID: ${newPackage.id_paquete}).`;
-
-      await logRepository.create(
-        {
-          accion: logAction,
-          id_usuario: user.id_usuario,
-          descripcion: logDescription,
-          ip_usuario: ip_usuario,
-          id_paquete: newPackage.id_paquete, // Se enlaza el log con el paquete
-        },
         { transaction: t }
       );
+      if (existingPackage) {
+        logger.warn(
+          { userId: id_usuario, guide: guia, operation: tipo_operacion },
+          "Intento de registrar paquete con guía duplicada."
+        );
+        throw new DuplicateError(
+          `La guía '${guia}' ya fue registrada para la misma operación'.`
+        );
+      }
+    }
 
-      return newPackage;
+    // 2. Preparación de los datos para la base de datos
+    const packageForDb = {
+      ...restOfData,
+      guia: guia,
+      tipo_operacion: tipo_operacion,
+    };
+
+    if (tipo_operacion === "recibir") {
+      packageForDb.id_usuario_recibir = id_usuario;
+      packageForDb.fecha_recibido = new Date();
+    } else if (tipo_operacion === "enviar") {
+      packageForDb.id_usuario_enviar = id_usuario;
+      packageForDb.fecha_envio = new Date();
+    } else {
+      throw new BadRequestError(
+        `El tipo de operación '${tipo_operacion}' no es válido.`
+      );
+    }
+
+    // 3. Creación del registro del paquete
+    const newPackage = await packageRepository.create(packageForDb, {
+      transaction: t,
     });
 
-    const createdPackages = await Promise.all(creationPromises);
-    logger.info(
-      { userId: user.id_usuario, count: createdPackages.length },
-      `${createdPackages.length} paquete(s) creado(s) exitosamente.`
+    // 4. Creación del registro de auditoría (log)
+    const logAction =
+      tipo_operacion === "recibir" ? "RECIBIR_PAQUETE" : "ENVIAR_PAQUETE";
+    const logDescription = `Se registró un paquete (${tipo_operacion}) con guía '${
+      guia || "N/A"
+    }' (ID: ${newPackage.id_paquete}).`;
+
+    await logRepository.create(
+      {
+        accion: logAction,
+        id_usuario: id_usuario,
+        descripcion: logDescription,
+        ip_usuario: ip_usuario,
+        id_paquete: newPackage.id_paquete,
+      },
+      { transaction: t }
     );
-    return createdPackages;
+
+    return newPackage;
   });
 };

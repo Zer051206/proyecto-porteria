@@ -59,6 +59,11 @@ const basePackageSchema = z.object({
     })
     .optional()
     .nullable(),
+  tipo_operacion: z
+    .string({
+      required_error: "El tipo de operacion es obligatorio",
+    })
+    .trim(),
 });
 
 /**
@@ -103,19 +108,3 @@ export const sendPackageSchema = basePackageSchema.extend({
       message: "El destino de salida no puede tener más de 100 caracteres.",
     }),
 });
-
-/**
- * @const {z.ZodArray} createReceivePackageSchema
- * @description Esquema para el endpoint de creación, que espera un array de paquetes de recepción.
- */
-export const createReceivePackageSchema = z
-  .array(receivePackageSchema)
-  .min(1, "Debes agregar al menos un paquete.");
-
-/**
- * @const {z.ZodArray} createSendPackageSchema
- * @description Esquema para el endpoint de creación, que espera un array de paquetes de envío.
- */
-export const createSendPackageSchema = z
-  .array(sendPackageSchema)
-  .min(1, "Debes agregar al menos un paquete.");

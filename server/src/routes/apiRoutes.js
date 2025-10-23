@@ -68,7 +68,7 @@ router.get("/tipos-paquetes", authMiddleware, apiController.getPackageTypes);
  * @middleware authMiddleware - Requiere autenticación.
  * @handler apiController.getVisitsHistorial
  */
-router.get("/visitas", authMiddleware, apiController.getVisitsHistorial);
+router.get("/historial/visitas", authMiddleware, apiController.getVisitsHistorial);
 
 /**
  * @route GET /api/paquetes
@@ -79,8 +79,4 @@ router.get("/visitas", authMiddleware, apiController.getVisitsHistorial);
  */
 router.get("/paquetes", authMiddleware, apiController.getPackagesHistorial);
 
-/**
- * @description Exporta el enrutador de Express configurado.
- * @type {Router}
- */
 export default router;

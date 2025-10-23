@@ -1,130 +1,116 @@
 /**
  * @file useVisitsHistorial.js
- * @module hooks/useVisitsHistorial
- * @description Custom hook para manejar la lógica, el estado y la comunicación con la API
- * para el historial de visitas. Incluye funcionalidad de búsqueda con debouncing.
- * @exports useVisitsHistorial
+ * @module Hooks/Historial
+ * @description Hook personalizado para la lógica del dashboard de historial de visitas.
+ * Carga todos los registros y aplica la lógica de búsqueda en el frontend.
  * @requires react
- * @requires ../../config/axios - Instancia configurada de Axios.
- * @requires ../../utils/dateFormat - Utilidad para formatear fechas.
+ * @requires ../../config/axios.js
  */
-import { useEffect, useState, useCallback, useRef } from "react";
-import api from "../../config/axios";
-import { formatDate } from "../../utils/dateFormat";
-
-/**
- * @typedef {object} VisitData
- * @property {number} id_visita - ID único de la visita.
- * @property {string} nombre_visitante - Nombre completo del visitante.
- * @property {string} identificacion - Número de documento.
- * @property {string} descripcion - Tipo de documento.
- * @property {string} nombre_destinatario - Nombre de la persona visitada.
- * @property {string} nombre_area - Área de destino.
- * @property {string} fecha_entrada - Marca de tiempo de la entrada.
- * @property {string|null} fecha_salida - Marca de tiempo de la salida.
- * @property {string} motivo - Motivo de la visita.
- * @property {string} [empresa] - Empresa de procedencia del visitante.
- * @property {string} [observaciones] - Observaciones adicionales.
- */
+import { useState, useEffect, useMemo, useCallback } from "react";
+import api from "../../config/axios.js";
+import { toast } from "react-hot-toast";
+import { formatDate } from "../../utils/dateFormat.js";
 
 /**
  * @function useVisitsHistorial
- * @description Hook que gestiona el estado y la lógica para la tabla de historial de visitas,
- * incluyendo la obtención de datos, la búsqueda debounced y la gestión del modal de detalles.
- * @returns {object} Un objeto con el estado y los *handlers* necesarios para el componente `VisitsHistorial`.
- * @returns {VisitData[]} return.visitsHistorial - Lista de visitas filtradas o completa.
- * @returns {boolean} return.isLoading - Indica si los datos están cargando.
- * @returns {string|null} return.error - Mensaje de error si la carga falla.
- * @returns {boolean} return.showModal - Estado de visibilidad del modal de detalles.
- * @returns {VisitData|null} return.selectedVisit - La visita seleccionada para el modal.
- * @returns {Function} return.handleSelectVisit - Función para abrir el modal y seleccionar una visita.
- * @returns {Function} return.handleCloseModal - Función para cerrar el modal.
- * @returns {Function} return.formatDate - Utilidad para formatear las fechas.
- * @returns {string} return.searchTerm - Término de búsqueda actual.
- * @returns {Function} return.handleSearchChange - Handler para cambios en el campo de búsqueda con debouncing.
- * @returns {boolean} return.noResults - Indica si no se encontraron resultados.
+ * @description Hook de React que encapsula la lógica para la página de historial de visitas.
+ * @returns {{
+ * visits: Array<object>,
+ * isLoading: boolean,
+ * error: string|null,
+ * refetch: Function,
+ * setSearchTerm: Function
+ * }} Objeto con las visitas filtradas, estados y funciones.
  */
-const useVisitsHistorial = () => {
-  /** @type {VisitData[]} */
-  const [visitsHistorial, setVisitsHistorial] = useState([]);
+export const useVisitsHistorial = () => {
+  /**
+   * @state {Array<object>} originalVisits - Almacena la lista original de visitas obtenida de la API.
+   */
+  const [originalVisits, setOriginalVisits] = useState([]);
+  /**
+   * @state {boolean} isLoading - Indica si se está realizando una petición a la API.
+   */
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  /**
+   * @state {boolean} showModal - Controla la visibilidad del modal de detalles.
+   */
   const [showModal, setShowModal] = useState(false);
-  /** @type {VisitData|null} */
-  const [selectedVisit, setSelectedVisit] = useState(null);
+  /**
+   * @state {string|null} error - Almacena un mensaje de error si la petición falla.
+   */
+  const [error, setError] = useState(null);
+  /**
+   * @state {string} searchTerm - Almacena el término de búsqueda actual.
+   */
   const [searchTerm, setSearchTerm] = useState("");
-  const [noResults, setNoResults] = useState(false);
-
-  /** @type {React.MutableRefObject<number|null>} Referencia para manejar el *timeout* del debouncing. */
-  const debounceRef = useRef(null);
+  /**
+   * @state {object|null} selectedVisit - Almacena el objeto de la visita seleccionada.
+   */
+  const [selectedVisit, setSelectedVisit] = useState(null);
 
   /**
-   * @function fetchVisitsHistorial
-   * @description Realiza la llamada a la API para obtener el historial de visitas, opcionalmente con un término de búsqueda.
-   * @param {string} [term=""] - El término de búsqueda a enviar a la API.
+   * @function fetchVisits
+   * @description Obtiene la lista completa de visitas desde el backend.
    */
-  const fetchVisitsHistorial = useCallback(async (term = "") => {
-    const isInitialLoad = term === "";
-
-    setIsLoading(true);
-    setError(null);
-    setNoResults(false);
-
+  const fetchVisits = useCallback(async () => {
     try {
-      const response = await api.get(`/historial/visitas`, {
-        params: { search: term },
-      });
-
-      const results = response.data || [];
-
-      if (results.length > 0) {
-        setVisitsHistorial(results);
-        setNoResults(false);
-      } else {
-        setVisitsHistorial([]);
-        // Si la búsqueda no arroja resultados o la carga inicial fue vacía, activa noResults.
-        setNoResults(!isInitialLoad || (isInitialLoad && results.length === 0));
-      }
+      setIsLoading(true);
+      setError(null);
+      const response = await api.get("/api/historial/visitas");
+      setOriginalVisits(response.data || []);
     } catch (err) {
-      setError("No se pudo cargar el historial de visitas.");
-      setVisitsHistorial([]);
-      setNoResults(true);
-      console.error(err);
+      setError("Error al cargar el historial de visitas.");
+      toast.error("No se pudo cargar el historial de visitas.");
     } finally {
       setIsLoading(false);
     }
-  }, []); // Dependencia vacía: la función solo se crea una vez.
+  }, []);
 
-  // Carga inicial y limpieza del debounce
   useEffect(() => {
-    fetchVisitsHistorial();
+    fetchVisits();
+  }, [fetchVisits]);
 
-    return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-      }
-    };
-  }, [fetchVisitsHistorial]);
+  /**
+   * @const {Array<object>} filteredVisits
+   * @description Memoriza la lista de visitas filtrada. Se recalcula solo si los
+   * datos originales o el término de búsqueda cambian.
+   */
+  const filteredVisits = useMemo(() => {
+    const term = searchTerm.toLowerCase();
+    if (!term) return originalVisits;
+
+    return originalVisits.filter((visit) => {
+      const nombreVisitante = (visit.nombre_visitante || "").toLowerCase();
+      const identificacion = (visit.identificacion || "").toLowerCase();
+      const destinatario = (visit.nombre_destinatario || "").toLowerCase();
+      const area = (visit.Area?.nombre_area || "").toLowerCase();
+      const tipoId = (
+        visit.IdentificationType?.descripcion || ""
+      ).toLowerCase();
+
+      return (
+        nombreVisitante.includes(term) ||
+        identificacion.includes(term) ||
+        destinatario.includes(term) ||
+        area.includes(term) ||
+        tipoId.includes(term)
+      );
+    });
+  }, [originalVisits, searchTerm]);
+
+  /**
+   * @const {boolean} noResults
+   * @description Verdadero si hay un término de búsqueda pero no hay visitas filtradas.
+   */
+  const noResults = searchTerm.length > 0 && filteredVisits.length === 0;
 
   /**
    * @function handleSearchChange
-   * @description Maneja el cambio en el input de búsqueda, aplicando un retraso (debouncing)
-   * de 500ms antes de llamar a la función de la API.
-   * @param {React.ChangeEvent<HTMLInputElement>} e - Evento de cambio del input.
+   * @description Actualiza el estado del término de búsqueda desde un evento de input.
+   * @param {React.ChangeEvent<HTMLInputElement>} e - El evento del input.
    */
   const handleSearchChange = (e) => {
-    const value = e.target.value;
-    setSearchTerm(value);
-
-    // Limpia el timeout anterior para evitar llamadas API innecesarias
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-    }
-
-    // Establece un nuevo timeout para llamar a la API después de 500ms
-    debounceRef.current = setTimeout(() => {
-      fetchVisitsHistorial(value);
-    }, 500);
+    setSearchTerm(e.target.value);
   };
 
   /**
@@ -147,17 +133,18 @@ const useVisitsHistorial = () => {
   };
 
   return {
-    visitsHistorial,
+    visits: filteredVisits,
     isLoading,
     error,
     showModal,
     selectedVisit,
-    handleSelectVisit,
-    handleCloseModal,
-    formatDate,
-    searchTerm,
-    handleSearchChange,
     noResults,
+    searchTerm,
+    formatDate,
+    handleCloseModal,
+    handleSelectVisit,
+    refetch: fetchVisits,
+    handleSearchChange,
   };
 };
 

@@ -12,8 +12,8 @@ import { DataTypes } from "sequelize";
 /**
  * @function defineLogModel
  * @description Define y devuelve el modelo 'Log' de Sequelize.
- * @param {import('sequelize').Sequelize} sequelize - La instancia de Sequelize.
- * @returns {import('sequelize').ModelCtor<Model>} El modelo 'Log' definido.
+ * @param {Sequelize} sequelize - La instancia de Sequelize.
+ * @returns {Model} El modelo 'Log' definido.
  */
 export default (sequelize) => {
   /**

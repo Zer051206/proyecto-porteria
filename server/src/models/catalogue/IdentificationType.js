@@ -11,8 +11,8 @@ import { DataTypes } from "sequelize";
 /**
  * @function defineIdentificationTypeModel
  * @description Define y devuelve el modelo 'IdentificationType' de Sequelize.
- * @param {import('sequelize').Sequelize} sequelize - La instancia de Sequelize.
- * @returns {import('sequelize').ModelCtor<Model>} El modelo 'IdentificationType' definido.
+ * @param {Sequelize} sequelize - La instancia de Sequelize.
+ * @returns {Model} El modelo 'IdentificationType' definido.
  */
 export default (sequelize) => {
   /**

@@ -1,5 +1,4 @@
 /** @type {import('tailwindcss').Config} */
-// Nota: 'import colors' ya no es necesario, ya que definimos todos los colores manualmente.
 
 export default {
   content: [

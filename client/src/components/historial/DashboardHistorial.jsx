@@ -10,13 +10,34 @@
  * @requires @fortawesome/free-solid-svg-icons - Íconos sólidos utilizados (faBoxesPacking, faArrowLeft, faUserClock).
  */
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBoxesPacking,
   faArrowLeft,
   faUserClock,
 } from "@fortawesome/free-solid-svg-icons";
+import { useAuthStore } from "../../stores/authStore";
+
+/**
+ * @function DashboardHistorialSkeleton
+ * @description Componente de esqueleto de carga que imita la estructura del DashboardHistorial.
+ * @returns {JSX.Element}
+ */
+export const DashboardHistorialSkeleton = () => (
+  <div className="flex flex-col items-center w-full animate-fade-in">
+    <div className="bg-surface p-8 sm:p-12 rounded-xl shadow-lg w-full max-w-2xl border border-gray-200 animate-pulse">
+      {/* Esqueleto para el Título */}
+      <div className="h-10 bg-gray-200 rounded w-3/4 mx-auto mb-10"></div>
+
+      {/* Esqueleto para los Botones */}
+      <div className="flex flex-col sm:flex-row justify-center items-center gap-10 w-full">
+        <div className="w-full sm:w-52 h-48 bg-gray-200 rounded-lg"></div>
+        <div className="w-full sm:w-52 h-48 bg-gray-200 rounded-lg"></div>
+      </div>
+    </div>
+  </div>
+);
 
 /**
  * @function DashboardHistorial
@@ -25,52 +46,64 @@ import {
  * @returns {JSX.Element} El componente de menú de historial.
  */
 export default function DashboardHistorial() {
-  /** @type {Function} Función para la navegación programática de React Router DOM. */
+  /**
+   * @type {Function}
+   * Función para la navegación programática de React Router DOM.
+   * */
   const navigate = useNavigate();
+  const goBack = () => navigate("/dashboard");
+  const { isLoading } = useAuthStore;
+
+  if (isLoading) {
+    return <DashboardHistorialSkeleton />;
+  }
 
   return (
-    <div className="flex flex-col items-center justify-center h-full sm:w-full sm:h-full text-blue-700 transition-colors duration-300">
-      <h1 className="text-4xl sm:text-6xl font-bold mb-10 text-center">
+    <div className="flex flex-col items-center justify-center h-full sm:w-full sm:h-full transition-colors duration-300">
+      <button
+        type="button"
+        onClick={goBack}
+        className="md:absolute md:left-[150px]  md:top-[100px] mb-5 bg-surface text-text-main font-bold p-3 rounded-full shadow-sm  shadow-black md:w-1/12 w-1/2 hover:bg-background transition-colors"
+        aria-label="Volver a la página de inicio"
+      >
+        <FontAwesomeIcon icon={faArrowLeft} className="text-xl" />
+      </button>
+      <h1 className="text-4xl sm:text-5xl font-bold mb-14 mt-10 text-center text-primary">
         Historial de Registros
       </h1>
 
-      <div className="flex space-x-8 w-screen justify-center  sm:space-x-20">
-        {/* Botón para Historial de Visitas */}
-        <button
-          /** @property {string} path - Navega a la ruta para el historial de visitas. */
-          onClick={() => navigate("/historial/visitas")}
-          className="flex flex-col items-center justify-center w-[180px] text-xl sm:text-2xl h-[145px] ml-[20px] sm:w-48 sm:h-48 bg-blue-700 hover:bg-blue-800 text-white font-bold rounded-lg shadow-lg  shadow-black transform hover:scale-105 transition-transform duration-200"
+      {/* Contenedor de los "cajones" de navegación */}
+      <div className="flex flex-col sm:flex-row justify-center items-center gap-10 w-full">
+        {/* Botón para Historial de Visitas (Color Primario) */}
+        <Link
+          to="/historial/visitas"
+          className="flex flex-col items-center justify-center p-8 w-full sm:w-52 h-48 bg-background hover:bg-secondary-light rounded-lg shadow-sm hover:shadow-md transition-all duration-300 border-2 border-neutral-200 hover:border-secondary"
+          aria-label="Ir al historial de visitas"
         >
-          {/* Icono: faUserClock (Representa Visitas/Registro de Tiempo) */}
-          <FontAwesomeIcon icon={faUserClock} className="text-5xl mb-4" />
-          <span className="text-lg">Visitas</span>
-        </button>
+          <FontAwesomeIcon
+            icon={faUserClock}
+            className="text-4xl text-secondary mb-3"
+          />
+          <span className="text-lg font-semibold text-text-main">
+            Historial de Visitas
+          </span>
+        </Link>
 
-        {/* Botón para Historial de Paquetes */}
-        <button
-          /** @property {string} path - Navega a la ruta para el historial de paquetes. */
-          onClick={() => navigate("/historial/paquetes")}
-          className="flex flex-col items-center justify-center w-[180px] text-xl sm:text-2xl h-[145px] mr-[20px] sm:w-48 sm:h-48 bg-green-700 hover:bg-green-800 text-white font-bold rounded-lg shadow-lg shadow-black transform hover:scale-105 transition-transform duration-200"
+        {/* Botón para Historial de Paquetes (Color Secundario) */}
+        <Link
+          to="/historial/paquetes"
+          className="flex flex-col items-center justify-center p-8 w-full sm:w-52 h-48 bg-background hover:bg-primary-light rounded-lg shadow-sm hover:shadow-md transition-all duration-300 border-2 border-neutral-200 hover:border-primary"
+          aria-label="Ir al historial de paquetes"
         >
-          {/* Icono: faBoxesPacking (Representa Paquetes/Inventario) */}
-          <FontAwesomeIcon icon={faBoxesPacking} className="text-5xl mb-4" />
-          <span className="text-lg">Paquetes</span>
-        </button>
+          <FontAwesomeIcon
+            icon={faBoxesPacking}
+            className="text-4xl text-primary mb-3"
+          />
+          <span className="text-lg font-semibold text-text-main">
+            Historial de Paquetes
+          </span>
+        </Link>
       </div>
-
-      {/* Botón Volver (Navega al Dashboard principal) */}
-      <button
-        /** @property {string} path - Navega de vuelta a la ruta principal del dashboard. */
-        onClick={() => navigate("/dashboard")}
-        className="mt-10 px-6 py-4 flex items-center text-lg sm:text-2xl bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-md transition-colors duration-200"
-      >
-        {/* Icono: faArrowLeft (Representa Volver) */}
-        <FontAwesomeIcon
-          icon={faArrowLeft}
-          className="mr-2 text-lg sm:text-2xl"
-        />
-        Volver
-      </button>
     </div>
   );
 }

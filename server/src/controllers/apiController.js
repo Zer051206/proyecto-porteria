@@ -82,7 +82,7 @@ export const getPackageTypes = async (req, res, next) => {
 /**
  * @async
  * @function getVisitsHistorial
- * @description Obtiene el historial completo de visitas, con soporte opcional para búsqueda (searchTerm).
+ * @description Obtiene el historial completo de visitas, con soporte opcional para búsqueda (user).
  * @param {object} req - Objeto de solicitud de Express.
  * @param {object} res - Objeto de respuesta de Express.
  * @param {function} next - Función para pasar errores al middleware global.
@@ -91,10 +91,10 @@ export const getPackageTypes = async (req, res, next) => {
 export const getVisitsHistorial = async (req, res, next) => {
   try {
     /**
-     * @const {string | undefined} searchTerm - Término de búsqueda extraído de los query parameters (req.query).
+     * @const {object | undefined} user - El usuario que realiza la petición.
      */
-    const searchTerm = req.query.search;
-    const visitsHistorial = await apiService.getVisitsHistory(searchTerm);
+    const user = req.user;
+    const visitsHistorial = await apiService.getVisitsHistory(user);
     return res.status(200).json(visitsHistorial);
   } catch (error) {
     next(error);
@@ -104,7 +104,7 @@ export const getVisitsHistorial = async (req, res, next) => {
 /**
  * @async
  * @function getPackagesHistorial
- * @description Obtiene el historial completo de paquetes, con soporte opcional para búsqueda (searchTerm).
+ * @description Obtiene el historial completo de paquetes, con soporte opcional para búsqueda (user).
  * @param {object} req - Objeto de solicitud de Express.
  * @param {object} res - Objeto de respuesta de Express.
  * @param {function} next - Función para pasar errores al middleware global.
@@ -113,10 +113,10 @@ export const getVisitsHistorial = async (req, res, next) => {
 export const getPackagesHistorial = async (req, res, next) => {
   try {
     /**
-     * @const {string | undefined} searchTerm - Término de búsqueda extraído de los query parameters (req.query).
+     * @const {object | undefined} user - El usuario que realiza la petición.
      */
-    const searchTerm = req.query.search;
-    const packagesHistorial = await apiService.getPackagesHistory(searchTerm);
+    const user = req.user;
+    const packagesHistorial = await apiService.getPackagesHistory(user);
     return res.status(200).json(packagesHistorial);
   } catch (error) {
     next(error);

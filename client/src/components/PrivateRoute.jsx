@@ -25,11 +25,7 @@ const PrivateRoute = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuthStore();
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="text-xl font-semibold">Verificando sesión...</div>
-      </div>
-    );
+    return null;
   }
 
   if (!isAuthenticated) {

@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: client/src/components/Dashboard.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: client/src/components/Dashboard.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @file DashboardPage.jsx
+ * @module DashboardPage
+ * @description Componente principal que sirve como la página de inicio para los usuarios autenticados.
+ * Muestra las visitas activas y proporciona enlaces de navegación a las principales funcionalidades de la aplicación.
+ * @component
+ * @requires react
+ * @requires react-router-dom/useNavigate
+ * @requires ../hooks/useDashboard
+ * @requires ../hooks/auth/useAuthStore
+ */
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faPlus,
+  faBox,
+  faHistory,
+  faExclamationTriangle,
+  faExternalLinkAlt,
+} from "@fortawesome/free-solid-svg-icons";
+import useDashboard from "../hooks/useDashboard.js";
+import { formatDate } from "../utils/dateFormat.js";
+import { useAuthStore } from "../stores/authStore.js";
+
+/**
+ * @function TableSkeleton
+ * @description Componente de esqueleto de carga que imita la ESTRUCTURA DE LA TABLA de visitas.
+ * @returns {JSX.Element}
+ */
+const TableSkeleton = () => (
+  &lt;div className="bg-surface rounded-lg shadow-md animate-pulse">
+    &lt;div className="p-4 border-b border-gray-200">
+      &lt;div className="h-6 bg-gray-200 rounded w-1/3">&lt;/div>
+    &lt;/div>
+    &lt;div className="p-4 space-y-4">
+      {[...Array(3)].map((_, i) => (
+        &lt;div key={i} className="grid grid-cols-6 gap-4 items-center">
+          &lt;div className="h-4 bg-gray-200 rounded col-span-1">&lt;/div>
+          &lt;div className="h-4 bg-gray-200 rounded col-span-1">&lt;/div>
+          &lt;div className="h-4 bg-gray-200 rounded col-span-1">&lt;/div>
+          &lt;div className="h-4 bg-gray-200 rounded col-span-1">&lt;/div>
+          &lt;div className="h-4 bg-gray-200 rounded col-span-1">&lt;/div>
+          &lt;div className="h-8 bg-gray-200 rounded col-span-1">&lt;/div>
+        &lt;/div>
+      ))}
+    &lt;/div>
+  &lt;/div>
+);
+
+/**
+ * @function DashboardSkeleton
+ * @description Componente de esqueleto de carga que imita la PÁGINA COMPLETA del Dashboard.
+ * Este es el componente que se usará en React.Suspense.
+ * @returns {JSX.Element}
+ */
+export const DashboardSkeleton = () => (
+  &lt;div className="flex flex-col items-center w-full animate-pulse">
+    {/* Esqueleto del Título */}
+    &lt;div className="h-10 bg-gray-300 rounded w-1/2 mb-12 mt-6">&lt;/div>
+
+    {/* Esqueleto de los Botones de Navegación */}
+    &lt;div className="grid grid-cols-1 sm:grid-cols-3 gap-6 w-full max-w-5xl mb-14">
+      &lt;div className="h-32 bg-gray-200 rounded-lg">&lt;/div>
+      &lt;div className="h-32 bg-gray-200 rounded-lg">&lt;/div>
+      &lt;div className="h-32 bg-gray-200 rounded-lg">&lt;/div>
+    &lt;/div>
+
+    {/* Esqueleto de la Tabla de Visitas */}
+    &lt;div className="w-full max-w-5xl">
+      &lt;div className="bg-surface p-4 rounded-lg shadow-md">
+        &lt;div className="h-6 bg-gray-200 rounded w-1/3 mb-4">&lt;/div>
+        &lt;TableSkeleton />
+      &lt;/div>
+    &lt;/div>
+  &lt;/div>
+);
+
+/**
+ * @function ActiveVisitsTable
+ * @description Subcomponente que muestra una tabla de todas las visitas actualmente registradas como "activas" (sin hora de salida).
+ * Maneja la lógica de carga, errores y la confirmación para finalizar una visita.
+ *
+ * @returns {JSX.Element} La tabla de visitas activas o un mensaje de estado (cargando/error).
+ */
+const ActiveVisitsTable = ({
+  activeVisits,
+  isLoading,
+  error,
+  showModal,
+  selectedVisit,
+  handleEndVisit,
+  handleConfirmEndVisit,
+  handleCloseModal,
+}) => {
+  if (isLoading) {
+    return &lt;TableSkeleton />;
+  }
+
+  if (error) {
+    return (
+      &lt;div className="px-4 py-5 bg-gray-800">
+        &lt;div className="bg-red-100 border-l-4 font-semibold border-error text-error-hover p-4 my-4">
+          &lt;div className="flex items-center">
+            &lt;FontAwesomeIcon
+              icon={faExclamationTriangle}
+              className="mr-2 text-xl"
+            />
+            &lt;p className="font-bold text-lg">Error de Carga&lt;/p>
+          &lt;/div>
+          &lt;p className="text-lg mr-[20px]">{error}&lt;/p>
+        &lt;/div>
+      &lt;/div>
+    );
+  }
+
+  if (activeVisits.length === 0) {
+    return (
+      &lt;div className="text-center bg-surface text-text-main py-6 rounded-lg shadow-lg">
+        &lt;p className="text-xl font-medium">
+          No hay visitas activas en este momento.
+        &lt;/p>
+        &lt;p className="text-sm mt-1">
+          Utiliza el botón "Nueva Visita" para registrar una entrada.
+        &lt;/p>
+      &lt;/div>
+    );
+  }
+
+  return (
+    &lt;>
+      &lt;div className="bg-surface rounded-lg shadow overflow-hidden mb-10 md:mb-0">
+        &lt;div className="overflow-x-auto">
+          &lt;table className="w-full">
+            &lt;thead>
+              &lt;tr>
+                &lt;th className="px-3 py-[8px] md:px-5 md:py-3 border-2 border-neutral-400 bg-background text-center text-xs font-bold text-black uppercase tracking-wider">
+                  Nombre del Visitante
+                &lt;/th>
+                &lt;th className="px-4 py-[8px] md:px-5 md:py-3 border-2 border-neutral-400 bg-background text-center text-xs font-bold text-black uppercase tracking-wider">
+                  Identificacion
+                &lt;/th>
+                &lt;th className="px-4 py-[8px] md:px-5 md:py-3 border-2 border-neutral-400 bg-background text-center text-xs font-bold text-black uppercase tracking-wider">
+                  Destinatario
+                &lt;/th>
+                &lt;th className="px-4 py-[8px] md:px-5 md:py-3 border-2 border-neutral-400 bg-background text-center text-xs font-bold text-black uppercase tracking-wider">
+                  Área de destino
+                &lt;/th>
+                &lt;th className="px-5 py-[10px] md:px-5 md:py-3 border-2 border-neutral-400 bg-background text-center text-xs font-bold text-black uppercase tracking-wider">
+                  Hora De Entrada
+                &lt;/th>
+                &lt;th className="px-4 py-[8px] md:px-5 md:py-3 border-2 border-neutral-400 bg-background text-center text-xs font-bold text-black uppercase tracking-wider">
+                  Acciones
+                &lt;/th>
+              &lt;/tr>
+            &lt;/thead>
+            &lt;tbody>
+              {activeVisits.map((visit) => (
+                &lt;tr key={visit.id_visita}>
+                  &lt;td className="md:px-3 md:py-1 font-semibold border border-neutral-400 bg-surface text-sm">
+                    &lt;p className="text-gray-900 whitespace-no-wrap">
+                      {visit.nombre_visitante}
+                    &lt;/p>
+                  &lt;/td>
+                  &lt;td className="md:px-3 md:py-1 font-semibold border border-neutral-400 bg-surface text-sm">
+                    &lt;p className="text-gray-900 whitespace-no-wrap">
+                      {visit.identificacion || "N/A"}
+                    &lt;/p>
+                  &lt;/td>
+                  &lt;td className="md:px-3 md:py-1 font-semibold border border-neutral-400 bg-surface text-sm">
+                    &lt;p className="text-gray-900 whitespace-no-wrap">
+                      {visit.nombre_destinatario}
+                    &lt;/p>
+                  &lt;/td>
+                  &lt;td className="md:px-3 md:py-1 font-semibold border border-neutral-400 bg-surface text-sm">
+                    &lt;p className="text-gray-900 whitespace-no-wrap">
+                      {visit.Area?.nombre_area}
+                    &lt;/p>
+                  &lt;/td>
+                  &lt;td className="md:px-3 md:py-1 font-semibold border border-neutral-400 bg-surface text-sm">
+                    &lt;p className="text-gray-900 whitespace-no-wrap">
+                      {formatDate(visit.fecha_entrada)}
+                    &lt;/p>
+                  &lt;/td>
+                  &lt;td className="px-3 py-1 font-semibold border border-neutral-400 bg-surface text-sm text-center">
+                    &lt;button
+                      onClick={() => handleEndVisit(visit)}
+                      className="bg-error hover:bg-error-hover text-xs text-surface font-bold py-1 px-2 rounded flex items-center justify-center mx-auto"
+                    >
+                      &lt;FontAwesomeIcon
+                        icon={faExternalLinkAlt}
+                        className="mr-1"
+                      />
+                      Salida
+                    &lt;/button>
+                  &lt;/td>
+                &lt;/tr>
+              ))}
+            &lt;/tbody>
+          &lt;/table>
+        &lt;/div>
+      &lt;/div>
+
+      {/* Modal de Confirmación para finalizar visita */}
+      {showModal &amp;&amp; (
+        &lt;div className="fixed inset-0 z-50 overflow-auto bg-gray-800/80 flex items-center justify-center">
+          &lt;div className="text-text-main bg-background rounded-lg p-8 w-screen md:w-1/3 shadow-xl">
+            &lt;h2 className="text-xl font-bold mb-4">Confirmar Finalización&lt;/h2>
+            &lt;p className="mb-6">
+              ¿Estás seguro de que deseas finalizar la visita de{" "}
+              &lt;span className="font-semibold text-secondary">
+                {selectedVisit?.nombre_visitante}
+              &lt;/span>
+              ?
+            &lt;/p>
+            &lt;div className="flex justify-end space-x-4">
+              &lt;button
+                onClick={handleCloseModal}
+                className="bg-text-muted hover:bg-tertiary text-surface font-bold py-2 px-4 rounded transition-colors"
+              >
+                Cancelar
+              &lt;/button>
+              &lt;button
+                onClick={handleConfirmEndVisit}
+                className="bg-secondary hover:bg-secondary-hover text-surface font-bold py-2 px-4 rounded transition-colors"
+              >
+                Finalizar
+              &lt;/button>
+            &lt;/div>
+          &lt;/div>
+        &lt;/div>
+      )}
+    &lt;/>
+  );
+};
+
+/**
+ * @function DashboardPage
+ * @description Contenedor principal del dashboard. Combina la navegación rápida y la tabla de visitas activas.
+ *
+ * @returns {JSX.Element} El elemento JSX que representa el Dashboard.
+ */
+export default function DashboardPage() {
+  const navigate = useNavigate();
+  const dashboardHook = useDashboard();
+  const { isLoading } = useAuthStore();
+
+  if (isLoading) {
+    return &lt;DashboardSkeleton />;
+  }
+
+  return (
+    &lt;div className="flex flex-col justify-items-center min-h-screen w-full">
+      &lt;div className="w-full justify-items-center">
+        &lt;h1 className="text-3xl sm:text-4xl font-extrabold text-primary mb-12 mt-6 text-center">
+          Gestión de Visitas y Paquetes
+        &lt;/h1>
+        &lt;div className="grid grid-cols-1 sm:grid-cols-3 gap-6 w-full max-w-4xl mb-14">
+          {/* Botón Nueva Visita */}
+          &lt;button
+            onClick={() => navigate("/visitas/entrada")}
+            className="flex flex-col items-center justify-center p-6 bg-primary text-surface rounded-lg shadow-md hover:bg-primary-hover transition-colors"
+          >
+            &lt;FontAwesomeIcon icon={faPlus} className="text-3xl mb-2" />
+            &lt;span className="font-semibold text-lg">Nueva Visita&lt;/span>
+          &lt;/button>
+
+          {/* Botón de Paquetes */}
+          &lt;button
+            onClick={() => navigate("/paquetes")}
+            className="flex flex-col items-center justify-center p-6 bg-secondary text-surface rounded-lg shadow-md hover:bg-secondary-hover transition-colors"
+          >
+            &lt;FontAwesomeIcon icon={faBox} className="text-3xl mb-2" />
+            &lt;span className="font-semibold text-lg">Paquetes&lt;/span>
+          &lt;/button>
+
+          {/* Botón de Historial */}
+          &lt;button
+            onClick={() => navigate("/historial")}
+            className="flex flex-col items-center justify-center p-6 bg-tertiary text-surface rounded-lg shadow-md hover:bg-tertiary-hover transition-colors"
+          >
+            &lt;FontAwesomeIcon icon={faHistory} className="text-3xl mb-2" />
+            &lt;span className="font-semibold text-lg">Historial&lt;/span>
+          &lt;/button>
+        &lt;/div>
+        {/* Contenedor de la tabla de visitas activas */}
+        &lt;div className="w-full h-full">
+          &lt;ActiveVisitsTable {...dashboardHook} />
+        &lt;/div>
+      &lt;/div>
+    &lt;/div>
+  );
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-App.html">App</a></li><li><a href="module-AxiosClient.html">AxiosClient</a></li><li><a href="module-Components.html">Components</a></li><li><a href="module-Components_Dashboard_Historial.html">Components/Dashboard/Historial</a></li><li><a href="module-Components_Packages_PackageHistoryTable.html">Components/Packages/PackageHistoryTable</a></li><li><a href="module-Components_RecibirPaqueteForm.html">Components/RecibirPaqueteForm</a></li><li><a href="module-Components_VisitHistory_VisitsHistorial.html">Components/VisitHistory/VisitsHistorial</a></li><li><a href="module-Components_Visits.html">Components/Visits</a></li><li><a href="module-Config.html">Config</a></li><li><a href="module-Controllers.html">Controllers</a></li><li><a href="module-DashboardPackage.html">DashboardPackage</a></li><li><a href="module-DashboardPage.html">DashboardPage</a></li><li><a href="module-DateUtils.html">DateUtils</a></li><li><a href="module-EntryPoint.html">EntryPoint</a></li><li><a href="module-EnviarPaqueteForm.html">EnviarPaqueteForm</a></li><li><a href="module-Hooks.html">Hooks</a></li><li><a href="module-Hooks_Auth.html">Hooks/Auth</a></li><li><a href="module-Hooks_Historial.html">Hooks/Historial</a></li><li><a href="module-Hooks_Paquetes.html">Hooks/Paquetes</a></li><li><a href="module-Hooks_Utils.html">Hooks/Utils</a></li><li><a href="module-Hooks_Visits.html">Hooks/Visits</a></li><li><a href="module-Hooks_usePackagesRecibir.html">Hooks/usePackagesRecibir</a></li><li><a href="module-InputHandlers.html">InputHandlers</a></li><li><a href="module-LoginForm.html">LoginForm</a></li><li><a href="module-Middlewares.html">Middlewares</a></li><li><a href="module-Models.html">Models</a></li><li><a href="module-Models_Catalogues.html">Models/Catalogues</a></li><li><a href="module-RegisterForm.html">RegisterForm</a></li><li><a href="module-Repositories.html">Repositories</a></li><li><a href="module-Routes.html">Routes</a></li><li><a href="module-Schemas.html">Schemas</a></li><li><a href="module-Services.html">Services</a></li><li><a href="module-Stores.html">Stores</a></li><li><a href="module-Utils.html">Utils</a></li><li><a href="module-Utils_Errors.html">Utils/Errors</a></li><li><a href="module-apiController.html">apiController</a></li><li><a href="module-apiRoutes.html">apiRoutes</a></li><li><a href="module-authRoutes.html">authRoutes</a></li><li><a href="module-packageController.html">packageController</a></li><li><a href="module-packageRoutes.html">packageRoutes</a></li><li><a href="module-passportConfig.html">passportConfig</a></li><li><a href="module-visitController.html">visitController</a></li><li><a href="module-visitRoutes.html">visitRoutes</a></li></ul><h3>Classes</h3><ul><li><a href="module-Models_Catalogues-Area.html">Area</a></li><li><a href="module-Models_Catalogues-IdentificationType.html">IdentificationType</a></li><li><a href="module-Models_Catalogues-PackageType.html">PackageType</a></li><li><a href="module-Models-Log.html">Log</a></li><li><a href="module-Models-Package.html">Package</a></li><li><a href="module-Models-RefreshToken.html">RefreshToken</a></li><li><a href="module-Models-User.html">User</a></li><li><a href="module-Models-Visit.html">Visit</a></li><li><a href="module-Utils_Errors.AppError.html">AppError</a></li><li><a href="module-Utils_Errors-AccountDisabledError.html">AccountDisabledError</a></li><li><a href="module-Utils_Errors-ActiveVisitDontExistsError.html">ActiveVisitDontExistsError</a></li><li><a href="module-Utils_Errors-AppError.html">AppError</a></li><li><a href="module-Utils_Errors-BadRequestError.html">BadRequestError</a></li><li><a href="module-Utils_Errors-DuplicateError.html">DuplicateError</a></li><li><a href="module-Utils_Errors-ForbiddenError.html">ForbiddenError</a></li><li><a href="module-Utils_Errors-InvalidTokenError.html">InvalidTokenError</a></li><li><a href="module-Utils_Errors-NotFoundError.html">NotFoundError</a></li><li><a href="module-Utils_Errors-UserAlreadyExistsError.html">UserAlreadyExistsError</a></li><li><a href="module-Utils_Errors-UserNotFoundOrInvalidPasswordError.html">UserNotFoundOrInvalidPasswordError</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Thu Oct 23 2025 12:14:13 GMT-0500 (hora estándar de Colombia)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: server/src/services/apiService.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: server/src/services/apiService.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @file apiService.js
+ * @module Services
+ * @description Capa de servicio unificada para las consultas de la API.
+ * Orquesta la obtención de datos para los dashboards (visitas activas, historiales)
+ * y para los catálogos, aplicando la lógica de autorización basada en roles.
+ * @requires sequelize
+ * @requires ../repositories/*.js
+ * @requires ../config/logger.js
+ */
+
+import { Op } from "sequelize";
+import * as visitRepository from "../repositories/visitRepository.js";
+import * as packageRepository from "../repositories/packageRepository.js";
+import * as areaRepository from "../repositories/areaRepository.js";
+import * as identificationTypeRepository from "../repositories/identificationTypeRepository.js";
+import * as packageTypeRepository from "../repositories/packageTypeRepository.js";
+import logger from "../config/logger.js";
+
+// --- SERVICIOS DE CATÁLOGO ---
+
+/**
+ * @async
+ * @function getAreas
+ * @description Obtiene una lista de todas las áreas.
+ * @returns {Promise&lt;Array&lt;object>>}
+ */
+export const getAreas = async () => {
+  logger.info("Solicitando lista de áreas del catálogo.");
+  const areas = await areaRepository.findAll();
+  if (!areas) {
+    return null;
+  }
+  return areas;
+};
+
+/**
+ * @async
+ * @function getIdentificationTypes
+ * @description Obtiene una lista de todos los tipos de identificación.
+ * @returns {Promise&lt;Array&lt;object>>}
+ */
+export const getIdentificationTypes = async () => {
+  logger.info("Solicitando lista de tipos de identificación del catálogo.");
+  const identificationTypes = await identificationTypeRepository.findAll();
+  if (!identificationTypes) {
+    return null;
+  }
+  return identificationTypes;
+};
+
+/**
+ * @async
+ * @function getPackageTypes
+ * @description Obtiene una lista de todos los tipos de paquetes.
+ * @returns {Promise&lt;Array&lt;object>>}
+ */
+export const getPackageTypes = async () => {
+  logger.info("Solicitando lista de tipos de paquetes del catálogo.");
+  const packageTypes = await packageTypeRepository.findAll();
+  if (!packageTypes) {
+    return null;
+  }
+  return packageTypes;
+};
+
+// --- SERVICIOS DE DASHBOARD E HISTORIAL ---
+
+/**
+ * @async
+ * @function getActiveVisits
+ * @description Obtiene un listado de todas las visitas que están actualmente activas.
+ * @returns {Promise&lt;Array&lt;object>>}
+ */
+export const getActiveVisits = async () => {
+  logger.info("Solicitando lista de visitas activas.");
+  const activeVisits = await visitRepository.findAll({
+    where: { estado: true },
+    order: [["fecha_entrada", "DESC"]],
+  });
+  if (!activeVisits) {
+    return null;
+  }
+  return activeVisits;
+};
+
+/**
+ * @async
+ * @function getPackagesHistory
+ * @description Obtiene el historial de paquetes, filtrado por rol. La búsqueda por texto se delega al frontend.
+ * @param {object} user - El usuario autenticado que realiza la solicitud.
+ * @returns {Promise&lt;Array&lt;object>>}
+ */
+export const getPackagesHistory = async (user) => {
+  logger.info(
+    { userId: user.id_usuario },
+    "Solicitando historial de paquetes."
+  );
+
+  const options = {
+    order: [
+      ["fecha_recibido", "DESC"],
+      ["fecha_envio", "DESC"],
+    ],
+    where: {},
+  };
+
+  // Lógica de rol: Un 'portero' solo ve los paquetes que ha gestionado.
+  if (user.rol === "portero") {
+    options.where = {
+      [Op.or]: [
+        { id_usuario_recibir: user.id_usuario },
+        { id_usuario_enviar: user.id_usuario },
+      ],
+    };
+  }
+
+  // Si es 'admin', el 'where' queda vacío, por lo que ve todo.
+  const packageHistory = await packageRepository.findAll(options);
+
+  if (!packageHistory) {
+    return null;
+  }
+
+  return packageHistory;
+};
+
+/**
+ * @async
+ * @function getVisitsHistory
+ * @description Obtiene el historial de visitas, filtrado por rol. La búsqueda por texto se delega al frontend.
+ * @param {object} user - El usuario autenticado que realiza la solicitud.
+ * @returns {Promise&lt;Array&lt;object>>}
+ */
+export const getVisitsHistory = async (user) => {
+  logger.info({ userId: user.id_usuario }, "Solicitando historial de visitas.");
+
+  const options = {
+    order: [["fecha_entrada", "DESC"]],
+    where: {},
+  };
+
+  // Lógica de rol: Un 'portero' solo ve las visitas que ha gestionado.
+  if (user.rol === "portero") {
+    options.where = {
+      [Op.or]: [
+        { id_usuario_entrada: user.id_usuario },
+        { id_usuario_salida: user.id_usuario },
+      ],
+    };
+  }
+
+  // Si es 'admin', el 'where' queda vacío, por lo que ve todo.
+  const visitHistory = await visitRepository.findAll(options);
+
+  if (!visitHistory) {
+    return null;
+  }
+
+  return visitHistory;
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-App.html">App</a></li><li><a href="module-AxiosClient.html">AxiosClient</a></li><li><a href="module-Components.html">Components</a></li><li><a href="module-Components_Dashboard_Historial.html">Components/Dashboard/Historial</a></li><li><a href="module-Components_Packages_PackageHistoryTable.html">Components/Packages/PackageHistoryTable</a></li><li><a href="module-Components_RecibirPaqueteForm.html">Components/RecibirPaqueteForm</a></li><li><a href="module-Components_VisitHistory_VisitsHistorial.html">Components/VisitHistory/VisitsHistorial</a></li><li><a href="module-Components_Visits.html">Components/Visits</a></li><li><a href="module-Config.html">Config</a></li><li><a href="module-Controllers.html">Controllers</a></li><li><a href="module-DashboardPackage.html">DashboardPackage</a></li><li><a href="module-DashboardPage.html">DashboardPage</a></li><li><a href="module-DateUtils.html">DateUtils</a></li><li><a href="module-EntryPoint.html">EntryPoint</a></li><li><a href="module-EnviarPaqueteForm.html">EnviarPaqueteForm</a></li><li><a href="module-Hooks.html">Hooks</a></li><li><a href="module-Hooks_Auth.html">Hooks/Auth</a></li><li><a href="module-Hooks_Historial.html">Hooks/Historial</a></li><li><a href="module-Hooks_Paquetes.html">Hooks/Paquetes</a></li><li><a href="module-Hooks_Utils.html">Hooks/Utils</a></li><li><a href="module-Hooks_Visits.html">Hooks/Visits</a></li><li><a href="module-Hooks_usePackagesRecibir.html">Hooks/usePackagesRecibir</a></li><li><a href="module-InputHandlers.html">InputHandlers</a></li><li><a href="module-LoginForm.html">LoginForm</a></li><li><a href="module-Middlewares.html">Middlewares</a></li><li><a href="module-Models.html">Models</a></li><li><a href="module-Models_Catalogues.html">Models/Catalogues</a></li><li><a href="module-RegisterForm.html">RegisterForm</a></li><li><a href="module-Repositories.html">Repositories</a></li><li><a href="module-Routes.html">Routes</a></li><li><a href="module-Schemas.html">Schemas</a></li><li><a href="module-Services.html">Services</a></li><li><a href="module-Stores.html">Stores</a></li><li><a href="module-Utils.html">Utils</a></li><li><a href="module-Utils_Errors.html">Utils/Errors</a></li><li><a href="module-apiController.html">apiController</a></li><li><a href="module-apiRoutes.html">apiRoutes</a></li><li><a href="module-authRoutes.html">authRoutes</a></li><li><a href="module-packageController.html">packageController</a></li><li><a href="module-packageRoutes.html">packageRoutes</a></li><li><a href="module-passportConfig.html">passportConfig</a></li><li><a href="module-visitController.html">visitController</a></li><li><a href="module-visitRoutes.html">visitRoutes</a></li></ul><h3>Classes</h3><ul><li><a href="module-Models_Catalogues-Area.html">Area</a></li><li><a href="module-Models_Catalogues-IdentificationType.html">IdentificationType</a></li><li><a href="module-Models_Catalogues-PackageType.html">PackageType</a></li><li><a href="module-Models-Log.html">Log</a></li><li><a href="module-Models-Package.html">Package</a></li><li><a href="module-Models-RefreshToken.html">RefreshToken</a></li><li><a href="module-Models-User.html">User</a></li><li><a href="module-Models-Visit.html">Visit</a></li><li><a href="module-Utils_Errors.AppError.html">AppError</a></li><li><a href="module-Utils_Errors-AccountDisabledError.html">AccountDisabledError</a></li><li><a href="module-Utils_Errors-ActiveVisitDontExistsError.html">ActiveVisitDontExistsError</a></li><li><a href="module-Utils_Errors-AppError.html">AppError</a></li><li><a href="module-Utils_Errors-BadRequestError.html">BadRequestError</a></li><li><a href="module-Utils_Errors-DuplicateError.html">DuplicateError</a></li><li><a href="module-Utils_Errors-ForbiddenError.html">ForbiddenError</a></li><li><a href="module-Utils_Errors-InvalidTokenError.html">InvalidTokenError</a></li><li><a href="module-Utils_Errors-NotFoundError.html">NotFoundError</a></li><li><a href="module-Utils_Errors-UserAlreadyExistsError.html">UserAlreadyExistsError</a></li><li><a href="module-Utils_Errors-UserNotFoundOrInvalidPasswordError.html">UserNotFoundOrInvalidPasswordError</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Thu Oct 23 2025 12:14:13 GMT-0500 (hora estándar de Colombia)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

@@ -12,8 +12,8 @@ import { DataTypes } from "sequelize";
 /**
  * @function defineVisitModel
  * @description Define y devuelve el modelo 'Visit' de Sequelize.
- * @param {import('sequelize').Sequelize} sequelize - La instancia de Sequelize.
- * @returns {import('sequelize').ModelCtor<Model>} El modelo 'Visit' definido.
+ * @param {Sequelize} sequelize - La instancia de Sequelize.
+ * @returns {Model} El modelo 'Visit' definido.
  */
 export default (sequelize) => {
   /**

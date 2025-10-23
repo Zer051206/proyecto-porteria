@@ -50,6 +50,7 @@ export default function VisitEntryForm() {
 
   const inputClasses =
     "mt-2 block w-full rounded-md font-semibold border-2 border-neutral-200 p-2 outline-none bg-background focus:border-secondary focus:ring-1 focus:ring-secondary-light transition-all";
+
   if (isLoadingCatalogs) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen w-full p-4 bg-gray-100">

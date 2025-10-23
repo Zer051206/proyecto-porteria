@@ -16,6 +16,7 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { handleKeyTextDown } from "../../utils/inputUtilities";
 import api from "../../config/axios";
+import toast from "react-hot-toast";
 
 /**
  * @function usePackagesRecibir
@@ -36,17 +37,31 @@ import api from "../../config/axios";
  * el estado de carga y las funciones de utilidad.
  */
 const usePackagesRecibir = (navigate) => {
-  /** @type {Array<object>} Estado para almacenar los tipos de paquetes disponibles. */
+  /**
+   * @type {Array<object>}
+   * Estado para almacenar los tipos de paquetes disponibles.
+   * */
   const [tiposPaquetes, setTiposPaquetes] = useState([]);
-  /** @type {Array<object>} Estado para almacenar las áreas disponibles. */
+  /**
+   * @type {Array<object>}
+   * Estado para almacenar las áreas disponibles.
+   */
   const [areas, setAreas] = useState([]);
-  /** @type {boolean} Indica si los datos iniciales del formulario están cargando. */
+  /**
+   * @type {boolean}
+   * Indica si los datos iniciales del formulario están cargando.
+   */
   const [isLoading, setIsLoading] = useState(true);
-  /** @type {(string|null)} Almacena un mensaje de error si la carga inicial falla. */
+  /**
+   * @type {(string|null)}
+   * Almacena un mensaje de error si la carga inicial falla.
+   */
   const [errorCarga, setErrorCarga] = useState(null);
-  /** @type {string|null} Almacena el error general del servidor después de intentar la sumisión. */
+  /**
+   * @type {string|null}
+   * Almacena el error general del servidor después de intentar la sumisión.
+   */
   const [error, setError] = useState(null);
-  // Nota: 'setErrors' es una función interna de formik. No es necesario declararla aquí.
 
   /**
    * @function handleClickClear
@@ -136,41 +151,33 @@ const usePackagesRecibir = (navigate) => {
      * @param {object} values - Valores actuales del formulario.
      * @param {object} formikBag - Objeto con utilidades de Formik (como `setErrors`).
      */
-    onSubmit: async (values, { setErrors }) => {
-      // Limpia el error general antes de la sumisión
-      setError(null);
+    onSubmit: async (values, { setErrors, resetForm, setSubmitting }) => {
       try {
-        await api.post("/paquetes/recibir", {
-          ...values,
-          // Lógica para enviar 'guia', 'empresa_transporte' y 'mensajero_nombre' como null si están vacíos o no aplican
-          guia: values.conGuia && values.guia ? values.guia : null,
-          empresa_transporte: values.empresa_transporte || null,
-          mensajero_nombre: values.mensajero_nombre || null,
-        });
-        alert("✅ ¡Paquete recibido con éxito!");
+        const payload = { ...values };
+        if (!payload.conGuia) {
+          payload.guia = null;
+        }
+
+        await api.post("/api/paquetes/recibir", payload);
+        toast.success("¡Paquete enviado con éxito!");
+        resetForm();
         navigate("/dashboard");
       } catch (error) {
-        // Manejo de errores del servidor
-        const serverErrors = error.response?.data?.errors;
-        if (serverErrors && Array.isArray(serverErrors)) {
+        if (error.response?.data?.errors) {
           const formikErrors = {};
-          serverErrors.forEach((e) => {
-            if (e.path) {
-              // Extrae el nombre del campo del path del error
-              const path = e.path.split(".");
-              formikErrors[path[path.length - 1]] = e.message;
-            }
+          error.response.data.errors.forEach((e) => {
+            const path = e.path[0];
+            formikErrors[path] = e.message;
           });
-          // Aplica errores específicos a los campos de Formik
           setErrors(formikErrors);
-          setError(null); // Asegura que el error general esté vacío
+          toast.error("Por favor, corrige los errores en el formulario.");
         } else {
-          // Muestra el mensaje de error general del servidor
-          setError(
-            error.response?.data?.message ||
-              "Ha ocurrido un error inesperado al registrar el paquete."
+          toast.error(
+            error.response?.data?.message || "Ha ocurrido un error inesperado."
           );
         }
+      } finally {
+        setSubmitting(false);
       }
     },
   });

@@ -27,7 +27,7 @@ export const findAll = async (options = {}) => {
         as: "PackagesReceived",
         attributes: ["nombre", "apellido"],
       },
-      { model: User, as: "Packagessent", attributes: ["nombre", "apellido"] },
+      { model: User, as: "PackagesSent", attributes: ["nombre", "apellido"] },
       { model: Area, attributes: ["nombre_area"] },
       { model: PackageType, attributes: ["descripcion"] },
     ],
@@ -69,8 +69,8 @@ export const findByGuide = async (guia, tipo_operacion) => {
   if (!guia) return null; // No buscar si la guía es nula o indefinida
   return Package.findOne({
     where: {
-      guia,
-      tipo_operacion,
+      guia: guia,
+      tipo_operacion: tipo_operacion,
     },
   });
 };

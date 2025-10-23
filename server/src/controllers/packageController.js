@@ -7,8 +7,8 @@
  */
 import * as packageService from "../services/packageService.js";
 import {
-  createReceivePackageSchema,
-  createSendPackageSchema,
+  receivePackageSchema,
+  sendPackageSchema,
 } from "../schemas/packageSchema.js";
 
 /**
@@ -23,17 +23,9 @@ import {
  */
 export const receivePackage = async (req, res, next) => {
   try {
-    const validateData = createReceivePackageSchema.safeParse(req.body);
+    const validateData = receivePackageSchema.safeParse(req.body);
 
-    if (!validateData.success) {
-      // Manejo detallado de errores de validación de Zod
-      const error = new Error("Error de validación de datos.");
-      error.errors = validateData.error;
-      error.status = 400; // Código 400 para errores de validación
-      return next(error);
-    }
-
-    const userId = req.user.userId;
+    const userId = req.user.id_usuario;
     const userIp = req.ip;
 
     /**
@@ -45,7 +37,7 @@ export const receivePackage = async (req, res, next) => {
       ip_usuario: userIp,
     };
 
-    await packageService.receivePackage(packageData);
+    await packageService.createPackage(packageData);
 
     return res.status(201).json({
       success: true,
@@ -68,17 +60,9 @@ export const receivePackage = async (req, res, next) => {
  */
 export const sendPackage = async (req, res, next) => {
   try {
-    const validateData = createSendPackageSchema.safeParse(req.body);
+    const validateData = sendPackageSchema.safeParse(req.body);
 
-    if (!validateData.success) {
-      // Manejo detallado de errores de validación de Zod
-      const error = new Error("Error de validación de datos.");
-      error.errors = validateData.error;
-      error.status = 400; // Código 400 para errores de validación
-      return next(error);
-    }
-
-    const userId = req.user.userId;
+    const userId = req.user.id_usuario;
     const userIp = req.ip;
 
     /**
@@ -90,7 +74,7 @@ export const sendPackage = async (req, res, next) => {
       ip_usuario: userIp,
     };
 
-    await packageService.sendPackage(packageData);
+    await packageService.createPackage(packageData);
 
     return res.status(201).json({
       success: true,

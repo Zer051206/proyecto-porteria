@@ -17,7 +17,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faSearch,
   faEye,
-  faSignOutAlt,
+  faArrowLeft,
   faExclamationTriangle,
 } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
@@ -35,7 +35,7 @@ export default function VisitsHistorial() {
    * Contiene el historial filtrado, estados de UI, y handlers.
    */
   const {
-    visitsHistorial,
+    visits,
     isLoading,
     error,
     showModal,
@@ -48,31 +48,25 @@ export default function VisitsHistorial() {
     noResults,
   } = useVisitsHistorial();
 
-  /** @type {Function} Hook para navegar de vuelta al dashboard o a la página anterior. */
+  /**
+   * @type {Function}
+   * Hook para navegar de vuelta al dashboard o a la página anterior.
+   * */
   const navigate = useNavigate();
-  const goBack = navigate(-1);
+  const goBack = () => navigate("/historial");
 
   return (
-    <div className="flex flex-col items-center w-full h-screen mb-[50px] p-4 text-blue-700">
-      {/* Botón Volver */}
+    <div className="flex flex-col items-center w-full h-full mb-[50px] p-4 text-secondary">
       <button
         type="button"
         onClick={goBack}
-        className="
-                    absolute top-1 right-4 
-                    bg-red-600 hover:bg-red-700 
-                    text-white font-bold 
-                    p-4 rounded-lg 
-                    flex flex-col items-center justify-center 
-                    transition-colors duration-300
-                    text-sm w-16 h-16 sm:w-20 sm:h-20
-                "
+        className="md:absolute md:left-[150px]  md:top-[100px] mb-5 bg-surface text-text-main font-bold p-3 rounded-full shadow-sm  shadow-black md:w-1/12 w-1/2 hover:bg-background transition-colors"
+        aria-label="Volver a la página de inicio"
       >
-        <FontAwesomeIcon icon={faSignOutAlt} className="text-xl sm:text-xl" />
-        <span className="text-xs sm:text-sm mt-1">Volver</span>
+        <FontAwesomeIcon icon={faArrowLeft} className="text-xl" />
       </button>
 
-      <h2 className="text-3xl sm:text-4xl font-bold mb-6 mt-[70px]  text-center text-blue-700">
+      <h2 className="text-3xl sm:text-4xl font-bold mb-10 text-center text-secondary">
         Historial de Visitas
       </h2>
 
@@ -82,13 +76,13 @@ export default function VisitsHistorial() {
           <input
             type="text"
             placeholder="Buscar por nombre, documento, etc"
-            className="w-full p-3 pl-10 border border-blue-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-3 pl-10 border text-tex-main border-secondary rounded-lg "
             value={searchTerm}
             onChange={handleSearchChange}
           />
           <FontAwesomeIcon
             icon={faSearch}
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-main"
           />
         </div>
       </div>
@@ -98,12 +92,12 @@ export default function VisitsHistorial() {
         <div className="py-8 w-full max-w-4xl text-center">
           <FontAwesomeIcon
             icon={faExclamationTriangle}
-            className="text-yellow-500 text-6xl mb-4"
+            className="text-primary text-6xl mb-4"
           />
-          <p className="text-2xl font-bold text-gray-800">
+          <p className="text-2xl font-bold text-text-main">
             ¡No se encontraron resultados!
           </p>
-          <p className="text-gray-600 mt-2">
+          <p className="text-text-main mt-2">
             Intenta con otro término de búsqueda.
           </p>
         </div>
@@ -111,7 +105,7 @@ export default function VisitsHistorial() {
 
       {/* Indicador de Carga */}
       {isLoading && (
-        <div className="py-8 w-full max-w-4xl text-center text-lg font-semibold text-blue-500">
+        <div className="py-8 w-full max-w-4xl text-center text-lg font-semibold text-secondary">
           Cargando historial de visitas...
         </div>
       )}
@@ -121,8 +115,8 @@ export default function VisitsHistorial() {
         {/* La tabla se renderiza si no hay resultados de búsqueda ni error de carga */}
         {!noResults && !error && !isLoading && (
           <table className="min-w-full rounded-lg">
-            <thead className="bg-blue-700 text-white">
-              <tr className="divide-x divide-blue-800">
+            <thead className="bg-secondary text-surface">
+              <tr className="divide-x divide-secondary-hover">
                 <th
                   scope="col"
                   className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
@@ -173,17 +167,17 @@ export default function VisitsHistorial() {
                 </th>
               </tr>
             </thead>
-            <tbody className=" bg-white divide-y divide-gray-200 text-gray-800">
-              {visitsHistorial.map((visit) => (
+            <tbody className=" bg-surface divide-y divide-neutral-200 text-text-main">
+              {visits.map((visit) => (
                 <tr
                   key={visit.id_visita}
-                  className="divide-x divide-gray-200 hover:bg-gray-50"
+                  className="divide-x divide-neutral-200 hover:bg-background"
                 >
                   <td className="px-6 py-4 whitespace-nowrap">
                     {visit.nombre_visitante}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {visit.descripcion}
+                    {visit.IdentificationType?.descripcion}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {visit.identificacion}
@@ -192,7 +186,7 @@ export default function VisitsHistorial() {
                     {visit.nombre_destinatario}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {visit.nombre_area}
+                    {visit.Area?.nombre_area}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     {formatDate(visit.fecha_entrada)}
@@ -204,8 +198,7 @@ export default function VisitsHistorial() {
                   <td className="px-6 py-4 whitespace-nowrap text-center justify-center items-center text-sm">
                     <button
                       onClick={() => handleSelectVisit(visit)}
-                      // Ajuste de estilos para visibilidad en fondo blanco
-                      className="text-blue-600 p-2 rounded-full hover:bg-blue-100 transition-colors duration-200 shadow-md shadow-gray-300"
+                      className="text-secondary p-2 rounded-lg hover:bg-secondary-light transition-colors duration-200 shadow-md shadow-neutral-400"
                       aria-label={`Ver detalles de la visita de ${visit.nombre_visitante}`}
                     >
                       <FontAwesomeIcon icon={faEye} className="text-xl" />
@@ -222,7 +215,7 @@ export default function VisitsHistorial() {
       {!noResults && error && (
         <div className="mt-8 w-full max-w-4xl">
           <div
-            className="bg-red-100 border-l-4 w-full font-semibold border-red-500 text-red-700 p-3 rounded-md shadow-md"
+            className="bg-red-100 border-l-4 w-full font-semibold border-error text-error-hover p-3 rounded-md shadow-md"
             role="alert"
           >
             <div className="flex items-center">
@@ -239,17 +232,17 @@ export default function VisitsHistorial() {
 
       {/* Modal de Detalles de la Visita */}
       {showModal && selectedVisit && (
-        <div className="fixed inset-0 bg-gray-600/80 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-text-main/80 overflow-y-auto h-full w-full flex items-center justify-center z-50">
           <div
-            className="relative bg-white p-6 rounded-lg shadow-2xl w-full max-w-md mx-4 transform transition-transform duration-300 scale-100 animate-fadeIn"
+            className="relative bg-background p-6 rounded-lg shadow-2xl w-full max-w-md mx-4 transform transition-transform duration-300 scale-100 animate-fadeIn"
             key={selectedVisit.id_visita} // Agregado para forzar re-renderizado si es necesario
           >
-            <h3 className="text-2xl font-bold text-blue-700 mb-6 text-center border-b pb-2">
+            <h3 className="text-2xl font-bold text-secondary mb-6 text-center border-b pb-2">
               Detalles de la visita
             </h3>
 
             {/* Contenido del modal */}
-            <div className="space-y-4 text-gray-700">
+            <div className="space-y-4 text-text-main">
               <p className="text-base">
                 <strong>Nombre completo del visitante:</strong>{" "}
                 {selectedVisit.nombre_visitante}
@@ -297,7 +290,7 @@ export default function VisitsHistorial() {
             <div className="mt-6 flex justify-end">
               <button
                 onClick={handleCloseModal}
-                className="px-6 py-2 bg-blue-700 text-white font-semibold rounded-md shadow-md hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                className="px-6 py-2 bg-secondary text-surface font-semibold rounded-md shadow-md hover:bg-secondary-hover focus:outline-none focus:ring-2 focus:ring-secondary-light transition-colors"
               >
                 Cerrar
               </button>

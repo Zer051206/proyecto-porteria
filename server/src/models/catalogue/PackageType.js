@@ -11,8 +11,8 @@ import { DataTypes } from "sequelize";
 /**
  * @function definePackageTypeModel
  * @description Define y devuelve el modelo 'PackageType' de Sequelize.
- * @param {import('sequelize').Sequelize} sequelize - La instancia de Sequelize.
- * @returns {import('sequelize').ModelCtor<Model>} El modelo 'PackageType' definido.
+ * @param {Sequelize} sequelize - La instancia de Sequelize.
+ * @returns {Model} El modelo 'PackageType' definido.
  */
 export default (sequelize) => {
   /**

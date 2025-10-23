@@ -21,7 +21,7 @@ import {
   faBroom,
   faCheckCircle,
   faExclamationTriangle,
-  faSignOutAlt,
+  faArrowLeft,
 } from "@fortawesome/free-solid-svg-icons";
 
 /**
@@ -32,10 +32,13 @@ import {
  * @returns {JSX.Element} La interfaz del formulario de recepción.
  */
 export default function RecibirPaqueteForm() {
-  /** @type {Function} Función de navegación de React Router DOM. */
+  /**
+   * @type {Function}
+   * Función de navegación de React Router DOM.
+   * */
   const navigate = useNavigate();
 
-  const goBack = () => navigate(-1);
+  const goBack = () => navigate("/paquetes");
 
   /**
    * @constant {object} formHookData
@@ -51,47 +54,33 @@ export default function RecibirPaqueteForm() {
     handleKeyTextDown,
   } = usePackagesRecibir(navigate);
 
-  return (
-    <div className="flex flex-col items-center h-screen w-screen md:w-full mt-[70px] mb-[50px] p-4">
-      {/* Botón de Volver al Dashboard */}
-      <button
-        type="button"
-        onClick={goBack}
-        className="
-                    absolute top-1 right-4 
-                    bg-red-600 hover:bg-red-700 
-                    text-white font-bold 
-                    p-4 rounded-lg 
-                    flex flex-col items-center justify-center 
-                    transition-colors duration-300
-                    text-sm w-16 h-16 sm:w-20 sm:h-20
-                "
-      >
-        <FontAwesomeIcon icon={faSignOutAlt} className="text-xl sm:text-xl" />
-        <span className="text-xs sm:text-sm mt-1">Volver</span>
-      </button>
+  const inputClasses =
+    "mt-2 block w-full rounded-md font-semibold border-2 border-neutral-200 p-2 outline-none bg-background focus:border-secondary focus:ring-1 focus:ring-secondary-light transition-all";
 
+  return (
+    <div className="flex flex-col items-center h-full w-full">
       {/* Formulario Principal */}
       <form
         onSubmit={formik.handleSubmit}
-        className="bg-gray-800 p-6 rounded-lg shadow-xl w-full font-semibold max-w-2xl mt-[50px]"
+        className="bg-surface p-6 rounded-lg shadow-xl w-full font-semibold max-w-2xl mb-[50px]"
       >
-        <h2 className="text-2xl font-bold mb-6 text-center text-blue-500">
+        <button
+          type="button"
+          onClick={goBack}
+          className="md:absolute md:left-[350px]  md:top-[130px] mb-5 bg-surface text-text-main font-bold p-3 rounded-full shadow-sm  shadow-black md:w-1/12 w-1/2 hover:bg-background transition-colors"
+          aria-label="Volver a la página de inicio"
+        >
+          <FontAwesomeIcon icon={faArrowLeft} className="text-xl" />
+        </button>
+        <h2 className="text-2xl font-bold mb-6 text-center text-primary">
           <FontAwesomeIcon icon={faDownload} className="mr-3" />
           Recibir Paquete
         </h2>
 
-        {/* Indicador de Carga */}
-        {isLoading && (
-          <div className="text-center text-gray-500 my-4">
-            Cargando opciones...
-          </div>
-        )}
-
         {/* Mensaje de Error de Carga Inicial */}
         {errorCarga && (
           <div
-            className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 my-4"
+            className="bg-red-100 border-l-4 border-error text-error-hover p-4 my-4"
             role="alert"
           >
             <div className="flex items-center">
@@ -107,14 +96,14 @@ export default function RecibirPaqueteForm() {
 
         {/* Campos del Formulario (se muestran solo si no hay carga ni error) */}
         {!isLoading && !errorCarga && (
-          <fieldset className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 p-4 rounded-md border border-gray-500 shadow-black shadow-sm">
-            <legend className="px-2 font-semibold text-blue-400">
+          <fieldset className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 p-4 rounded-md border border-neutral-200 shadow-neutral-200 shadow-sm">
+            <legend className="px-2 font-semibold text-primary">
               Datos del Paquete
             </legend>
 
             {/* Campo Tipo de Paquete */}
             <label className="block">
-              <span className="text-gray-400 text-sm font-medium">
+              <span className="text-text-main text-sm font-medium">
                 Tipo de Paquete:
               </span>
               <select
@@ -122,7 +111,7 @@ export default function RecibirPaqueteForm() {
                 value={formik.values.id_tipo_paquete}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                className="mt-1 block w-full rounded-md border-2 p-2 border-gray-600 bg-gray-50 shadow-lg"
+                className={inputClasses}
               >
                 <option value="" hidden>
                   Seleccione un tipo
@@ -146,7 +135,7 @@ export default function RecibirPaqueteForm() {
 
             {/* Campo Nombre del Destinatario */}
             <label className="block">
-              <span className="text-gray-400 text-sm font-medium">
+              <span className="text-text-main text-sm font-medium">
                 Nombre completo del destinatario:
               </span>
               <input
@@ -158,7 +147,7 @@ export default function RecibirPaqueteForm() {
                 value={formik.values.nombre_destinatario}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                className="mt-1 block w-full rounded-md border-2 p-2 placeholder:italic  border-gray-400 bg-gray-50 shadow-lg"
+                className={inputClasses}
               />
               {formik.touched.nombre_destinatario &&
                 formik.errors.nombre_destinatario && (
@@ -170,13 +159,13 @@ export default function RecibirPaqueteForm() {
 
             {/* Campo Área */}
             <label className="block">
-              <span className="text-gray-400 text-sm font-medium">Área:</span>
+              <span className="text-text-main text-sm font-medium">Área:</span>
               <select
                 name="id_area"
                 value={formik.values.id_area}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                className="mt-1 block w-full rounded-md border-2 p-2 border-gray-400 bg-gray-50 shadow-lg"
+                className={inputClasses}
               >
                 <option value="" disabled hidden>
                   Seleccione un área
@@ -196,7 +185,7 @@ export default function RecibirPaqueteForm() {
 
             {/* Campo Empresa de Transporte */}
             <label className="block">
-              <span className="text-gray-400 text-sm font-medium">
+              <span className="text-text-main text-sm font-medium">
                 Empresa de Transporte (Opcional):
               </span>
               <input
@@ -207,13 +196,13 @@ export default function RecibirPaqueteForm() {
                 value={formik.values.empresa_transporte}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                className="mt-1 block w-full rounded-md border-2 p-2 placeholder:italic  border-gray-400 bg-gray-50 shadow-lg"
+                className={inputClasses}
               />
             </label>
 
             {/* Campo Nombre del Mensajero */}
             <label className="block">
-              <span className="text-gray-400 text-sm font-medium">
+              <span className="text-text-main text-sm font-medium">
                 Nombre del Mensajero (Opcional):
               </span>
               <input
@@ -225,17 +214,32 @@ export default function RecibirPaqueteForm() {
                 value={formik.values.mensajero_nombre}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                className="mt-1 block w-full rounded-md border-2 p-2 placeholder:italic border-gray-400 bg-gray-50 shadow-lg"
+                className={inputClasses}
               />
             </label>
 
             {/* Campo Guía (Condicional) y Checkbox */}
             <div className="justify-center w-full flex flex-col gap-4 mb-[10px]">
-              {/* Input de Guía, visible solo si conGuia es true */}
+              {/* Checkbox Con Guía */}
+              <label className="flex items-center justify-center mt-[40px] space-x-2">
+                <input
+                  type="checkbox"
+                  name="conGuia"
+                  checked={formik.values.conGuia}
+                  onChange={formik.handleChange}
+                  className="rounded text-primary"
+                />
+                <span className="text-text-main text-sm font-medium">
+                  El paquete tiene número de guía
+                </span>
+              </label>
+            </div>
+            {/* Input de Guía, visible solo si conGuia es true */}
+            <div className="col-span-1 md:col-span-2">
               {formik.values.conGuia && (
                 <div className="">
                   <label className="block">
-                    <span className="text-gray-400 text-sm font-medium">
+                    <span className="text-text-main text-sm font-medium">
                       Número de Guía:
                     </span>
                     <input
@@ -246,7 +250,7 @@ export default function RecibirPaqueteForm() {
                       value={formik.values.guia}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className="mt-1 block w-full rounded-md border-2 p-2 placeholder:italic  border-gray-400 bg-gray-50 shadow-lg"
+                      className={`${inputClasses} w-full`}
                     />
                     {formik.touched.guia && formik.errors.guia && (
                       <div className="text-red-500 text-sm mt-1">
@@ -256,25 +260,12 @@ export default function RecibirPaqueteForm() {
                   </label>
                 </div>
               )}
-              {/* Checkbox Con Guía */}
-              <label className="flex items-center justify-center space-x-2">
-                <input
-                  type="checkbox"
-                  name="conGuia"
-                  checked={formik.values.conGuia}
-                  onChange={formik.handleChange}
-                  className="rounded text-blue-600"
-                />
-                <span className="text-gray-400 text-sm font-medium">
-                  El paquete tiene número de guía
-                </span>
-              </label>
             </div>
 
             {/* Campo Observaciones (ocupa 2 columnas) */}
             <div className="col-span-1 md:col-span-2">
               <label className="block">
-                <span className="text-gray-400 text-sm font-medium">
+                <span className="text-text-main text-sm font-medium">
                   Observaciones (Opcional):
                 </span>
                 <textarea
@@ -284,12 +275,19 @@ export default function RecibirPaqueteForm() {
                   autoComplete="off"
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  className="mt-1 block w-full rounded-md border-2 p-2 placeholder:italic  border-gray-400 bg-gray-50 shadow-lg focus:outline-none"
+                  className={inputClasses}
                   rows="3"
                 />
               </label>
             </div>
           </fieldset>
+        )}
+
+        {/* Mensaje de error general de la API */}
+        {errorCarga && formik.submitCount > 0 && (
+          <div className="bg-red-100 border border-red-400 text-error px-4 py-3 rounded-md relative text-center mt-[30px] mb-[5px]">
+            <span className="block sm:inline">{errorCarga}</span>
+          </div>
         )}
 
         {/* Botones de Acción */}
@@ -306,7 +304,7 @@ export default function RecibirPaqueteForm() {
           {/* Botón Registrar (Submit) */}
           <button
             type="submit"
-            className="flex items-center px-6 py-2 bg-blue-600 text-white font-bold rounded-md hover:bg-blue-700 transition-colors duration-200"
+            className="flex items-center px-6 py-2 bg-primary text-white font-bold rounded-md hover:bg-primary-hover transition-colors duration-200"
             disabled={formik.isSubmitting || isLoading || !!errorCarga}
           >
             {formik.isSubmitting ? (

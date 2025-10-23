@@ -11,8 +11,8 @@ import { DataTypes } from "sequelize";
 /**
  * @function defineAreaModel
  * @description Define y devuelve el modelo 'Area' de Sequelize.
- * @param {import('sequelize').Sequelize} sequelize - La instancia de Sequelize.
- * @returns {import('sequelize').ModelCtor<Model>} El modelo 'Area' definido.
+ * @param {Sequelize} sequelize - La instancia de Sequelize.
+ * @returns {Model} El modelo 'Area' definido.
  */
 export default (sequelize) => {
   /**

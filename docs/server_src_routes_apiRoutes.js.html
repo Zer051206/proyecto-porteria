@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: server/src/routes/apiRoutes.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: server/src/routes/apiRoutes.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @file apiRoutes.js
+ * @module apiRoutes
+ * @description Define todas las rutas generales de la API para obtener datos estáticos (catálogos)
+ * y listados de historial. Todas las rutas requieren el middleware de autenticación (`authMiddleware`),
+ * a excepción de la ruta para obtener el token CSRF.
+ */
+import { Router } from "express";
+import * as apiController from "../controllers/apiController.js";
+import authMiddleware from "../middlewares/authMiddleware.js";
+
+const router = Router();
+
+/**
+ * @route GET /api/status
+ * @description Verifica el estado de la sesión activa del usuario.
+ * @access Private
+ * @middleware authMiddleware - Requiere autenticación.
+ */
+router.get("/status", authMiddleware, (req, res) => {
+  res.status(200).json({ message: "Sesión activa" });
+});
+
+/**
+ * @route GET /api/areas
+ * @description Obtiene el listado de todas las áreas de la empresa de la base de datos.
+ * @access Private
+ * @middleware authMiddleware - Requiere autenticación.
+ * @handler apiController.getAreas
+ */
+router.get("/areas", authMiddleware, apiController.getAreas);
+
+/**
+ * @route GET /api/tipos-identificacion
+ * @description Obtiene el listado de tipos de identificación válidos.
+ * @access Private
+ * @middleware authMiddleware - Requiere autenticación.
+ * @handler apiController.getIdentificationTypes
+ */
+router.get(
+  "/tipos-identificacion",
+  authMiddleware,
+  apiController.getIdentificationTypes
+);
+
+/**
+ * @route GET /api/visitas-activas
+ * @description Obtiene un listado de todas las visitas que se encuentran activas actualmente (aún no han terminado).
+ * @access Private
+ * @middleware authMiddleware - Requiere autenticación.
+ * @handler apiController.getActiveVisits
+ */
+router.get("/visitas-activas", authMiddleware, apiController.getActiveVisits);
+
+/**
+ * @route GET /api/tipos-paquetes
+ * @description Obtiene el listado de los tipos de paquetes.
+ * @access Private
+ * @middleware authMiddleware - Requiere autenticación.
+ * @handler apiController.getPackageTypes
+ */
+router.get("/tipos-paquetes", authMiddleware, apiController.getPackageTypes);
+
+/**
+ * @route GET /api/visitas
+ * @description Obtiene el historial completo de todas las visitas registradas.
+ * @access Private
+ * @middleware authMiddleware - Requiere autenticación.
+ * @handler apiController.getVisitsHistorial
+ */
+router.get("/historial/visitas", authMiddleware, apiController.getVisitsHistorial);
+
+/**
+ * @route GET /api/paquetes
+ * @description Obtiene el historial completo de todos los paquetes registrados.
+ * @access Private
+ * @middleware authMiddleware - Requiere autenticación.
+ * @handler apiController.getPackagesHistorial
+ */
+router.get("/paquetes", authMiddleware, apiController.getPackagesHistorial);
+
+export default router;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-App.html">App</a></li><li><a href="module-AxiosClient.html">AxiosClient</a></li><li><a href="module-Components.html">Components</a></li><li><a href="module-Components_Dashboard_Historial.html">Components/Dashboard/Historial</a></li><li><a href="module-Components_Packages_PackageHistoryTable.html">Components/Packages/PackageHistoryTable</a></li><li><a href="module-Components_RecibirPaqueteForm.html">Components/RecibirPaqueteForm</a></li><li><a href="module-Components_VisitHistory_VisitsHistorial.html">Components/VisitHistory/VisitsHistorial</a></li><li><a href="module-Components_Visits.html">Components/Visits</a></li><li><a href="module-Config.html">Config</a></li><li><a href="module-Controllers.html">Controllers</a></li><li><a href="module-DashboardPackage.html">DashboardPackage</a></li><li><a href="module-DashboardPage.html">DashboardPage</a></li><li><a href="module-DateUtils.html">DateUtils</a></li><li><a href="module-EntryPoint.html">EntryPoint</a></li><li><a href="module-EnviarPaqueteForm.html">EnviarPaqueteForm</a></li><li><a href="module-Hooks.html">Hooks</a></li><li><a href="module-Hooks_Auth.html">Hooks/Auth</a></li><li><a href="module-Hooks_Historial.html">Hooks/Historial</a></li><li><a href="module-Hooks_Paquetes.html">Hooks/Paquetes</a></li><li><a href="module-Hooks_Utils.html">Hooks/Utils</a></li><li><a href="module-Hooks_Visits.html">Hooks/Visits</a></li><li><a href="module-Hooks_usePackagesRecibir.html">Hooks/usePackagesRecibir</a></li><li><a href="module-InputHandlers.html">InputHandlers</a></li><li><a href="module-LoginForm.html">LoginForm</a></li><li><a href="module-Middlewares.html">Middlewares</a></li><li><a href="module-Models.html">Models</a></li><li><a href="module-Models_Catalogues.html">Models/Catalogues</a></li><li><a href="module-RegisterForm.html">RegisterForm</a></li><li><a href="module-Repositories.html">Repositories</a></li><li><a href="module-Routes.html">Routes</a></li><li><a href="module-Schemas.html">Schemas</a></li><li><a href="module-Services.html">Services</a></li><li><a href="module-Stores.html">Stores</a></li><li><a href="module-Utils.html">Utils</a></li><li><a href="module-Utils_Errors.html">Utils/Errors</a></li><li><a href="module-apiController.html">apiController</a></li><li><a href="module-apiRoutes.html">apiRoutes</a></li><li><a href="module-authRoutes.html">authRoutes</a></li><li><a href="module-packageController.html">packageController</a></li><li><a href="module-packageRoutes.html">packageRoutes</a></li><li><a href="module-passportConfig.html">passportConfig</a></li><li><a href="module-visitController.html">visitController</a></li><li><a href="module-visitRoutes.html">visitRoutes</a></li></ul><h3>Classes</h3><ul><li><a href="module-Models_Catalogues-Area.html">Area</a></li><li><a href="module-Models_Catalogues-IdentificationType.html">IdentificationType</a></li><li><a href="module-Models_Catalogues-PackageType.html">PackageType</a></li><li><a href="module-Models-Log.html">Log</a></li><li><a href="module-Models-Package.html">Package</a></li><li><a href="module-Models-RefreshToken.html">RefreshToken</a></li><li><a href="module-Models-User.html">User</a></li><li><a href="module-Models-Visit.html">Visit</a></li><li><a href="module-Utils_Errors.AppError.html">AppError</a></li><li><a href="module-Utils_Errors-AccountDisabledError.html">AccountDisabledError</a></li><li><a href="module-Utils_Errors-ActiveVisitDontExistsError.html">ActiveVisitDontExistsError</a></li><li><a href="module-Utils_Errors-AppError.html">AppError</a></li><li><a href="module-Utils_Errors-BadRequestError.html">BadRequestError</a></li><li><a href="module-Utils_Errors-DuplicateError.html">DuplicateError</a></li><li><a href="module-Utils_Errors-ForbiddenError.html">ForbiddenError</a></li><li><a href="module-Utils_Errors-InvalidTokenError.html">InvalidTokenError</a></li><li><a href="module-Utils_Errors-NotFoundError.html">NotFoundError</a></li><li><a href="module-Utils_Errors-UserAlreadyExistsError.html">UserAlreadyExistsError</a></li><li><a href="module-Utils_Errors-UserNotFoundOrInvalidPasswordError.html">UserNotFoundOrInvalidPasswordError</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Thu Oct 23 2025 12:14:13 GMT-0500 (hora estándar de Colombia)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

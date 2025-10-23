@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: client/src/components/historial/DashboardHistorial.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: client/src/components/historial/DashboardHistorial.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @file DashboardHistorial.jsx
+ * @module Components/Dashboard/Historial
+ * @description Componente de página que funciona como un menú para acceder al historial de registros de
+ * diferentes categorías (Visitas y Paquetes).
+ * @exports DashboardHistorial
+ * @requires react
+ * @requires react-router-dom - Para la navegación.
+ * @requires @fortawesome/react-fontawesome - Para la renderización de íconos.
+ * @requires @fortawesome/free-solid-svg-icons - Íconos sólidos utilizados (faBoxesPacking, faArrowLeft, faUserClock).
+ */
+import React from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faBoxesPacking,
+  faArrowLeft,
+  faUserClock,
+} from "@fortawesome/free-solid-svg-icons";
+import { useAuthStore } from "../../stores/authStore";
+
+/**
+ * @function DashboardHistorialSkeleton
+ * @description Componente de esqueleto de carga que imita la estructura del DashboardHistorial.
+ * @returns {JSX.Element}
+ */
+export const DashboardHistorialSkeleton = () => (
+  &lt;div className="flex flex-col items-center w-full animate-fade-in">
+    &lt;div className="bg-surface p-8 sm:p-12 rounded-xl shadow-lg w-full max-w-2xl border border-gray-200 animate-pulse">
+      {/* Esqueleto para el Título */}
+      &lt;div className="h-10 bg-gray-200 rounded w-3/4 mx-auto mb-10">&lt;/div>
+
+      {/* Esqueleto para los Botones */}
+      &lt;div className="flex flex-col sm:flex-row justify-center items-center gap-10 w-full">
+        &lt;div className="w-full sm:w-52 h-48 bg-gray-200 rounded-lg">&lt;/div>
+        &lt;div className="w-full sm:w-52 h-48 bg-gray-200 rounded-lg">&lt;/div>
+      &lt;/div>
+    &lt;/div>
+  &lt;/div>
+);
+
+/**
+ * @function DashboardHistorial
+ * @description Renderiza el menú de opciones para ver el historial de registros.
+ * Ofrece enlaces directos para el historial de Visitas y Paquetes, y una opción para volver.
+ * @returns {JSX.Element} El componente de menú de historial.
+ */
+export default function DashboardHistorial() {
+  /**
+   * @type {Function}
+   * Función para la navegación programática de React Router DOM.
+   * */
+  const navigate = useNavigate();
+  const goBack = () => navigate("/dashboard");
+  const { isLoading } = useAuthStore;
+
+  if (isLoading) {
+    return &lt;DashboardHistorialSkeleton />;
+  }
+
+  return (
+    &lt;div className="flex flex-col items-center justify-center h-full sm:w-full sm:h-full transition-colors duration-300">
+      &lt;button
+        type="button"
+        onClick={goBack}
+        className="md:absolute md:left-[150px]  md:top-[100px] mb-5 bg-surface text-text-main font-bold p-3 rounded-full shadow-sm  shadow-black md:w-1/12 w-1/2 hover:bg-background transition-colors"
+        aria-label="Volver a la página de inicio"
+      >
+        &lt;FontAwesomeIcon icon={faArrowLeft} className="text-xl" />
+      &lt;/button>
+      &lt;h1 className="text-4xl sm:text-5xl font-bold mb-14 mt-10 text-center text-primary">
+        Historial de Registros
+      &lt;/h1>
+
+      {/* Contenedor de los "cajones" de navegación */}
+      &lt;div className="flex flex-col sm:flex-row justify-center items-center gap-10 w-full">
+        {/* Botón para Historial de Visitas (Color Primario) */}
+        &lt;Link
+          to="/historial/visitas"
+          className="flex flex-col items-center justify-center p-8 w-full sm:w-52 h-48 bg-background hover:bg-secondary-light rounded-lg shadow-sm hover:shadow-md transition-all duration-300 border-2 border-neutral-200 hover:border-secondary"
+          aria-label="Ir al historial de visitas"
+        >
+          &lt;FontAwesomeIcon
+            icon={faUserClock}
+            className="text-4xl text-secondary mb-3"
+          />
+          &lt;span className="text-lg font-semibold text-text-main">
+            Historial de Visitas
+          &lt;/span>
+        &lt;/Link>
+
+        {/* Botón para Historial de Paquetes (Color Secundario) */}
+        &lt;Link
+          to="/historial/paquetes"
+          className="flex flex-col items-center justify-center p-8 w-full sm:w-52 h-48 bg-background hover:bg-primary-light rounded-lg shadow-sm hover:shadow-md transition-all duration-300 border-2 border-neutral-200 hover:border-primary"
+          aria-label="Ir al historial de paquetes"
+        >
+          &lt;FontAwesomeIcon
+            icon={faBoxesPacking}
+            className="text-4xl text-primary mb-3"
+          />
+          &lt;span className="text-lg font-semibold text-text-main">
+            Historial de Paquetes
+          &lt;/span>
+        &lt;/Link>
+      &lt;/div>
+    &lt;/div>
+  );
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-App.html">App</a></li><li><a href="module-AxiosClient.html">AxiosClient</a></li><li><a href="module-Components.html">Components</a></li><li><a href="module-Components_Dashboard_Historial.html">Components/Dashboard/Historial</a></li><li><a href="module-Components_Packages_PackageHistoryTable.html">Components/Packages/PackageHistoryTable</a></li><li><a href="module-Components_RecibirPaqueteForm.html">Components/RecibirPaqueteForm</a></li><li><a href="module-Components_VisitHistory_VisitsHistorial.html">Components/VisitHistory/VisitsHistorial</a></li><li><a href="module-Components_Visits.html">Components/Visits</a></li><li><a href="module-Config.html">Config</a></li><li><a href="module-Controllers.html">Controllers</a></li><li><a href="module-DashboardPackage.html">DashboardPackage</a></li><li><a href="module-DashboardPage.html">DashboardPage</a></li><li><a href="module-DateUtils.html">DateUtils</a></li><li><a href="module-EntryPoint.html">EntryPoint</a></li><li><a href="module-EnviarPaqueteForm.html">EnviarPaqueteForm</a></li><li><a href="module-Hooks.html">Hooks</a></li><li><a href="module-Hooks_Auth.html">Hooks/Auth</a></li><li><a href="module-Hooks_Historial.html">Hooks/Historial</a></li><li><a href="module-Hooks_Paquetes.html">Hooks/Paquetes</a></li><li><a href="module-Hooks_Utils.html">Hooks/Utils</a></li><li><a href="module-Hooks_Visits.html">Hooks/Visits</a></li><li><a href="module-Hooks_usePackagesRecibir.html">Hooks/usePackagesRecibir</a></li><li><a href="module-InputHandlers.html">InputHandlers</a></li><li><a href="module-LoginForm.html">LoginForm</a></li><li><a href="module-Middlewares.html">Middlewares</a></li><li><a href="module-Models.html">Models</a></li><li><a href="module-Models_Catalogues.html">Models/Catalogues</a></li><li><a href="module-RegisterForm.html">RegisterForm</a></li><li><a href="module-Repositories.html">Repositories</a></li><li><a href="module-Routes.html">Routes</a></li><li><a href="module-Schemas.html">Schemas</a></li><li><a href="module-Services.html">Services</a></li><li><a href="module-Stores.html">Stores</a></li><li><a href="module-Utils.html">Utils</a></li><li><a href="module-Utils_Errors.html">Utils/Errors</a></li><li><a href="module-apiController.html">apiController</a></li><li><a href="module-apiRoutes.html">apiRoutes</a></li><li><a href="module-authRoutes.html">authRoutes</a></li><li><a href="module-packageController.html">packageController</a></li><li><a href="module-packageRoutes.html">packageRoutes</a></li><li><a href="module-passportConfig.html">passportConfig</a></li><li><a href="module-visitController.html">visitController</a></li><li><a href="module-visitRoutes.html">visitRoutes</a></li></ul><h3>Classes</h3><ul><li><a href="module-Models_Catalogues-Area.html">Area</a></li><li><a href="module-Models_Catalogues-IdentificationType.html">IdentificationType</a></li><li><a href="module-Models_Catalogues-PackageType.html">PackageType</a></li><li><a href="module-Models-Log.html">Log</a></li><li><a href="module-Models-Package.html">Package</a></li><li><a href="module-Models-RefreshToken.html">RefreshToken</a></li><li><a href="module-Models-User.html">User</a></li><li><a href="module-Models-Visit.html">Visit</a></li><li><a href="module-Utils_Errors.AppError.html">AppError</a></li><li><a href="module-Utils_Errors-AccountDisabledError.html">AccountDisabledError</a></li><li><a href="module-Utils_Errors-ActiveVisitDontExistsError.html">ActiveVisitDontExistsError</a></li><li><a href="module-Utils_Errors-AppError.html">AppError</a></li><li><a href="module-Utils_Errors-BadRequestError.html">BadRequestError</a></li><li><a href="module-Utils_Errors-DuplicateError.html">DuplicateError</a></li><li><a href="module-Utils_Errors-ForbiddenError.html">ForbiddenError</a></li><li><a href="module-Utils_Errors-InvalidTokenError.html">InvalidTokenError</a></li><li><a href="module-Utils_Errors-NotFoundError.html">NotFoundError</a></li><li><a href="module-Utils_Errors-UserAlreadyExistsError.html">UserAlreadyExistsError</a></li><li><a href="module-Utils_Errors-UserNotFoundOrInvalidPasswordError.html">UserNotFoundOrInvalidPasswordError</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Thu Oct 23 2025 12:14:13 GMT-0500 (hora estándar de Colombia)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

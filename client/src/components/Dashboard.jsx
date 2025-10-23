@@ -7,7 +7,7 @@
  * @requires react
  * @requires react-router-dom/useNavigate
  * @requires ../hooks/useDashboard
- * @requires ../hooks/auth/useAuthLogout
+ * @requires ../hooks/auth/useAuthStore
  */
 import React from "react";
 import { useNavigate } from "react-router-dom";
@@ -21,6 +21,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import useDashboard from "../hooks/useDashboard.js";
 import { formatDate } from "../utils/dateFormat.js";
+import { useAuthStore } from "../stores/authStore.js";
 
 /**
  * @function TableSkeleton
@@ -93,7 +94,7 @@ const ActiveVisitsTable = ({
   handleCloseModal,
 }) => {
   if (isLoading) {
-    return <DashboardSkeleton />;
+    return <TableSkeleton />;
   }
 
   if (error) {
@@ -242,6 +243,11 @@ const ActiveVisitsTable = ({
 export default function DashboardPage() {
   const navigate = useNavigate();
   const dashboardHook = useDashboard();
+  const { isLoading } = useAuthStore();
+
+  if (isLoading) {
+    return <DashboardSkeleton />;
+  }
 
   return (
     <div className="flex flex-col justify-items-center min-h-screen w-full">
