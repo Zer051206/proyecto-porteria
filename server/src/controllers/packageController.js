@@ -116,14 +116,14 @@ export const recentPackages = async (req, res, next) => {
 
     // Llama al servicio para obtener los paquetes recientes
     const recentPackagesList = await packageService.getRecentPackages(
-      limit,
-      user
-    ); // Cambiado nombre de servicio
+      user,
+      limit
+    );
 
     return res.status(200).json({
       success: true,
       message: "Paquetes recientes obtenidos exitosamente.",
-      data: recentPackagesList, // Es buena práctica usar 'data' como clave
+      data: recentPackagesList,
     });
   } catch (error) {
     next(error); // Pasa errores al manejador global

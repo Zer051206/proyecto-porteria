@@ -159,7 +159,7 @@ const usePackagesRecibir = (navigate) => {
         }
 
         await api.post("/api/paquetes/recibir", payload);
-        toast.success("¡Paquete enviado con éxito!");
+        toast.success("¡Paquete recibido con éxito!");
         resetForm();
         navigate("/dashboard");
       } catch (error) {

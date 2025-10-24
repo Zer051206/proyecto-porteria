@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: server/src/services/visitService.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: server/src/services/visitService.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @file visitService.js
+ * @module Services
+ * @description Capa de servicio para la gestión de la lógica de negocio de las visitas.
+ * Se encarga de la creación (entrada) y finalización (salida) de visitas, asegurando la integridad
+ * de los datos a través de transacciones y registrando las acciones para auditoría.
+ * @requires ../models/index.js
+ * @requires ../repositories/visitRepository.js
+ * @requires ../repositories/logRepository.js
+ * @requires ../repositories/areaRepository.js
+ * @requires ../utils/customErrors.js
+ * @requires ../config/logger.js
+ */
+
+import db from "../models/index.js";
+import * as visitRepository from "../repositories/visitRepository.js";
+import * as logRepository from "../repositories/logRepository.js";
+import * as areaRepository from "../repositories/areaRepository.js";
+import { NotFoundError } from "../utils/customErrors.js";
+import logger from "../config/logger.js";
+
+/**
+ * @async
+ * @function createVisit
+ * @description Registra la entrada de un nuevo visitante en una transacción.
+ * @param {object} visitData - Datos de la visita a registrar.
+ * @param {object} user - El usuario (portero) que registra la entrada.
+ * @param {string} ip_usuario - La dirección IP del usuario.
+ * @returns {Promise&lt;object>} El objeto de la visita recién creada.
+ * @throws {VisitExistsError} Si ya existe una visita activa para la misma identificación.
+ * @throws {NotFoundError} Si el ID de área proporcionado no es válido.
+ */
+export const createVisit = async (visitData) => {
+  return db.sequelize.transaction(async (t) => {
+    const { identificacion, id_area, id_usuario, ip_usuario, ...restOfData } =
+      visitData;
+
+    // 1. Verificar que no exista una visita activa para la misma identificación.
+    const activeVisit = await visitRepository.findActiveByIdentification(
+      identificacion,
+      { transaction: t }
+    );
+    if (activeVisit) {
+      logger.warn(
+        { userId: id_usuario, visitorId: identificacion },
+        "Intento de registrar una visita duplicada activa."
+      );
+      throw new VisitExistsError();
+    }
+
+    // 2. Verificar que el área de destino exista.
+    const areaExists = await areaRepository.findById(id_area, {
+      transaction: t,
+    });
+    if (!areaExists) {
+      logger.warn(
+        { userId: id_usuario, areaId: id_area },
+        "Intento de registrar visita a un área inexistente."
+      );
+      throw new NotFoundError(`El área con ID ${id_area} no existe.`);
+    }
+
+    // 3. Preparar y crear el registro de la visita.
+    const visitForDb = {
+      ...restOfData,
+      identificacion,
+      id_area,
+      id_usuario_entrada: id_usuario,
+      fecha_entrada: new Date(),
+      estado: true, // Se establece explícitamente el estado activo.
+    };
+
+    const newVisit = await visitRepository.create(visitForDb, {
+      transaction: t,
+    });
+
+    // 4. Registrar la acción en el log.
+    await logRepository.create(
+      {
+        accion: "REGISTRAR_ENTRADA_VISITA",
+        id_usuario: id_usuario,
+        descripcion: `Se registró la entrada del visitante '${newVisit.nombre_visitante}' (ID Visita: ${newVisit.id_visita}).`,
+        ip_usuario: ip_usuario,
+        id_visita: newVisit.id_visita,
+      },
+      { transaction: t }
+    );
+
+    logger.info(
+      { userId: id_usuario, visitId: newVisit.id_visita },
+      "Nueva visita registrada exitosamente."
+    );
+
+    return newVisit;
+  });
+};
+
+/**
+ * @async
+ * @function updateVisitExit
+ * @description Registra la salida de una visita activa en una transacción.
+ * @param {number} visitId - El ID de la visita a finalizar.
+ * @param {object} user - El usuario (portero) que registra la salida.
+ * @param {string} ip_usuario - La dirección IP del usuario.
+ * @returns {Promise&lt;object>} El objeto de la visita actualizada.
+ * @throws {NotFoundError} Si la visita no se encuentra o ya está finalizada.
+ */
+export const updateVisitExit = async (visitData) => {
+  return db.sequelize.transaction(async (t) => {
+    const { visitId, id_usuario, ip_usuario } = visitData;
+
+    // 1. Buscar la visita para asegurar que existe y está activa.
+    const visitDb = await visitRepository.findById(visitId, { transaction: t });
+
+    if (!visitDb || !visitDb.estado) {
+      logger.warn(
+        { userId: id_usuario, visitId },
+        "Intento de finalizar una visita inexistente o ya finalizada."
+      );
+      throw new NotFoundError(
+        "No se encontró una visita activa con el ID proporcionado"
+      );
+    }
+
+    // 2. Preparar y ejecutar la actualización.
+    const updateData = {
+      fecha_salida: new Date(),
+      estado: false,
+      id_usuario_salida: id_usuario,
+    };
+
+    const updatedVisit = await visitRepository.update(visitId, updateData, {
+      transaction: t,
+    });
+
+    // 3. Registrar la acción en el log.
+    await logRepository.create(
+      {
+        accion: "REGISTRAR_SALIDA_VISITA",
+        id_usuario: id_usuario,
+        descripcion: `Se registró la salida del visitante '${visitDb.nombre_visitante}' (ID Visita: ${visitId}).`,
+        ip_usuario: ip_usuario,
+        id_visita: visitId, // Enlazamos el log con la visita.
+      },
+      { transaction: t }
+    );
+
+    logger.info(
+      { userId: id_usuario, visitId },
+      "Salida de visita registrada exitosamente."
+    );
+
+    return updatedVisit;
+  });
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-App.html">App</a></li><li><a href="module-AxiosClient.html">AxiosClient</a></li><li><a href="module-Components.html">Components</a></li><li><a href="module-Components_Dashboard_Historial.html">Components/Dashboard/Historial</a></li><li><a href="module-Components_RecibirPaqueteForm.html">Components/RecibirPaqueteForm</a></li><li><a href="module-Components_Visits.html">Components/Visits</a></li><li><a href="module-Config.html">Config</a></li><li><a href="module-Controllers.html">Controllers</a></li><li><a href="module-DashboardPackage.html">DashboardPackage</a></li><li><a href="module-DashboardPage.html">DashboardPage</a></li><li><a href="module-DateUtils.html">DateUtils</a></li><li><a href="module-EntryPoint.html">EntryPoint</a></li><li><a href="module-Hooks.html">Hooks</a></li><li><a href="module-Hooks_Auth.html">Hooks/Auth</a></li><li><a href="module-Hooks_Historial.html">Hooks/Historial</a></li><li><a href="module-Hooks_Packages.html">Hooks/Packages</a></li><li><a href="module-Hooks_Paquetes.html">Hooks/Paquetes</a></li><li><a href="module-Hooks_Utils.html">Hooks/Utils</a></li><li><a href="module-Hooks_Visits.html">Hooks/Visits</a></li><li><a href="module-Hooks_usePackagesRecibir.html">Hooks/usePackagesRecibir</a></li><li><a href="module-InputHandlers.html">InputHandlers</a></li><li><a href="module-LoginForm.html">LoginForm</a></li><li><a href="module-Middlewares.html">Middlewares</a></li><li><a href="module-Models.html">Models</a></li><li><a href="module-Models_Catalogues.html">Models/Catalogues</a></li><li><a href="module-PackagesEnviarForm.html">PackagesEnviarForm</a></li><li><a href="module-RegisterForm.html">RegisterForm</a></li><li><a href="module-Repositories.html">Repositories</a></li><li><a href="module-Routes.html">Routes</a></li><li><a href="module-Schemas.html">Schemas</a></li><li><a href="module-Services.html">Services</a></li><li><a href="module-Stores.html">Stores</a></li><li><a href="module-Utils.html">Utils</a></li><li><a href="module-Utils_Errors.html">Utils/Errors</a></li><li><a href="module-apiController.html">apiController</a></li><li><a href="module-apiRoutes.html">apiRoutes</a></li><li><a href="module-authRoutes.html">authRoutes</a></li><li><a href="module-packageController.html">packageController</a></li><li><a href="module-packageRoutes.html">packageRoutes</a></li><li><a href="module-passportConfig.html">passportConfig</a></li><li><a href="module-visitController.html">visitController</a></li><li><a href="module-visitRoutes.html">visitRoutes</a></li></ul><h3>Classes</h3><ul><li><a href="module-Models_Catalogues-Area.html">Area</a></li><li><a href="module-Models_Catalogues-IdentificationType.html">IdentificationType</a></li><li><a href="module-Models_Catalogues-PackageType.html">PackageType</a></li><li><a href="module-Models-Log.html">Log</a></li><li><a href="module-Models-Package.html">Package</a></li><li><a href="module-Models-RefreshToken.html">RefreshToken</a></li><li><a href="module-Models-User.html">User</a></li><li><a href="module-Models-Visit.html">Visit</a></li><li><a href="module-Utils_Errors.AppError.html">AppError</a></li><li><a href="module-Utils_Errors-AccountDisabledError.html">AccountDisabledError</a></li><li><a href="module-Utils_Errors-ActiveVisitDontExistsError.html">ActiveVisitDontExistsError</a></li><li><a href="module-Utils_Errors-AppError.html">AppError</a></li><li><a href="module-Utils_Errors-BadRequestError.html">BadRequestError</a></li><li><a href="module-Utils_Errors-DuplicateError.html">DuplicateError</a></li><li><a href="module-Utils_Errors-ForbiddenError.html">ForbiddenError</a></li><li><a href="module-Utils_Errors-InvalidTokenError.html">InvalidTokenError</a></li><li><a href="module-Utils_Errors-NotFoundError.html">NotFoundError</a></li><li><a href="module-Utils_Errors-UserAlreadyExistsError.html">UserAlreadyExistsError</a></li><li><a href="module-Utils_Errors-UserNotFoundOrInvalidPasswordError.html">UserNotFoundOrInvalidPasswordError</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Fri Oct 24 2025 09:49:48 GMT-0500 (hora estándar de Colombia)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

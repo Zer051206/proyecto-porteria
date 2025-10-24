@@ -51,7 +51,7 @@ const usePackagesEnviar = (onSuccess) => {
    */
   const handleClearForm = () => {
     formik.resetForm();
-    setError(null); // Limpiar error general al resetear
+    setError(null);
   };
 
   /**
@@ -146,7 +146,7 @@ const usePackagesEnviar = (onSuccess) => {
         }
 
         await api.post("/api/paquetes/enviar", payload);
-        toast.success("¡Paquete recibido con éxito!");
+        toast.success("¡Paquete enviado con éxito!");
         resetForm();
         if (onSuccess) {
           onSuccess();
@@ -179,7 +179,7 @@ const usePackagesEnviar = (onSuccess) => {
     areas,
     isLoading,
     errorCarga,
-    handleClearForm, // Renombrado y lógica ajustada
+    handleClearForm,
     handleKeyTextDown,
     handleAddressKeyDown,
     error: formik.errors.apiError,

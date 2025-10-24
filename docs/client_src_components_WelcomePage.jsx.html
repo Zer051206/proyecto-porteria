@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: client/src/components/WelcomePage.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: client/src/components/WelcomePage.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @file WelcomePage.jsx
+ * @module Components
+ * @description Componente que sirve como la página de inicio de la aplicación.
+ * Redirige a los usuarios autenticados al dashboard y, para los no autenticados,
+ * presenta la aplicación y ofrece enlaces para Iniciar Sesión o Registrarse.
+ * @requires react
+ * @requires react-router-dom
+ * @requires ../stores/authStore.js
+ * @requires @fortawesome/react-fontawesome
+ */
+import React from "react";
+import { Link, Navigate } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faDoorOpen,
+  faUserPlus,
+  faBuilding,
+} from "@fortawesome/free-solid-svg-icons";
+import { useAuthStore } from "../stores/authStore.js";
+
+/**
+ * @function WelcomePageSkeleton
+ * @description Componente de esqueleto de carga que imita la estructura de WelcomePage.
+ * @returns {JSX.Element}
+ */
+const WelcomePageSkeleton = () => (
+  &lt;div className="flex flex-col items-center justify-center min-h-screen w-full p-4 bg-background animate-pulse">
+    &lt;div className="bg-surface p-8 sm:p-12 rounded-xl shadow-lg text-center w-full max-w-2xl border border-gray-200">
+      {/* Esqueleto del Logo */}
+      &lt;div className="w-20 h-20 mb-6 bg-gray-200 rounded-full mx-auto">&lt;/div>
+
+      {/* Esqueleto del Título */}
+      &lt;div className="h-10 bg-gray-200 rounded w-3/4 mx-auto mb-4">&lt;/div>
+
+      {/* Esqueleto del Subtítulo */}
+      &lt;div className="h-6 bg-gray-200 rounded w-1/2 mx-auto">&lt;/div>
+
+      {/* Esqueleto de los Botones */}
+      &lt;div className="flex flex-col sm:flex-row justify-center items-center gap-10 mt-10 w-full">
+        &lt;div className="w-full sm:w-52 h-48 bg-gray-200 rounded-lg">&lt;/div>
+        &lt;div className="w-full sm:w-52 h-48 bg-gray-200 rounded-lg">&lt;/div>
+      &lt;/div>
+    &lt;/div>
+  &lt;/div>
+);
+
+/**
+ * @function WelcomePage
+ * @description Renderiza la interfaz de bienvenida. Es "inteligente": si el usuario ya está
+ * autenticado, lo redirige al dashboard. De lo contrario, muestra las opciones de navegación.
+ * @returns {JSX.Element}
+ */
+export function WelcomePage() {
+  const { isAuthenticated, isLoading } = useAuthStore();
+
+  if (isLoading) {
+    return &lt;WelcomePageSkeleton />;
+  }
+
+  // Si el usuario ya está autenticado, lo redirige directamente al dashboard.
+  if (isAuthenticated) {
+    return &lt;Navigate to="/dashboard" replace />;
+  }
+
+  return (
+    &lt;div className="flex flex-col items-center justify-center min-h-screen w-full p-4 bg-background animate-fade-in">
+      &lt;div className="bg-white p-8 sm:p-12 rounded-xl shadow-lg text-center md:w-10/12 w-11/12 border border-gray-200">
+        &lt;div className="w-20 h-20 mb-6 bg-gray-100 rounded-full flex items-center justify-center mx-auto">
+          &lt;FontAwesomeIcon
+            icon={faBuilding}
+            className="text-3xl text-primary"
+          />
+        &lt;/div>
+
+        &lt;h1 className="text-4xl sm:text-5xl font-bold text-primary mb-4">
+          Sistema de Portería
+        &lt;/h1>
+
+        &lt;p className="text-lg text-secondary font-semibold max-w-lg mx-auto">
+          Gestión centralizada de visitas y paquetes.
+        &lt;/p>
+
+        &lt;div className="flex flex-col sm:flex-row justify-center items-center gap-10 mt-10 w-full">
+          &lt;Link
+            to="/auth/login"
+            className="flex flex-col items-center justify-center p-8 w-full sm:w-52 h-48 bg-background hover:bg-primary-light rounded-lg shadow-sm hover:shadow-md transition-all duration-300 border-2 border-neutral-200 hover:border-primary"
+            aria-label="Ir a la página de inicio de sesión"
+          >
+            &lt;FontAwesomeIcon
+              icon={faDoorOpen}
+              className="text-4xl text-primary mb-3"
+            />
+            &lt;span className="text-lg font-semibold text-text-main">
+              Iniciar Sesión
+            &lt;/span>
+          &lt;/Link>
+
+          &lt;Link
+            to="/auth/register"
+            className="flex flex-col items-center justify-center p-8 w-full sm:w-52 h-48 bg-background hover:bg-secondary-light rounded-lg shadow-sm hover:shadow-md transition-all duration-300 border-2 border-neutral-200 hover:border-secondary-hover"
+            aria-label="Ir a la página de registro"
+          >
+            &lt;FontAwesomeIcon
+              icon={faUserPlus}
+              className="text-4xl text-secondary mb-3"
+            />
+            &lt;span className="text-lg font-semibold text-text-main">
+              Registrarse
+            &lt;/span>
+          &lt;/Link>
+        &lt;/div>
+      &lt;/div>
+    &lt;/div>
+  );
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-App.html">App</a></li><li><a href="module-AxiosClient.html">AxiosClient</a></li><li><a href="module-Components.html">Components</a></li><li><a href="module-Components_Dashboard_Historial.html">Components/Dashboard/Historial</a></li><li><a href="module-Components_RecibirPaqueteForm.html">Components/RecibirPaqueteForm</a></li><li><a href="module-Components_Visits.html">Components/Visits</a></li><li><a href="module-Config.html">Config</a></li><li><a href="module-Controllers.html">Controllers</a></li><li><a href="module-DashboardPackage.html">DashboardPackage</a></li><li><a href="module-DashboardPage.html">DashboardPage</a></li><li><a href="module-DateUtils.html">DateUtils</a></li><li><a href="module-EntryPoint.html">EntryPoint</a></li><li><a href="module-Hooks.html">Hooks</a></li><li><a href="module-Hooks_Auth.html">Hooks/Auth</a></li><li><a href="module-Hooks_Historial.html">Hooks/Historial</a></li><li><a href="module-Hooks_Packages.html">Hooks/Packages</a></li><li><a href="module-Hooks_Paquetes.html">Hooks/Paquetes</a></li><li><a href="module-Hooks_Utils.html">Hooks/Utils</a></li><li><a href="module-Hooks_Visits.html">Hooks/Visits</a></li><li><a href="module-Hooks_usePackagesRecibir.html">Hooks/usePackagesRecibir</a></li><li><a href="module-InputHandlers.html">InputHandlers</a></li><li><a href="module-LoginForm.html">LoginForm</a></li><li><a href="module-Middlewares.html">Middlewares</a></li><li><a href="module-Models.html">Models</a></li><li><a href="module-Models_Catalogues.html">Models/Catalogues</a></li><li><a href="module-PackagesEnviarForm.html">PackagesEnviarForm</a></li><li><a href="module-RegisterForm.html">RegisterForm</a></li><li><a href="module-Repositories.html">Repositories</a></li><li><a href="module-Routes.html">Routes</a></li><li><a href="module-Schemas.html">Schemas</a></li><li><a href="module-Services.html">Services</a></li><li><a href="module-Stores.html">Stores</a></li><li><a href="module-Utils.html">Utils</a></li><li><a href="module-Utils_Errors.html">Utils/Errors</a></li><li><a href="module-apiController.html">apiController</a></li><li><a href="module-apiRoutes.html">apiRoutes</a></li><li><a href="module-authRoutes.html">authRoutes</a></li><li><a href="module-packageController.html">packageController</a></li><li><a href="module-packageRoutes.html">packageRoutes</a></li><li><a href="module-passportConfig.html">passportConfig</a></li><li><a href="module-visitController.html">visitController</a></li><li><a href="module-visitRoutes.html">visitRoutes</a></li></ul><h3>Classes</h3><ul><li><a href="module-Models_Catalogues-Area.html">Area</a></li><li><a href="module-Models_Catalogues-IdentificationType.html">IdentificationType</a></li><li><a href="module-Models_Catalogues-PackageType.html">PackageType</a></li><li><a href="module-Models-Log.html">Log</a></li><li><a href="module-Models-Package.html">Package</a></li><li><a href="module-Models-RefreshToken.html">RefreshToken</a></li><li><a href="module-Models-User.html">User</a></li><li><a href="module-Models-Visit.html">Visit</a></li><li><a href="module-Utils_Errors.AppError.html">AppError</a></li><li><a href="module-Utils_Errors-AccountDisabledError.html">AccountDisabledError</a></li><li><a href="module-Utils_Errors-ActiveVisitDontExistsError.html">ActiveVisitDontExistsError</a></li><li><a href="module-Utils_Errors-AppError.html">AppError</a></li><li><a href="module-Utils_Errors-BadRequestError.html">BadRequestError</a></li><li><a href="module-Utils_Errors-DuplicateError.html">DuplicateError</a></li><li><a href="module-Utils_Errors-ForbiddenError.html">ForbiddenError</a></li><li><a href="module-Utils_Errors-InvalidTokenError.html">InvalidTokenError</a></li><li><a href="module-Utils_Errors-NotFoundError.html">NotFoundError</a></li><li><a href="module-Utils_Errors-UserAlreadyExistsError.html">UserAlreadyExistsError</a></li><li><a href="module-Utils_Errors-UserNotFoundOrInvalidPasswordError.html">UserNotFoundOrInvalidPasswordError</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Fri Oct 24 2025 09:49:48 GMT-0500 (hora estándar de Colombia)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

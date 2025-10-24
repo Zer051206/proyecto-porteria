@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: server/src/config/passport.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: server/src/config/passport.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @file passport.js
+ * @module passportConfig
+ * @description Configuración central de Passport.js para la autenticación OAuth.
+ * Define las estrategias de Google y Microsoft, y maneja la serialización y
+ * deserialización de usuarios para la gestión de sesiones.
+ */
+
+import passport from "passport";
+import { Strategy as GoogleStrategy } from "passport-google-oauth20";
+import { Strategy as MicrosoftStrategy } from "passport-microsoft";
+import * as userModel from "../repositories/userRepository.js";
+import * as authService from "../services/authService.js";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+/**
+ * @function serializeUser
+ * @description Almacena el identificador único del usuario en la sesión/cookie de Express.
+ * @param {object} user - Objeto de usuario que se va a serializar.
+ * @param {function} done - Callback a llamar al finalizar la serialización.
+ * @returns {void} Llama a `done(null, user.id_usuario)`.
+ */
+passport.serializeUser((user, done) => {
+  done(null, user.id_usuario);
+});
+
+/**
+ * @async
+ * @function deserializeUser
+ * @description Recupera el objeto de usuario completo a partir del ID almacenado en la sesión.
+ * @param {number} id - El ID de usuario almacenado en la sesión.
+ * @param {function} done - Callback a llamar al finalizar la deserialización.
+ * @returns {Promise&lt;void>} Llama a `done(null, user)` o `done(error, null)`.
+ */
+passport.deserializeUser(async (id, done) => {
+  try {
+    const user = await userModel.findById(id);
+    done(null, user);
+  } catch (error) {
+    done(error, null);
+  }
+});
+
+// --- ESTRATEGIAS OAUTH ---
+
+/**
+ * @strategy GoogleStrategy
+ * @description Define la estrategia de autenticación para Google OAuth 2.0.
+ * Utiliza `authService.handleOauthLogin` para gestionar el registro o login del usuario.
+ * @param {string} accessToken - Token de acceso de Google.
+ * @param {string} refreshToken - Token de refresco de Google.
+ * @param {object} profile - Perfil de usuario devuelto por Google.
+ * @param {function} done - Callback de Passport.
+ * @returns {Promise&lt;void>} Llama a `done(null, { token })` con el token JWT de la aplicación.
+ */
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: process.env.GOOGLE_CALLBACK_URL,
+      scope: ["profile", "email"],
+    },
+    async (accessToken, refreshToken, profile, done) => {
+      try {
+        // Extraemos los datos de Google
+        const googleId = profile.id;
+        const nombre = profile.name.givenName;
+        const apellido = profile.name.familyName;
+        const correo = profile.emails[0].value;
+
+        // Llamamos al servicio para manejar la autenticación
+        const token = await authService.handleOauthLogin({
+          id_oauth: googleId,
+          proveedor_oauth: "google",
+          nombre,
+          apellido,
+          correo,
+        });
+
+        // Devolvemos el token al controlador
+        return done(null, { token });
+      } catch (error) {
+        return done(error, null);
+      }
+    }
+  )
+);
+
+/**
+ * @strategy MicrosoftStrategy
+ * @description Define la estrategia de autenticación para Microsoft (Azure AD/Personal).
+ * Utiliza `authService.handleOauthLogin` para gestionar el registro o login del usuario.
+ * @param {string} accessToken - Token de acceso de Microsoft.
+ * @param {string} refreshToken - Token de refresco de Microsoft.
+ * @param {object} profile - Perfil de usuario devuelto por Microsoft.
+ * @param {function} done - Callback de Passport.
+ * @returns {Promise&lt;void>} Llama a `done(null, { token })` con el token JWT de la aplicación.
+ */
+passport.use(
+  new MicrosoftStrategy(
+    {
+      clientID: process.env.MICROSOFT_CLIENT_ID,
+      clientSecret: process.env.MICROSOFT_CLIENT_SECRET,
+      callbackURL: process.env.MICROSOFT_CALLBACK_URL,
+      scope: ["user.read"],
+    },
+    async (accessToken, refreshToken, profile, done) => {
+      try {
+        // Extraemos los datos de Microsoft
+        const microsoftId = profile.id;
+        const nombre = profile.name.givenName;
+        const apellido = profile.name.familyName;
+        const correo = profile.emails[0].value;
+
+        // Llamamos al servicio para manejar la autenticación
+        const token = await authService.handleOauthLogin({
+          id_oauth: microsoftId,
+          proveedor_oauth: "microsoft",
+          nombre,
+          apellido,
+          correo,
+        });
+
+        // Devolvemos el token al controlador
+        return done(null, { token });
+      } catch (error) {
+        return done(error, null);
+      }
+    }
+  )
+);
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-App.html">App</a></li><li><a href="module-AxiosClient.html">AxiosClient</a></li><li><a href="module-Components.html">Components</a></li><li><a href="module-Components_Dashboard_Historial.html">Components/Dashboard/Historial</a></li><li><a href="module-Components_RecibirPaqueteForm.html">Components/RecibirPaqueteForm</a></li><li><a href="module-Components_Visits.html">Components/Visits</a></li><li><a href="module-Config.html">Config</a></li><li><a href="module-Controllers.html">Controllers</a></li><li><a href="module-DashboardPackage.html">DashboardPackage</a></li><li><a href="module-DashboardPage.html">DashboardPage</a></li><li><a href="module-DateUtils.html">DateUtils</a></li><li><a href="module-EntryPoint.html">EntryPoint</a></li><li><a href="module-Hooks.html">Hooks</a></li><li><a href="module-Hooks_Auth.html">Hooks/Auth</a></li><li><a href="module-Hooks_Historial.html">Hooks/Historial</a></li><li><a href="module-Hooks_Packages.html">Hooks/Packages</a></li><li><a href="module-Hooks_Paquetes.html">Hooks/Paquetes</a></li><li><a href="module-Hooks_Utils.html">Hooks/Utils</a></li><li><a href="module-Hooks_Visits.html">Hooks/Visits</a></li><li><a href="module-Hooks_usePackagesRecibir.html">Hooks/usePackagesRecibir</a></li><li><a href="module-InputHandlers.html">InputHandlers</a></li><li><a href="module-LoginForm.html">LoginForm</a></li><li><a href="module-Middlewares.html">Middlewares</a></li><li><a href="module-Models.html">Models</a></li><li><a href="module-Models_Catalogues.html">Models/Catalogues</a></li><li><a href="module-PackagesEnviarForm.html">PackagesEnviarForm</a></li><li><a href="module-RegisterForm.html">RegisterForm</a></li><li><a href="module-Repositories.html">Repositories</a></li><li><a href="module-Routes.html">Routes</a></li><li><a href="module-Schemas.html">Schemas</a></li><li><a href="module-Services.html">Services</a></li><li><a href="module-Stores.html">Stores</a></li><li><a href="module-Utils.html">Utils</a></li><li><a href="module-Utils_Errors.html">Utils/Errors</a></li><li><a href="module-apiController.html">apiController</a></li><li><a href="module-apiRoutes.html">apiRoutes</a></li><li><a href="module-authRoutes.html">authRoutes</a></li><li><a href="module-packageController.html">packageController</a></li><li><a href="module-packageRoutes.html">packageRoutes</a></li><li><a href="module-passportConfig.html">passportConfig</a></li><li><a href="module-visitController.html">visitController</a></li><li><a href="module-visitRoutes.html">visitRoutes</a></li></ul><h3>Classes</h3><ul><li><a href="module-Models_Catalogues-Area.html">Area</a></li><li><a href="module-Models_Catalogues-IdentificationType.html">IdentificationType</a></li><li><a href="module-Models_Catalogues-PackageType.html">PackageType</a></li><li><a href="module-Models-Log.html">Log</a></li><li><a href="module-Models-Package.html">Package</a></li><li><a href="module-Models-RefreshToken.html">RefreshToken</a></li><li><a href="module-Models-User.html">User</a></li><li><a href="module-Models-Visit.html">Visit</a></li><li><a href="module-Utils_Errors.AppError.html">AppError</a></li><li><a href="module-Utils_Errors-AccountDisabledError.html">AccountDisabledError</a></li><li><a href="module-Utils_Errors-ActiveVisitDontExistsError.html">ActiveVisitDontExistsError</a></li><li><a href="module-Utils_Errors-AppError.html">AppError</a></li><li><a href="module-Utils_Errors-BadRequestError.html">BadRequestError</a></li><li><a href="module-Utils_Errors-DuplicateError.html">DuplicateError</a></li><li><a href="module-Utils_Errors-ForbiddenError.html">ForbiddenError</a></li><li><a href="module-Utils_Errors-InvalidTokenError.html">InvalidTokenError</a></li><li><a href="module-Utils_Errors-NotFoundError.html">NotFoundError</a></li><li><a href="module-Utils_Errors-UserAlreadyExistsError.html">UserAlreadyExistsError</a></li><li><a href="module-Utils_Errors-UserNotFoundOrInvalidPasswordError.html">UserNotFoundOrInvalidPasswordError</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Fri Oct 24 2025 09:49:48 GMT-0500 (hora estándar de Colombia)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: client/src/hooks/packages/usePackagesEnviar.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: client/src/hooks/packages/usePackagesEnviar.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @file usePackagesEnviar.js
+ * @module Hooks/Paquetes
+ * @description Hook personalizado para gestionar el formulario y la lógica de envío de paquetes.
+ * Se encarga de cargar opciones, definir el esquema de validación, manejar el estado
+ * del formulario con Formik, y enviar los datos a la API.
+ * @requires react/useState, useEffect
+ * @requires formik/useFormik
+ * @requires yup - Para la definición del esquema de validación.
+ * @requires ../../config/axios - Instancia de Axios configurada para la API.
+ * @requires ../../utils/inputUtilities - Funciones de utilidad para el manejo de entradas de teclado.
+ *
+ * @param {Function} navigate - Función de navegación de `react-router-dom/useNavigate`.
+ */
+import { useState, useEffect } from "react";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import api from "../../config/axios";
+import {
+  handleKeyTextDown,
+  handleAddressKeyDown,
+} from "../../utils/inputUtilities";
+import toast from "react-hot-toast";
+
+/**
+ * @function usePackagesEnviar
+ * @description Gestiona el estado, la validación y el envío del formulario para registrar
+ * la salida de un paquete del almacén.
+ * @property {object} formik - Objeto completo devuelto por `useFormik` para enlazar con los campos del formulario.
+ * @property {Array&lt;object>} tiposPaquetes - Lista de opciones de tipos de paquetes cargada desde la API.
+ * @property {Array&lt;object>} areas - Lista de opciones de áreas cargada desde la API.
+ * @property {boolean} isLoading - Indica si las opciones iniciales del formulario están cargando.
+ * @property {string | null} errorCarga - Mensaje de error si falló la carga inicial de opciones.
+ * @property {Function} handleClearForm - Función para resetear el formulario y limpiar errores.
+ * @property {Function} handleKeyTextDown - Utilidad para restringir caracteres en entradas de texto.
+ * @property {Function} handleAddressKeyDown - Utilidad para restringir caracteres en entradas de dirección/destino.
+ * @property {string | null} error - Mensaje de error general si falló la submission del formulario.
+ */
+const usePackagesEnviar = (onSuccess) => {
+  // Estados para la carga de datos iniciales
+  const [tiposPaquetes, setTiposPaquetes] = useState([]);
+  const [areas, setAreas] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorCarga, setErrorCarga] = useState(null);
+  const [error, setError] = useState(null);
+
+  /**
+   * @function handleClearForm
+   * @description Restablece los valores del formulario a su estado inicial y limpia mensajes de error.
+   * @returns {void}
+   */
+  const handleClearForm = () => {
+    formik.resetForm();
+    setError(null);
+  };
+
+  /**
+   * @effect
+   * @description Hook de efecto para cargar las opciones de tipos de paquetes y áreas
+   * desde la API al montar el componente.
+   */
+  useEffect(() => {
+    const fetchFormData = async () => {
+      try {
+        // Peticiones concurrentes para optimizar la carga
+        const [tiposRes, areasRes] = await Promise.all([
+          api.get("/api/tipos-paquetes"),
+          api.get("/api/areas"),
+        ]);
+        setTiposPaquetes(tiposRes.data);
+        setAreas(areasRes.data);
+      } catch (error) {
+        setErrorCarga(
+          "No se pudieron cargar las opciones. Intente recargar la página"
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchFormData();
+  }, []);
+
+  /**
+   * @const {object} validationSchema
+   * @description Esquema de validación para los campos del formulario utilizando Yup.
+   * Incluye validación condicional para el campo `guia`.
+   */
+  const validationSchema = Yup.object({
+    id_tipo_paquete: Yup.number().required(
+      "El tipo de paquete es obligatorio."
+    ),
+    nombre_remitente: Yup.string().required(
+      "El nombre del remitente es obligatorio."
+    ),
+    id_area: Yup.number().required("El área es obligatoria."),
+    guia: Yup.string().when("conGuia", {
+      is: true,
+      then: (schema) => schema.required("El número de guía es obligatorio."),
+    }),
+    empresa_transporte: Yup.string()
+      .nullable()
+      .max(100, "La empresa no puede exceder los 100 caracteres."),
+    mensajero_nombre: Yup.string()
+      .nullable()
+      .max(255, "El nombre no puede exceder los 255 caracteres."),
+    destino_salida: Yup.string()
+      .required("El destino es obligatorio.")
+      .nullable()
+      .max(100, "El destino no puede exceder los 100 caracteres."),
+    observaciones: Yup.string()
+      .nullable()
+      .max(500, "Las observaciones no pueden exceder los 500 caracteres."),
+  });
+
+  /**
+   * @const {object} formik
+   * @description Instancia de Formik configurada para manejar el estado, validación y
+   * submission del formulario.
+   */
+  const formik = useFormik({
+    initialValues: {
+      id_tipo_paquete: "",
+      tipo_operacion: "enviar",
+      guia: "",
+      nombre_remitente: "",
+      id_area: "",
+      destino_salida: "",
+      empresa_transporte: "",
+      mensajero_nombre: "",
+      observaciones: "",
+      conGuia: false, // Estado del checkbox
+    },
+    validationSchema,
+    /**
+     * @async
+     * @function onSubmit
+     * @description Función de submission del formulario. Envía los datos del paquete a la API.
+     * @param {object} values - Valores validados del formulario.
+     * @returns {void}
+     */
+    onSubmit: async (values, { setErrors, resetForm, setSubmitting }) => {
+      try {
+        const payload = { ...values };
+        if (!payload.conGuia) {
+          payload.guia = null; // Asegura que la guía sea nula si no se marca
+        }
+
+        await api.post("/api/paquetes/enviar", payload);
+        toast.success("¡Paquete enviado con éxito!");
+        resetForm();
+        if (onSuccess) {
+          onSuccess();
+        }
+      } catch (error) {
+        if (error.response?.data?.errors) {
+          // Errores de validación de Zod
+          const formikErrors = {};
+          error.response.data.errors.forEach((e) => {
+            const path = e.path[0];
+            formikErrors[path] = e.message;
+          });
+          setErrors(formikErrors);
+          toast.error("Por favor, corrige los errores en el formulario.");
+        } else {
+          // Error general (ej. guía duplicada)
+          toast.error(
+            error.response?.data?.message || "Ha ocurrido un error inesperado."
+          );
+        }
+      } finally {
+        setSubmitting(false);
+      }
+    },
+  });
+
+  return {
+    formik,
+    tiposPaquetes,
+    areas,
+    isLoading,
+    errorCarga,
+    handleClearForm,
+    handleKeyTextDown,
+    handleAddressKeyDown,
+    error: formik.errors.apiError,
+  };
+};
+
+export default usePackagesEnviar;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-App.html">App</a></li><li><a href="module-AxiosClient.html">AxiosClient</a></li><li><a href="module-Components.html">Components</a></li><li><a href="module-Components_Dashboard_Historial.html">Components/Dashboard/Historial</a></li><li><a href="module-Components_RecibirPaqueteForm.html">Components/RecibirPaqueteForm</a></li><li><a href="module-Components_Visits.html">Components/Visits</a></li><li><a href="module-Config.html">Config</a></li><li><a href="module-Controllers.html">Controllers</a></li><li><a href="module-DashboardPackage.html">DashboardPackage</a></li><li><a href="module-DashboardPage.html">DashboardPage</a></li><li><a href="module-DateUtils.html">DateUtils</a></li><li><a href="module-EntryPoint.html">EntryPoint</a></li><li><a href="module-Hooks.html">Hooks</a></li><li><a href="module-Hooks_Auth.html">Hooks/Auth</a></li><li><a href="module-Hooks_Historial.html">Hooks/Historial</a></li><li><a href="module-Hooks_Packages.html">Hooks/Packages</a></li><li><a href="module-Hooks_Paquetes.html">Hooks/Paquetes</a></li><li><a href="module-Hooks_Utils.html">Hooks/Utils</a></li><li><a href="module-Hooks_Visits.html">Hooks/Visits</a></li><li><a href="module-Hooks_usePackagesRecibir.html">Hooks/usePackagesRecibir</a></li><li><a href="module-InputHandlers.html">InputHandlers</a></li><li><a href="module-LoginForm.html">LoginForm</a></li><li><a href="module-Middlewares.html">Middlewares</a></li><li><a href="module-Models.html">Models</a></li><li><a href="module-Models_Catalogues.html">Models/Catalogues</a></li><li><a href="module-PackagesEnviarForm.html">PackagesEnviarForm</a></li><li><a href="module-RegisterForm.html">RegisterForm</a></li><li><a href="module-Repositories.html">Repositories</a></li><li><a href="module-Routes.html">Routes</a></li><li><a href="module-Schemas.html">Schemas</a></li><li><a href="module-Services.html">Services</a></li><li><a href="module-Stores.html">Stores</a></li><li><a href="module-Utils.html">Utils</a></li><li><a href="module-Utils_Errors.html">Utils/Errors</a></li><li><a href="module-apiController.html">apiController</a></li><li><a href="module-apiRoutes.html">apiRoutes</a></li><li><a href="module-authRoutes.html">authRoutes</a></li><li><a href="module-packageController.html">packageController</a></li><li><a href="module-packageRoutes.html">packageRoutes</a></li><li><a href="module-passportConfig.html">passportConfig</a></li><li><a href="module-visitController.html">visitController</a></li><li><a href="module-visitRoutes.html">visitRoutes</a></li></ul><h3>Classes</h3><ul><li><a href="module-Models_Catalogues-Area.html">Area</a></li><li><a href="module-Models_Catalogues-IdentificationType.html">IdentificationType</a></li><li><a href="module-Models_Catalogues-PackageType.html">PackageType</a></li><li><a href="module-Models-Log.html">Log</a></li><li><a href="module-Models-Package.html">Package</a></li><li><a href="module-Models-RefreshToken.html">RefreshToken</a></li><li><a href="module-Models-User.html">User</a></li><li><a href="module-Models-Visit.html">Visit</a></li><li><a href="module-Utils_Errors.AppError.html">AppError</a></li><li><a href="module-Utils_Errors-AccountDisabledError.html">AccountDisabledError</a></li><li><a href="module-Utils_Errors-ActiveVisitDontExistsError.html">ActiveVisitDontExistsError</a></li><li><a href="module-Utils_Errors-AppError.html">AppError</a></li><li><a href="module-Utils_Errors-BadRequestError.html">BadRequestError</a></li><li><a href="module-Utils_Errors-DuplicateError.html">DuplicateError</a></li><li><a href="module-Utils_Errors-ForbiddenError.html">ForbiddenError</a></li><li><a href="module-Utils_Errors-InvalidTokenError.html">InvalidTokenError</a></li><li><a href="module-Utils_Errors-NotFoundError.html">NotFoundError</a></li><li><a href="module-Utils_Errors-UserAlreadyExistsError.html">UserAlreadyExistsError</a></li><li><a href="module-Utils_Errors-UserNotFoundOrInvalidPasswordError.html">UserNotFoundOrInvalidPasswordError</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Fri Oct 24 2025 09:49:48 GMT-0500 (hora estándar de Colombia)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

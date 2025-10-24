@@ -111,18 +111,18 @@ export const getRecentPackages = async (user, limit) => {
     // Define las asociaciones a incluir en la consulta
     const includeOptions = [
       {
-        model: db.Paquetes, // Modelo Paquetes
+        model: db.Package,
         required: true, // INNER JOIN
         include: [
           {
-            model: db.TiposPaquetes,
+            model: db.PackageType,
             attributes: ["descripcion"],
-          }, // Corregido: attributes
-          { model: db.Areas, attributes: ["nombre_area"] }, // Corregido: attributes
+          },
+          { model: db.Area, attributes: ["nombre_area"] },
         ],
       },
       {
-        model: db.Usuarios, // Modelo Usuarios
+        model: db.User,
         attributes: ["id_usuario", "nombre", "apellido", "rol"],
       },
     ];
@@ -153,6 +153,7 @@ export const getRecentPackages = async (user, limit) => {
       return []; // Devuelve vacío si el rol no está permitido
     }
     // Si es admin, no se añade filtro de id_usuario, usa solo baseWhere
+    console.log("🚀 ~ getRecentPackages ~ user.rol:", user.rol);
 
     // Llama a la función genérica del repositorio pasando todas las opciones construidas
     const recentLogs = await logRepository.findRecent(queryOptions);

@@ -8,7 +8,7 @@
  * @requires ../../config/axios.js
  * @requires ../../utils/dateFormat.js // Para formato de fecha estándar si es necesario
  */
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import api from "../../config/axios.js";
 import { toast } from "react-hot-toast";
 import { formatDate } from "../../utils/dateFormat.js";
@@ -38,7 +38,7 @@ export const useDashboardPackage = () => {
         setError("Error al cargar la actividad reciente.");
         toast.error("No se pudo cargar la actividad reciente.");
         console.error("Error fetching recent packages:", err);
-        setRecentPackages([]); // Limpia en caso de error
+        setOriginalRecentPackages([]); // Limpia en caso de error
       } finally {
         if (isLoading) setIsLoading(false); // Solo cambia isLoading en la carga inicial
       }
