@@ -180,8 +180,6 @@ export const getRecentPackages = async (user, limit) => {
       );
       return []; // Devuelve vacío si el rol no está permitido
     }
-    // Si es admin, no se añade filtro de id_usuario, usa solo baseWhere
-    console.log("🚀 ~ getRecentPackages ~ user.rol:", user.rol);
 
     // Llama a la función genérica del repositorio pasando todas las opciones construidas
     const recentLogs = await logRepository.findRecent(queryOptions);
