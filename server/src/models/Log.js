@@ -49,7 +49,10 @@ export default (sequelize) => {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
-      // --------------------
+      id_vehiculo: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
       accion: {
         type: DataTypes.STRING(255),
         allowNull: false,
@@ -75,6 +78,7 @@ export default (sequelize) => {
     Log.belongsTo(models.User, { foreignKey: "id_usuario" });
     Log.belongsTo(models.Visit, { foreignKey: "id_visita" });
     Log.belongsTo(models.Package, { foreignKey: "id_paquete" });
+    Log.belongsTo(models.Vehicle, { foreignKey: "id_vehiculo" });
   };
 
   return Log;

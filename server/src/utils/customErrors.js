@@ -139,8 +139,27 @@ export class BadRequestError extends AppError {
   }
 }
 
+/**
+ * @class InvalidIdError
+ * @description Error específico para indicar que un ID proporcionado en la solicitud
+ * @extends AppError
+ */
 export class InvalidIdError extends AppError {
   constructor(message = "El ID proporcionado no es válido.") {
     super(message, 400);
+  }
+}
+
+/**
+ * @class ConflictError
+ * @description Error para indicar que una solicitud no pudo ser procesada debido a un conflicto
+ * con el estado actual del recurso (ej. recurso ya existe, estado inválido para la acción).
+ * @extends AppError
+ */
+export class ConflictError extends AppError {
+  constructor(
+    message = "La solicitud entra en conflicto con el estado actual del recurso."
+  ) {
+    super(message, 409);
   }
 }

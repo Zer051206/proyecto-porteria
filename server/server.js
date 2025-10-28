@@ -26,6 +26,7 @@ import authRoutes from "./src/routes/authRoutes.js";
 import visitRoutes from "./src/routes/visitRoutes.js";
 import packageRoutes from "./src/routes/packageRoutes.js";
 import apiRoutes from "./src/routes/apiRoutes.js";
+import parkingRoutes from "./src/routes/parkingRoutes.js";
 
 // 4. Importaciones de Middlewares Personalizados
 import authMiddleware from "./src/middlewares/authMiddleware.js";
@@ -90,6 +91,7 @@ app.use("/api", apiLimiter, authMiddleware);
 // Rutas específicas para cada recurso, ya protegidas por el middleware anterior
 app.use("/api/visitas", visitRoutes);
 app.use("/api/paquetes", packageRoutes);
+app.use("/api/parqueadero", parkingRoutes);
 app.use("/api", apiRoutes); // Para rutas generales como el historial
 
 // --- MANEJADOR DE ERRORES ---
