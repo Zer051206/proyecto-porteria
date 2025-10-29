@@ -1,22 +1,33 @@
+/**
+ * @file vehicleSchema.js
+ * @module Schemas
+ * @description Define los esquemas de validación (usando Zod) para las operaciones de gestión de vehículos.
+ * Incluye esquemas para la creación de uno o múltiples vehículos y para la actualización.
+ * @requires zod
+ */
 import { z } from "zod";
 
-// --- Esquema Base ---
-// Define la estructura y validaciones de un solo vehículo.
-// Usado como base para creación y actualización.
+/**
+ * @const {z.ZodObject} vehicleBaseSchema
+ * @description Esquema base para la validación de los datos de un único vehículo.
+ * Incluye validaciones para todos los campos de la tabla `vehiculos` y
+ * refinamientos para lógica condicional (placa requerida según tipo, género requerido para motos).
+ * Este esquema es la base para los esquemas de creación y actualización.
+ */
 const vehicleBaseSchema = z
   .object({
     placa: z
       .string()
       .max(10, { message: "La placa no debe exceder los 10 caracteres." })
-      .regex(/^[A-Z0-9]{1,10}$/, {
+      .regex(/^(|[A-Z0-9]{1,10})$/, {
         message: "Placa inválida. Use mayúsculas y números.",
       })
       .nullable() // Permite null
       .optional(), // Permite undefined o no incluirlo
-    tipo_vehiculo: z.enum(["Carro", "Moto", "Bicicleta"], {
+    tipo_vehiculo: z.enum(["Carro", "Moto", "Bicicleta", "Otros"], {
       required_error: "El tipo de vehículo es obligatorio.",
       invalid_type_error:
-        "Seleccione un tipo de vehículo válido (Carro, Moto, Bicicleta).",
+        "Seleccione un tipo de vehículo válido (Carro, Moto, Bicicleta, Otros).",
     }),
     modelo_descripcion: z
       .string()
@@ -36,7 +47,7 @@ const vehicleBaseSchema = z
       .regex(/^[a-zA-Z\sñÑáéíóúÁÉÍÓÚ]+$/, {
         message: "Nombre inválido. Use solo letras y espacios.",
       }), // Regex para nombres (incluye ñ y acentos)
-    identificacion_dueno: z
+    identificacion_dueno: z.coerce
       .string()
       .min(5, {
         message: "La identificación debe tener al menos 5 caracteres.",
@@ -73,10 +84,14 @@ const vehicleBaseSchema = z
         path: ["codigo_sensor"],
       }),
   })
+  // Refinamiento 1: Placa obligatoria excepto para Bicicleta y Otros
   .refine(
     (data) => {
       // Si NO es Bicicleta, la placa es requerida y no debe ser null/undefined/vacía
-      if (data.tipo_vehiculo !== "Bicicleta") {
+      if (
+        data.tipo_vehiculo !== "Bicicleta" &&
+        data.tipo_vehiculo !== "Otros"
+      ) {
         return data.placa && data.placa.trim().length > 0;
       }
       return true; // Si es Bicicleta, la placa puede ser null o string vacío
@@ -85,30 +100,23 @@ const vehicleBaseSchema = z
       message: "La placa es obligatoria para Carros y Motos.",
       path: ["placa"],
     }
-  )
-  .refine(
-    (data) => {
-      // Si es Moto, el género debe ser Masculino o Femenino
-      if (data.tipo_vehiculo === "Moto") {
-        return (
-          data.genero_dueno === "Masculino" || data.genero_dueno === "Femenino"
-        );
-      }
-      return true;
-    },
-    {
-      message: "Debe seleccionar el género del conductor para Motos.",
-      path: ["genero_dueno"],
-    }
   );
 
-// --- Esquema de Creación (Array) ---
-// Define que la entrada debe ser un array con al menos un objeto
-// que cumpla con el esquema base.
+/**
+ * @const {z.ZodArray} createVehiclesSchema
+ * @description Esquema para la validación de la creación de uno o más vehículos.
+ * Asegura que la entrada sea un array que contenga al menos un objeto
+ * que cumpla con `vehicleBaseSchema`.
+ */
 export const createVehiclesSchema = z
   .array(vehicleBaseSchema)
   .min(1, { message: "Debe agregar al menos un vehículo." });
 
-// --- Esquema de Actualización ---
-// Toma el esquema base y hace todos los campos opcionales.
+/**
+ * @const {z.ZodObject} updateVehicleSchema
+ * @description Esquema para la validación de la actualización de un vehículo.
+ * Utiliza `.partial()` sobre `vehicleBaseSchema`, lo que hace que todos los campos
+ * sean opcionales. Permite enviar solo los campos que se desean modificar.
+ * Las validaciones internas de cada campo (longitud, regex, etc.) se mantienen.
+ */
 export const updateVehicleSchema = vehicleBaseSchema.partial();

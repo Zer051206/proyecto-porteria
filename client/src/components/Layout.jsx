@@ -1,6 +1,6 @@
 /**
  * @file Layout.jsx
- * @module Components
+ * @module components/Layout.jsx
  * @description Componente de layout persistente para las rutas privadas.
  * Proporciona una estructura visual consistente con una cabecera que incluye
  * el nombre del usuario y el botón para cerrar sesión.

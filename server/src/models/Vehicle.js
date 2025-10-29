@@ -2,7 +2,8 @@
  * @file Vehicle.js
  * @module Models
  * @description Define el modelo de Sequelize para la tabla 'vehiculos'.
- * Representa la información única de cada vehículo registrado en el sistema.
+ * Representa la información única de cada vehículo registrado en el sistema,
+ * así como su estado actual dentro del parqueadero.
  * @requires sequelize
  */
 import { DataTypes } from "sequelize";
@@ -10,11 +11,26 @@ import { DataTypes } from "sequelize";
 /**
  * @function defineVehicleModel
  * @description Define y devuelve el modelo 'Vehicle' de Sequelize usando sequelize.define.
- * @param {import('sequelize').Sequelize} sequelize - La instancia de Sequelize.
- * @returns {import('sequelize').ModelCtor<Model>} El constructor del modelo 'Vehicle' definido.
+ * @param {Sequelize} sequelize - La instancia de Sequelize.
+ * @returns {Model} El constructor del modelo 'Vehicle' definido.
  */
 export default (sequelize) => {
-  // Define el modelo usando sequelize.define
+  /**
+   * @class Vehicle
+   * @classdesc Modelo de Sequelize para la tabla `vehiculos`. Almacena datos identificativos
+   * y el estado actual de cada vehículo (dentro/fuera, activo/inactivo).
+   * @property {number} id_vehiculo - Clave primaria autoincremental.
+   * @property {string|null} placa - Placa del vehículo. Única si no es NULL. Nulo para bicicletas.
+   * @property {string} tipo_vehiculo - Tipo de vehículo ('Carro', 'Moto', 'Bicicleta', 'Otros').
+   * @property {string|null} modelo_descripcion - Modelo o descripción adicional del vehículo (opcional).
+   * @property {string} nombre_dueno - Nombre completo del dueño o conductor principal.
+   * @property {string} identificacion_dueno - Número de identificación del dueño.
+   * @property {string} genero_dueno - Género del dueño ('Masculino', 'Femenino', 'N/A'). Relevante para capacidad de motos.
+   * @property {string|null} lugar_asignado_default - Descripción del lugar habitual de parqueo (opcional).
+   * @property {boolean} esta_dentro - Indica si el vehículo está actualmente dentro del parqueadero (TRUE) o fuera (FALSE).
+   * @property {boolean} activo - Indica si el vehículo está activo en el sistema (TRUE) o desactivado (FALSE).
+   * @property {string|null} codigo_sensor - Código único asociado al tag/lector para identificación automática (opcional, único si no es NULL).
+   */
   const Vehicle = sequelize.define(
     "Vehicle",
     {
@@ -30,7 +46,7 @@ export default (sequelize) => {
         unique: true,
       },
       tipo_vehiculo: {
-        type: DataTypes.ENUM("Carro", "Moto", "Bicicleta"),
+        type: DataTypes.ENUM("Carro", "Moto", "Bicicleta", "Otros"),
         allowNull: false,
       },
       modelo_descripcion: {
@@ -93,13 +109,16 @@ export default (sequelize) => {
 
   /**
    * @function associate
-   * @static
    * @description Define las asociaciones del modelo Vehicle con otros modelos.
-   * Este método es llamado automáticamente por `models/index.js`.
    * @param {object} models - Un objeto que contiene todos los modelos de la aplicación.
    */
   Vehicle.associate = (models) => {
-    // Asociación HACIA ParkingLog (Un Vehículo tiene muchos Registros de Parqueo)
+    /**
+     * @description Asociación (hasMany): Un Vehículo puede tener muchos registros en el historial de parqueadero.
+     * @param {Model} models.ParkingLog - El modelo ParkingLog.
+     * @property {string} foreignKey - La clave foránea en la tabla `parqueadero_registros`.
+     * @property {string} as - Alias para acceder a los registros desde una instancia de vehículo (`vehicleInstance.getParkingLogs()`).
+     */
     Vehicle.hasMany(models.ParkingLog, {
       foreignKey: "id_vehiculo",
       as: "ParkingLogs",

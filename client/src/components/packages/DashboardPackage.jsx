@@ -1,6 +1,6 @@
 /**
  * @file DashboardPackage.jsx
- * @module DashboardPackage
+ * @module components/packages/DashboardPackage.jsx
  * @description Página principal para la gestión de envíos y paquetes. Presenta opciones
  * claras para registrar la recepción o el envío de un paquete, y una opción para volver.
  * @component
@@ -27,7 +27,7 @@ import { useAuthStore } from "../../stores/authStore";
 import { useDashboardPackage } from "../../hooks/packages/useDashboardPackage";
 import PackagesEnviarForm from "./PackagesEnviarForm";
 import PackagesRecibirForm from "./PackagesRecibirForm";
-import { HistoryDetailModal } from "../historial/DashboardHistorial";
+import DetailModal from "../utils/DetailModal";
 
 /**
  * @function DashboardPackageSkeleton
@@ -313,7 +313,7 @@ export default function DashboardPackage() {
       )}
       {/* Reutiliza HistoryDetailModal para ver detalles */}
       {modalType === "details" && selectedPackage && (
-        <HistoryDetailModal
+        <DetailModal
           item={selectedPackage} // Pasa el paquete seleccionado del estado
           onClose={closeModal}
           type="paquete" // Indica que es un paquete

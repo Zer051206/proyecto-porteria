@@ -1,6 +1,6 @@
 /**
  * @file PrivateRoute.jsx
- * @module Components
+ * @module components/PrivateRoute.jsx
  * @description Componente de "guardia de ruta" que protege el acceso a las rutas privadas.
  * Se integra con el store global de Zustand para leer el estado de autenticación.
  * @requires react

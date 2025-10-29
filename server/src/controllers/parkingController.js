@@ -3,6 +3,7 @@ import {
   updateVehicleSchema,
 } from "../schemas/vehicleSchema.js";
 import * as parkingService from "../services/parkingService.js";
+import { BadRequestError } from "../utils/customErrors.js";
 
 /**
  * @async
@@ -14,7 +15,7 @@ import * as parkingService from "../services/parkingService.js";
  * @param {function} next - Función middleware para pasar errores.
  * @returns {Promise<void>} Responde con 200 y el objeto de ocupación, o pasa el error.
  */
-export const getOccupancyController = async (req, res, next) => {
+export const getOccupancy = async (req, res, next) => {
   try {
     const occupancyData = await parkingService.getOccupancy();
     return res.status(200).json({
@@ -23,7 +24,7 @@ export const getOccupancyController = async (req, res, next) => {
       data: occupancyData,
     });
   } catch (error) {
-    next(error); // Pasa errores al middleware global
+    next(error);
   }
 };
 
@@ -63,24 +64,16 @@ export const getAllActiveVehicles = async (req, res, next) => {
  * @param {function} next - Función middleware para pasar errores.
  * @returns {Promise<void>} Responde con 201 y los vehículos creados, o pasa el error al middleware.
  */
-export const createVehicle = async (req, res, next) => {
+export const createVehicles = async (req, res, next) => {
   try {
     const user = req.user;
     const ip = req.ip;
 
     const validateData = createVehiclesSchema.safeParse(req.body);
-    const validationResult = createVehiclesSchema.safeParse(req.body);
-    if (!validationResult.success) {
-      return res.status(400).json({
-        success: false,
-        message: "Datos de entrada inválidos.",
-        errors: validationResult.error.fieldErrors,
-      });
-    }
 
-    const createdVehicle = await parkingService.createVehicle(
+    const createdVehicle = await parkingService.createVehicles(
       user,
-      validateData,
+      validateData.data,
       ip
     );
 
@@ -143,20 +136,21 @@ export const updateVehicle = async (req, res, next) => {
  */
 export const registerEntry = async (req, res, next) => {
   try {
-    const user = req.user;
+    const id_usuario = req.user.id_usuario;
     const ip = req.ip;
     const { id_vehiculo } = req.body;
     const entryData = {
-      user,
+      id_usuario,
       ip,
       id_vehiculo,
     };
 
-    await parkingService.registerEntry(entryData);
+    const historyLog = await parkingService.registerEntry(entryData);
 
     return res.status(200).json({
       message: "Se registró la entrada del vehículo exitosamente.",
       success: true,
+      data: historyLog,
     });
   } catch (error) {
     next(error);
@@ -175,11 +169,11 @@ export const registerEntry = async (req, res, next) => {
  */
 export const registerExit = async (req, res, next) => {
   try {
-    const user = req.user;
+    const id_usuario = req.user.id_usuario;
     const ip = req.ip;
     const id_vehiculo = parseInt(req.params.id, 10);
     const exitData = {
-      user,
+      id_usuario,
       ip,
       id_vehiculo,
     };
@@ -189,6 +183,62 @@ export const registerExit = async (req, res, next) => {
     return res.status(200).json({
       message: "Se registró la salida del vehículo exitosamente.",
       success: true,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @async
+ * @function handleScan
+ * @description Controlador para manejar las peticiones del lector de sensores (NFC/Barras).
+ * Recibe el código del sensor, busca el vehículo asociado y llama al servicio
+ * para registrar automáticamente la entrada o la salida.
+ * @param {object} req - Objeto de solicitud de Express. `req.body` debe contener `{ codigo_sensor: string }`.
+ * @param {object} res - Objeto de respuesta de Express.
+ * @param {function} next - Función middleware para pasar errores.
+ * @returns {Promise<void>} Responde con 200 y el resultado de la operación (entrada/salida), o pasa el error.
+ */
+export const handleScan = async (req, res, next) => {
+  try {
+    // 1. Extraer y validar el código del sensor del body
+    const { codigo_sensor } = req.body;
+    if (
+      !codigo_sensor ||
+      typeof codigo_sensor !== "string" ||
+      codigo_sensor.trim() === ""
+    ) {
+      // Usa BadRequestError para que el middleware de errores lo maneje
+      return next(
+        new BadRequestError(
+          "Falta el 'codigo_sensor' o está vacío en el cuerpo de la solicitud."
+        )
+      );
+    }
+
+    // 2. Obtener IP (útil para logs en el servicio)
+    const ip = req.ip;
+
+    // 3. Llamar al servicio handleVehicleScan
+    const result = await parkingService.handleVehicleScan(codigo_sensor, ip);
+
+    // 4. Formular respuesta basada en el resultado del servicio
+    let message = "Operación registrada exitosamente.";
+    if (result && result.action === "entry") {
+      message = `Entrada registrada para vehículo con placa ${
+        result.vehicle?.placa || "N/A"
+      }.`;
+    } else if (result && result.action === "exit") {
+      message = `Salida registrada para vehículo con placa ${
+        result.vehicle?.placa || "N/A"
+      }.`;
+    }
+
+    return res.status(200).json({
+      message: message,
+      success: true,
+      data: result,
     });
   } catch (error) {
     next(error);

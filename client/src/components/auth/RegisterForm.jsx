@@ -1,6 +1,6 @@
 /**
  * @file RegisterForm.jsx
- * @module RegisterForm
+ * @module component/auth/RegisterForm.jsx
  * @description Componente funcional que renderiza el formulario de registro de nuevos usuarios.
  * Toda la lógica de manejo de estado, validación y comunicación con la API se delega al hook `useRegisterForm`.
  * @component

@@ -1,6 +1,6 @@
 /**
  * @file RecibirPaqueteForm.jsx
- * @module Components/RecibirPaqueteForm
+ * @module components/packages/RecibirPaqueteForm.jsx
  * @description Componente de página que renderiza el formulario para registrar la recepción de un nuevo paquete.
  * Utiliza el hook personalizado usePackagesRecibir para manejar toda la lógica, estado y sumisión del formulario,
  * así como la carga inicial de tipos de paquetes y áreas.

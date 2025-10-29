@@ -30,6 +30,18 @@ export const useDashboardHistorial = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("fecha_desc"); // 'fecha_desc', 'fecha_asc'
 
+  // --- Estados de Modal ---
+  /**
+   * @state {boolean} showDetailsModal
+   * @description Controla la visibilidad del modal de detalles.
+   */
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  /**
+   * @state {object|null} selectedItem
+   * @description Almacena el objeto (visita o paquete) seleccionado para mostrar en el modal.
+   */
+  const [selectedItem, setSelectedItem] = useState(null);
+
   /**
    * @function fetchData
    * @description Obtiene todos los datos (visitas y paquetes) en paralelo.
@@ -126,18 +138,56 @@ export const useDashboardHistorial = () => {
   // 4. Estado derivado para "No hay resultados"
   const noResults = filteredData.length === 0 && searchTerm.length > 0;
 
-  // Devolvemos todo lo que el componente principal necesitará
+  /**
+   * @function openDetailsModal
+   * @description Abre el modal de detalles y guarda el item seleccionado.
+   * @param {object} item - La visita o paquete a mostrar.
+   */
+  const openDetailsModal = (item) => {
+    setSelectedItem(item);
+    setShowDetailsModal(true);
+  };
+
+  /**
+   * @function closeModal
+   * @description Cierra el modal de detalles y limpia el item seleccionado.
+   */
+  const closeModal = () => {
+    setShowDetailsModal(false);
+    setSelectedItem(null);
+  };
+
+  /**
+   * @function handleSearchChange
+   * @description Actualiza el estado `searchTerm` desde un evento de input.
+   */
+  const handleSearchChange = (event) => {
+    setSearchTerm(event.target.value);
+  };
+
+  /**
+   * @function handleSortChange
+   * @description Actualiza el estado `sortBy` desde un evento de select.
+   */
+  const handleSortChange = (event) => {
+    setSortBy(event.target.value);
+  };
+
   return {
-    data: filteredData, // La lista final para mostrar
+    data: filteredData,
     activeTab,
-    setActiveTab,
+    showDetailsModal,
+    selectedItem,
     isLoading,
     error,
     noResults,
     searchTerm,
-    handleSearchChange: (e) => setSearchTerm(e.target.value),
-    handleSortChange: (e) => setSortBy(e.target.value),
+    setActiveTab,
+    handleSearchChange,
+    handleSortChange,
     refetch: fetchData,
-    formatDate, // Exponemos la función de formato
+    formatDate,
+    openDetailsModal,
+    closeModal,
   };
 };

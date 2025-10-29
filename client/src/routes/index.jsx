@@ -22,6 +22,7 @@ import DashboardPackage from "../components/packages/DashboardPackage.jsx";
 import PackagesRecibirForm from "../components/packages/PackagesRecibirForm.jsx";
 import PackagesEnviarForm from "../components/packages/PackagesEnviarForm.jsx";
 import DashboardHistorial from "../components/historial/DashboardHistorial.jsx";
+import DasboardParking from "../components/parking/DashboardParking.jsx";
 
 /**
  * @function AppRoutes
@@ -46,6 +47,7 @@ export function AppRoutes() {
           <Route path="/paquetes/recibir" element={<PackagesRecibirForm />} />
           <Route path="/paquetes/enviar" element={<PackagesEnviarForm />} />
           <Route path="/historial" element={<DashboardHistorial />} />
+          <Route path="/parqueadero" element={<DasboardParking />} />
         </Route>
       </Route>
     </Routes>

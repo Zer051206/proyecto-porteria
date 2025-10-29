@@ -3,9 +3,9 @@
  * @module Repositories/Parking
  * @description Capa de acceso a datos para la entidad 'ParkingLog' (parqueadero_registro).
  * Encapsula consultas a la BD para el historial de entradas/salidas.
- * @requires ../models
+ * @requires ../models/index.js
  */
-import db from "../models";
+import db from "../models/index.js";
 const ParkingLog = db.ParkingLog;
 
 /**
@@ -43,13 +43,10 @@ export const create = async (data, options = {}) => {
  * @returns {Promise<Array<number>>} Un array con el número de filas afectadas (debería ser [1]).
  */
 export const updateExit = async (data, id, options = {}) => {
-  return ParkingLog.update(
-    data,
-    {
-      where: { id_vehiculo: id, fecha_salida: null },
-      order: [["fecha_entrada", "DESC"]],
-      limit: 1,
-    },
-    options
-  );
+  return ParkingLog.update(data, {
+    where: { id_vehiculo: id, fecha_salida: null },
+    order: [["fecha_entrada", "DESC"]],
+    limit: 1,
+    ...options,
+  });
 };

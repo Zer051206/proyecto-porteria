@@ -79,6 +79,19 @@ export class InvalidTokenError extends AppError {
 }
 
 /**
+ * @class MissingApiKeyError
+ * @description Error específico para cuando no se proporciona la API Key requerida en las cabeceras.
+ * @extends AppError
+ */
+export class MissingApiKeyError extends AppError {
+  constructor(
+    message = "Falta la API Key requerida en la cabecera X-API-Key o Authorization: ApiKey."
+  ) {
+    super(message, 401); // 401 Unauthorized es apropiado para credenciales faltantes.
+  }
+}
+
+/**
  * @class ForbiddenError
  * @description Error para cuando un usuario autenticado no tiene los permisos necesarios.
  * @extends AppError

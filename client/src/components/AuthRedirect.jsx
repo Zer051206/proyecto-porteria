@@ -1,6 +1,6 @@
 /**
  * @file AuthRedirect.jsx
- * @module Components
+ * @module component/AuthRedirect.jsx
  * @description Componente que se renderiza cuando un usuario no autenticado intenta acceder a una ruta protegida.
  * @requires react
  * @requires react-router-dom

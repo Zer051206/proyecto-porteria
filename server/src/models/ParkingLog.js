@@ -10,11 +10,20 @@ import { DataTypes } from "sequelize";
 /**
  * @function defineParkingLogModel
  * @description Define y devuelve el modelo 'ParkingLog' de Sequelize para el historial del parqueadero, usando sequelize.define.
- * @param {import('sequelize').Sequelize} sequelize - La instancia de Sequelize.
- * @returns {import('sequelize').ModelCtor<Model>} El constructor del modelo 'ParkingLog' definido.
+ * @param {Sequelize} sequelize - La instancia de Sequelize.
+ * @returns {Model} El constructor del modelo 'ParkingLog' definido.
  */
 export default (sequelize) => {
-  // Define el modelo usando sequelize.define
+  /**
+   * @class ParkingLog
+   * @classdesc Modelo de Sequelize para la tabla `parqueadero_registros`. Representa una única entrada o salida del parqueadero.
+   * @property {number} id_registro - Clave primaria autoincremental del registro.
+   * @property {number} id_vehiculo - Clave foránea que referencia al vehículo asociado (tabla `vehiculos`).
+   * @property {Date} fecha_entrada - Fecha y hora exactas en que el vehículo ingresó al parqueadero.
+   * @property {Date|null} fecha_salida - Fecha y hora exactas en que el vehículo salió del parqueadero (NULL si aún está dentro).
+   * @property {number} id_usuario_entrada - Clave foránea que referencia al usuario (portero) que registró la entrada.
+   * @property {number|null} id_usuario_salida - Clave foránea que referencia al usuario (portero) que registró la salida (NULL si aún está dentro).
+   */
   const ParkingLog = sequelize.define(
     "ParkingLog",
     {
@@ -67,16 +76,29 @@ export default (sequelize) => {
    * @param {object} models - Un objeto que contiene todos los modelos de la aplicación.
    */
   ParkingLog.associate = (models) => {
-    // Asociación HACIA Vehiculo
+    /**
+     * @description Asociación (belongsTo): Un registro de parqueadero pertenece a un Vehículo.
+     * @param {Model} models.Vehicle - El modelo Vehicle.
+     * @property {string} foreignKey - La clave foránea en `parqueadero_registros`.
+     * @property {string} as - Alias para acceder al vehículo desde un registro (`parkingLogInstance.Vehicle`).
+     * @property {string} onDelete - 'CASCADE': Si se borra un vehículo, se borran sus registros de historial.
+     * @property {string} onUpdate - 'CASCADE': Si cambia el `id_vehiculo`, se actualiza aquí.
+     */
     ParkingLog.belongsTo(models.Vehicle, {
-      // Asume modelo 'Vehicle'
       foreignKey: "id_vehiculo",
       as: "Vehicle",
       onDelete: "CASCADE",
       onUpdate: "CASCADE",
     });
 
-    // Asociación HACIA Usuario (Entrada)
+    /**
+     * @description Asociación (belongsTo): Un registro de parqueadero tiene un Usuario que registró la entrada.
+     * @param {Model} models.User - El modelo User.
+     * @property {string} foreignKey - La clave foránea `id_usuario_entrada`.
+     * @property {string} as - Alias para acceder al usuario de entrada (`parkingLogInstance.EntryUser`).
+     * @property {string} onDelete - 'RESTRICT': Previene borrar un usuario si tiene registros de entrada asociados.
+     * @property {string} onUpdate - 'CASCADE': Si cambia el `id_usuario`, se actualiza aquí.
+     */
     ParkingLog.belongsTo(models.User, {
       foreignKey: "id_usuario_entrada",
       as: "EntryUser",
@@ -84,11 +106,17 @@ export default (sequelize) => {
       onUpdate: "CASCADE",
     });
 
-    // Asociación HACIA Usuario (Salida)
+    /**
+     * @description Asociación (belongsTo): Un registro de parqueadero puede tener un Usuario que registró la salida.
+     * @param {Model} models.User - El modelo User.
+     * @property {string} foreignKey - La clave foránea `id_usuario_salida`.
+     * @property {string} as - Alias para acceder al usuario de salida (`parkingLogInstance.ExitUser`).
+     * @property {string} onDelete - 'SET NULL': Si se borra el usuario, el `id_usuario_salida` se pone a NULL.
+     * @property {string} onUpdate - 'CASCADE': Si cambia el `id_usuario`, se actualiza aquí.
+     */
     ParkingLog.belongsTo(models.User, {
       foreignKey: "id_usuario_salida",
       as: "ExitUser",
-      allowNull: true,
       onDelete: "SET NULL",
       onUpdate: "CASCADE",
     });

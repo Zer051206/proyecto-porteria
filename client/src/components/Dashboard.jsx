@@ -1,6 +1,6 @@
 /**
- * @file DashboardPage.jsx
- * @module DashboardPage
+ * @file Dashboard.jsx
+ * @module components/Dashboard.jsx
  * @description Componente principal que sirve como la página de inicio para los usuarios autenticados.
  * Muestra las visitas activas y proporciona enlaces de navegación a las principales funcionalidades de la aplicación.
  * @component
@@ -18,6 +18,7 @@ import {
   faHistory,
   faExclamationTriangle,
   faExternalLinkAlt,
+  faCar,
 } from "@fortawesome/free-solid-svg-icons";
 import useDashboard from "../hooks/useDashboard.js";
 import { formatDate } from "../utils/dateFormat.js";
@@ -60,7 +61,8 @@ export const DashboardSkeleton = () => (
     <div className="h-10 bg-gray-300 rounded w-1/2 mb-12 mt-6"></div>
 
     {/* Esqueleto de los Botones de Navegación */}
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 w-full max-w-5xl mb-14">
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 w-full max-w-5xl mb-14">
+      <div className="h-32 bg-gray-200 rounded-lg"></div>
       <div className="h-32 bg-gray-200 rounded-lg"></div>
       <div className="h-32 bg-gray-200 rounded-lg"></div>
       <div className="h-32 bg-gray-200 rounded-lg"></div>
@@ -250,12 +252,12 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="flex flex-col justify-items-center min-h-screen w-full">
+    <div className="flex flex-col justify-items-center min-h-screen w-full mb-10 md:mb-0">
       <div className="w-full justify-items-center">
         <h1 className="text-3xl sm:text-4xl font-extrabold text-primary mb-12 mt-6 text-center">
           Gestión de Visitas y Paquetes
         </h1>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 w-full max-w-4xl mb-14">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 w-full max-w-4xl mb-14">
           {/* Botón Nueva Visita */}
           <button
             onClick={() => navigate("/visitas/entrada")}
@@ -281,6 +283,16 @@ export default function DashboardPage() {
           >
             <FontAwesomeIcon icon={faHistory} className="text-3xl mb-2" />
             <span className="font-semibold text-lg">Historial</span>
+          </button>
+          {/* --- Botón de Parqueadero--- */}
+          <button
+            onClick={() => navigate("/parqueadero")}
+            className="flex flex-col items-center justify-center p-6 bg-neutral-600 text-surface rounded-lg shadow-md hover:bg-neutral-700 transition-colors h-32" // Alto fijo
+          >
+            <FontAwesomeIcon icon={faCar} className="text-3xl mb-2" />
+            <span className="font-semibold text-lg text-center">
+              Parqueadero
+            </span>
           </button>
         </div>
         {/* Contenedor de la tabla de visitas activas */}

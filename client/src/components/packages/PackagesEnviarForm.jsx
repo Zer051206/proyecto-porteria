@@ -1,6 +1,6 @@
 /**
  * @file PackagesEnviarForm.jsx
- * @module PackagesEnviarForm
+ * @module components/packages/PackagesEnviarForm.jsx
  * @description Componente de página que renderiza el formulario para registrar la salida (envío) de un paquete.
  * Utiliza el hook `usePackagesEnviar` para manejar la lógica del formulario, validaciones, carga de opciones y submission a la API.
  * @component

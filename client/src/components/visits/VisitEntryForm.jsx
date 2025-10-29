@@ -1,6 +1,6 @@
 /**
  * @file VisitEntryForm.jsx
- * @module Components/Visits
+ * @module components/visits/VisitEntryForm.jsx
  * @description Componente de formulario para registrar la entrada de un visitante.
  * @requires react
  * @requires ../../hooks/visits/useVisitEntryForm.js

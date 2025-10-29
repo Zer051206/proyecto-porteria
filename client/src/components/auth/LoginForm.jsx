@@ -1,6 +1,6 @@
 /**
  * @file LoginForm.jsx
- * @module LoginForm
+ * @module component/auth/LoginForm.jsx
  * @description Componente funcional que renderiza el formulario de inicio de sesión.
  * Utiliza hooks personalizados para manejar la lógica de estado (useLoginForm),
  * la navegación (useGoBackHome) y la visibilidad de la contraseña (usePasswordToggle).

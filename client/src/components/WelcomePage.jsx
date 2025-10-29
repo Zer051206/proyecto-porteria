@@ -1,6 +1,6 @@
 /**
  * @file WelcomePage.jsx
- * @module Components
+ * @module components/WelcomePage.jsx
  * @description Componente que sirve como la página de inicio de la aplicación.
  * Redirige a los usuarios autenticados al dashboard y, para los no autenticados,
  * presenta la aplicación y ofrece enlaces para Iniciar Sesión o Registrarse.

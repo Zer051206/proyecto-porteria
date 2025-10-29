@@ -1,6 +1,6 @@
 /**
  * @file DashboardHistorial.jsx
- * @module Components/Dashboard/Historial
+ * @module Components/Historial/DashboardHistorial
  * @description Componente de página que funciona como un menú para acceder al historial de registros de
  * diferentes categorías (Visitas y Paquetes).
  * @exports DashboardHistorial
@@ -19,10 +19,10 @@ import {
   faEye,
   faSearch,
   faExclamationTriangle,
-  faTimes,
 } from "@fortawesome/free-solid-svg-icons";
 import { useAuthStore } from "../../stores/authStore";
 import { useDashboardHistorial } from "../../hooks/historial/useDashboardHistorial";
+import DetailModal from "../utils/DetailModal";
 
 const VisitsTable = ({ visits, onAction, formatDate }) => {
   return (
@@ -170,119 +170,6 @@ const PackagesTable = ({ packages, onAction, formatDate }) => {
   );
 };
 
-// Fila de detalle reutilizable
-const DetailRow = ({ label, value }) => (
-  <p className="text-base text-text-main">
-    <strong className="font-semibold">{label}:</strong> {value || "N/A"}
-  </p>
-);
-
-export const HistoryDetailModal = ({ item, onClose, type, formatDate }) => {
-  if (!item) return null;
-
-  const isVisit = type === "visita";
-  const title = isVisit ? "Detalles de la Visita" : "Detalles del Paquete";
-  const titleColor = isVisit ? "text-secondary" : "text-primary";
-  const buttonClass = isVisit
-    ? "bg-secondary text-surface hover:bg-secondary-hover"
-    : "bg-primary text-surface hover:bg-primary-hover";
-
-  return (
-    <div className="fixed inset-0 bg-text-main/80 overflow-y-auto h-full w-full flex items-center justify-center z-50">
-      <div
-        className="relative bg-background p-3 rounded-lg shadow-2xl w-full max-w-md mx-2 animate-fadeIn"
-        key={item.id_visita || item.id_paquete}
-      >
-        <h3
-          className={`text-2xl font-bold ${titleColor} mb-6 text-center border-b pb-2`}
-        >
-          {title}
-        </h3>
-
-        {/* --- Contenido del modal --- */}
-        <div className="space-y-4 text-text-main">
-          {isVisit ? (
-            /* --- Detalles de Visita --- */
-            <>
-              <DetailRow label="Nombre" value={item.nombre_visitante} />
-              <DetailRow
-                label="Tipo ID"
-                value={item.IdentificationType?.descripcion}
-              />
-              <DetailRow label="Identificación" value={item.identificacion} />
-              <DetailRow label="Empresa" value={item.empresa} />
-              <DetailRow
-                label="Destinatario"
-                value={item.nombre_destinatario}
-              />
-              <DetailRow label="Área" value={item.Area?.nombre_area} />
-              <DetailRow label="Motivo" value={item.motivo} />
-              <DetailRow
-                label="Fecha Entrada"
-                value={formatDate(item.fecha_entrada)}
-              />
-              <DetailRow
-                label="Fecha Salida"
-                value={
-                  item.fecha_salida
-                    ? formatDate(item.fecha_salida)
-                    : "Pendiente"
-                }
-              />
-              {item.observaciones && (
-                <DetailRow label="Observaciones" value={item.observaciones} />
-              )}
-            </>
-          ) : (
-            /* --- Detalles de Paquete --- */
-            <>
-              <DetailRow label="Guía" value={item.guia} />
-              <DetailRow
-                label="Tipo Paquete"
-                value={item.PackageType?.descripcion}
-              />
-              <DetailRow label="Operación" value={item.tipo_operacion} />
-              <DetailRow label="Remitente" value={item.nombre_remitente} />
-              <DetailRow
-                label="Destinatario"
-                value={item.nombre_destinatario}
-              />
-              <DetailRow label="Área" value={item.Area?.nombre_area} />
-              <DetailRow
-                label="Transportadora"
-                value={item.empresa_transporte}
-              />
-              <DetailRow label="Mensajero" value={item.mensajero_nombre} />
-              <DetailRow label="Destino (Salida)" value={item.destino_salida} />
-              <DetailRow
-                label="Fecha Recibido"
-                value={formatDate(item.fecha_recibido)}
-              />
-              <DetailRow
-                label="Fecha Enviado"
-                value={formatDate(item.fecha_envio)}
-              />
-              {item.observaciones && (
-                <DetailRow label="Observaciones" value={item.observaciones} />
-              )}
-            </>
-          )}
-        </div>
-
-        {/* --- Botón de Cierre --- */}
-        <div className="mt-6 flex justify-end">
-          <button
-            onClick={onClose}
-            className={`px-6 py-2 font-semibold rounded-md shadow-md transition-colors ${buttonClass}`}
-          >
-            Cerrar
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 /**
  * @function TabButton
  * @description Botón reutilizable para las pestañas.
@@ -383,21 +270,18 @@ export default function DashboardHistorial() {
     handleSearchChange,
     handleSortChange,
     formatDate,
+    showDetailsModal,
+    selectedItem,
+    openDetailsModal,
+    closeModal,
   } = useDashboardHistorial();
 
-  const { idLoading } = useAuthStore();
-
-  // Estado local solo para el modal
-  const [modal, setModal] = useState({ type: null, data: null });
+  const { isLoading: isAuthLoading } = useAuthStore();
 
   const navigate = useNavigate();
   const goBack = () => navigate("/dashboard");
 
-  // Handlers para el modal
-  const handleAction = (type, item) => setModal({ type, data: item });
-  const closeModal = () => setModal({ type: null, data: null });
-
-  if (isLoading) {
+  if (isLoading || isAuthLoading) {
     return <DashboardHistorialSkeleton />;
   }
 
@@ -516,24 +400,29 @@ export default function DashboardHistorial() {
           (activeTab === "visitas" ? (
             <VisitsTable
               visits={data}
-              onAction={handleAction}
+              onAction={openDetailsModal}
               formatDate={formatDate}
             />
           ) : (
             <PackagesTable
               packages={data}
-              onAction={handleAction}
+              onAction={openDetailsModal}
               formatDate={formatDate}
             />
           ))}
       </div>
 
-      {/* --- Modal Unificado --- */}
-      {modal.data && (
-        <HistoryDetailModal
-          item={modal.data}
+      {showDetailsModal && selectedItem && (
+        <DetailModal
+          item={selectedItem}
           onClose={closeModal}
-          type={modal.type}
+          title={
+            activeTab === "visitas"
+              ? "Detalles de la Visita"
+              : "Detalles del Paquete"
+          }
+          config={activeTab === "visitas" ? visitConfig : packageConfig}
+          themeColor={activeTab === "visitas" ? "secondary" : "primary"}
           formatDate={formatDate}
         />
       )}
