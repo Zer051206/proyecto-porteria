@@ -173,6 +173,17 @@ const VehicleTable = ({
     }
   };
 
+  if (vehicles.length === 0) {
+    return (
+      <div className="text-center bg-surface text-text-main py-6 rounded-lg shadow-lg">
+        <p className="text-xl font-medium">No hay vehiculos registrados aún.</p>
+        <p className="text-sm mt-1">
+          Utiliza el botón "Añadir vehiculo" para registrar uno nuevo.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full overflow-x-auto rounded-lg shadow-md shadow-black bg-surface">
       <table className="min-w-full rounded-lg">

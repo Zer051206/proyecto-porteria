@@ -28,9 +28,8 @@ export const visitConfig = [
   { label: "Área", key: "Area.nombre_area" },
   { label: "Motivo", key: "motivo" },
   { label: "Fecha Entrada", key: "fecha_entrada", format: "date" },
-  { label: "Fecha Salida", key: "fecha_salida", format: "date" }, // formatDate manejará el null y mostrará 'Pendiente'
+  { label: "Fecha Salida", key: "fecha_salida", format: "date" },
   { label: "Observaciones", key: "observaciones", conditional: true },
-  // { label: "Firma", key: "path_firma", format: "image" }, // Opcional si quieres mostrar la firma
 ];
 
 /**
@@ -57,7 +56,4 @@ export const packageConfig = [
   { label: "Fecha Recibido", key: "fecha_recibido", format: "date" },
   { label: "Fecha Enviado", key: "fecha_envio", format: "date" },
   { label: "Observaciones", key: "observaciones", conditional: true },
-  // { label: "Firma Recibe", key: "path_firma_recibe_documento", format: "image" }, // Opcional
-  // { label: "Firma Validador", key: "path_firma_validador_envio", format: "image" }, // Opcional
-  // { label: "Firma Remitente", key: "path_firma_remitente", format: "image" }, // Opcional
 ];

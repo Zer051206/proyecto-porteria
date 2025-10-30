@@ -7,6 +7,8 @@
  */
 import db from "../models/index.js";
 const ParkingLog = db.ParkingLog;
+const Vehicle = db.Vehicle;
+const User = db.User;
 
 /**
  * @async
@@ -16,7 +18,23 @@ const ParkingLog = db.ParkingLog;
  * @returns {Promise<Array<ParkingLog>>} Array de registros encontrados.
  */
 export const findAll = async (options = {}) => {
-  return ParkingLog.findAll(options);
+  return ParkingLog.findAll({
+    include: [
+      {
+        model: Vehicle,
+        as: "Vehicle",
+        attributes: [
+          "placa",
+          "tipo_vehiculo",
+          "nombre_dueno",
+          "identificacion_dueno",
+        ],
+      },
+      { model: User, as: "EntryUser", attributes: ["nombre", "rol"] },
+      { model: User, as: "ExitUser", attributes: ["nombre", "rol"] },
+    ],
+    ...options,
+  });
 };
 
 /**

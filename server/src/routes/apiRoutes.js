@@ -7,7 +7,6 @@
  */
 import { Router } from "express";
 import * as apiController from "../controllers/apiController.js";
-import authMiddleware from "../middlewares/authMiddleware.js";
 
 const router = Router();
 
@@ -17,7 +16,7 @@ const router = Router();
  * @access Private
  * @middleware authMiddleware - Requiere autenticación.
  */
-router.get("/status", authMiddleware, (req, res) => {
+router.get("/status", (req, res) => {
   res.status(200).json({ message: "Sesión activa" });
 });
 
@@ -28,7 +27,7 @@ router.get("/status", authMiddleware, (req, res) => {
  * @middleware authMiddleware - Requiere autenticación.
  * @handler apiController.getAreas
  */
-router.get("/areas", authMiddleware, apiController.getAreas);
+router.get("/areas", apiController.getAreas);
 
 /**
  * @route GET /api/tipos-identificacion
@@ -37,11 +36,7 @@ router.get("/areas", authMiddleware, apiController.getAreas);
  * @middleware authMiddleware - Requiere autenticación.
  * @handler apiController.getIdentificationTypes
  */
-router.get(
-  "/tipos-identificacion",
-  authMiddleware,
-  apiController.getIdentificationTypes
-);
+router.get("/tipos-identificacion", apiController.getIdentificationTypes);
 
 /**
  * @route GET /api/visitas-activas
@@ -50,7 +45,7 @@ router.get(
  * @middleware authMiddleware - Requiere autenticación.
  * @handler apiController.getActiveVisits
  */
-router.get("/visitas-activas", authMiddleware, apiController.getActiveVisits);
+router.get("/visitas-activas", apiController.getActiveVisits);
 
 /**
  * @route GET /api/tipos-paquetes
@@ -59,7 +54,7 @@ router.get("/visitas-activas", authMiddleware, apiController.getActiveVisits);
  * @middleware authMiddleware - Requiere autenticación.
  * @handler apiController.getPackageTypes
  */
-router.get("/tipos-paquetes", authMiddleware, apiController.getPackageTypes);
+router.get("/tipos-paquetes", apiController.getPackageTypes);
 
 /**
  * @route GET /api/visitas
@@ -68,11 +63,7 @@ router.get("/tipos-paquetes", authMiddleware, apiController.getPackageTypes);
  * @middleware authMiddleware - Requiere autenticación.
  * @handler apiController.getVisitsHistorial
  */
-router.get(
-  "/historial/visitas",
-  authMiddleware,
-  apiController.getVisitsHistorial
-);
+router.get("/historial/visitas", apiController.getVisitsHistorial);
 
 /**
  * @route GET /api/paquetes
@@ -81,10 +72,8 @@ router.get(
  * @middleware authMiddleware - Requiere autenticación.
  * @handler apiController.getPackagesHistorial
  */
-router.get(
-  "/historial/paquetes",
-  authMiddleware,
-  apiController.getPackagesHistorial
-);
+router.get("/historial/paquetes", apiController.getPackagesHistorial);
+
+router.get("/historial/parqueadero", apiController.getParkingLogs)
 
 export default router;

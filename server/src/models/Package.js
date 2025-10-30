@@ -19,21 +19,29 @@ export default (sequelize) => {
   /**
    * @class Package
    * @classdesc Modelo de Sequelize para la tabla `paquetes`.
-   * @property {number} id_paquete - La clave primaria del registro del paquete.
-   * @property {number} id_tipo_paquete - FK al tipo de paquete.
-   * @property {'enviar'|'recibir'} tipo_operacion - El tipo de operación (entrada o salida).
-   * @property {string|null} guia - El número de guía del paquete, si aplica.
-   * @property {string|null} nombre_destinatario - El nombre del empleado a quien va dirigido (en 'recibir').
-   * @property {number|null} id_area - FK al área de destino del paquete (en 'recibir').
-   * @property {string|null} nombre_remitente - El nombre del empleado que envía el paquete (en 'enviar').
-   * @property {string|null} destino_salida - La dirección de destino del paquete (en 'enviar').
-   * @property {string|null} empresa_transporte - La empresa de mensajería (en 'enviar').
-   * @property {string|null} mensajero_nombre - El nombre del mensajero que recoge el paquete (en 'enviar').
-   * @property {Date|null} fecha_recibido - La fecha y hora de recepción.
-   * @property {Date|null} fecha_envio - La fecha y hora de envío.
-   * @property {string|null} observaciones - Observaciones adicionales.
-   * @property {number|null} id_usuario_recibir - FK al usuario (portero) que registró la recepción.
-   * @property {number|null} id_usuario_enviar - FK al usuario (portero) que registró el envío.
+   * @property {number} id_paquete - PK
+   * @property {number} id_tipo_paquete - FK (TiposPaquetes)
+   * @property {string} tipo_operacion - 'enviar' o 'recibir'
+   * @property {string|null} guia - Número de guía/tracking.
+   * @property {string|null} nombre_destinatario - Nombre del destinatario (interno).
+   * @property {number|null} id_area - FK (Areas)
+   * @property {string|null} nombre_remitente - Nombre del remitente (interno).
+   * @property {string|null} destino_salida - Dirección de destino (envío).
+   * @property {string|null} empresa_transporte - Empresa de mensajería.
+   * @property {string|null} mensajero_nombre - Nombre del mensajero.
+   * @property {Date|null} fecha_recibido - Timestamp de recepción.
+   * @property {Date|null} fecha_envio - Timestamp de envío.
+   * @property {string|null} observaciones - Observaciones generales.
+   * @property {number|null} id_usuario_recibir - FK (Usuarios) Portero que recibió.
+   * @property {number|null} id_usuario_enviar - FK (Usuarios) Portero que envió.
+   * @property {boolean} es_radicado - TRUE si es un radicado.
+   * @property {string|null} referencia_radicado - N° único del radicado (UNIQUE).
+   * @property {string|null} nombre_recibe_documento - Empleado que recibe el documento/radicado.
+   * @property {string|null} path_firma_recibe_documento - Firma del empleado que recibe.
+   * @property {string|null} path_firma_validador - Firma del portero (validador) al recibir radicado.
+   * @property {string|null} path_firma_entregador - Firma del mensajero (entregador) al recibir radicado.
+   * @property {string|null} path_firma_validador_envio - Firma del portero (validador) al enviar.
+   * @property {string|null} path_firma_remitente - Firma del empleado (remitente) al enviar.
    */
   const Package = sequelize.define(
     "Package",
@@ -60,6 +68,40 @@ export default (sequelize) => {
       observaciones: { type: DataTypes.TEXT, allowNull: true },
       id_usuario_recibir: { type: DataTypes.INTEGER, allowNull: true },
       id_usuario_enviar: { type: DataTypes.INTEGER, allowNull: true },
+      es_radicado: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
+      referencia_radicado: {
+        type: DataTypes.STRING(100),
+        allowNull: true,
+        unique: true,
+      },
+      nombre_recibe_documento: {
+        type: DataTypes.STRING(150),
+        allowNull: true,
+      },
+      path_firma_recibe_documento: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+      },
+      path_firma_validador: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+      },
+      path_firma_entregador: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+      },
+      path_firma_validador_envio: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+      },
+      path_firma_remitente: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+      },
     },
     {
       tableName: "paquetes",
@@ -73,22 +115,38 @@ export default (sequelize) => {
    * @param {object} models - Un objeto que contiene todos los modelos de la aplicación.
    */
   Package.associate = (models) => {
-    // Asociación con el tipo de paquete
+    /**
+     * @description Asociación (belongsTo): Un Paquete pertenece a un Tipo de Paquete.
+     * @param {Model} models.TiposPaquete - El modelo TiposPaquete.
+     * @property {string} as - Alias 'PackageType'.
+     */
     Package.belongsTo(models.PackageType, { foreignKey: "id_tipo_paquete" });
 
-    // Asociación con el usuario que RECIBE
+    /**
+     * @description Asociación (belongsTo): Un Paquete puede pertenecer a un Área.
+     * @param {Model} models.Area - El modelo Area.
+     * @property {string} as - Alias 'Area'.
+     */
     Package.belongsTo(models.User, {
       as: "PackagesReceived",
       foreignKey: "id_usuario_recibir",
     });
 
-    // Asociación con el usuario que ENVÍA
+    /**
+     * @description Asociación (belongsTo): Un Paquete es recibido por un Usuario (Portero).
+     * @param {Model} models.User - El modelo User.
+     * @property {string} as - Alias 'ReceivedBy'.
+     */
     Package.belongsTo(models.User, {
       as: "PackagesSent",
       foreignKey: "id_usuario_enviar",
     });
 
-    // Asociación con el área de destino (para paquetes recibidos)
+    /**
+     * @description Asociación (belongsTo): Un Paquete es enviado por un Usuario (Portero).
+     * @param {Model} models.User - El modelo User.
+     * @property {string} as - Alias 'SentBy'.
+     */
     Package.belongsTo(models.Area, { foreignKey: "id_area" });
   };
 

@@ -20,6 +20,7 @@ export const useDashboardHistorial = () => {
   // --- Estados de Datos ---
   const [originalVisits, setOriginalVisits] = useState([]);
   const [originalPackages, setOriginalPackages] = useState([]);
+  const [originalParkingLogs, setOriginalParkingLogs] = useState([]);
 
   // --- Estados de UI ---
   const [isLoading, setIsLoading] = useState(true);
@@ -51,13 +52,16 @@ export const useDashboardHistorial = () => {
     setError(null);
     try {
       // Hacemos ambas peticiones al mismo tiempo para más eficiencia
-      const [visitsResponse, packagesResponse] = await Promise.all([
-        api.get("/api/historial/visitas"),
-        api.get("/api/historial/paquetes"),
-      ]);
+      const [visitsResponse, packagesResponse, parkingLogsResponse] =
+        await Promise.all([
+          api.get("/api/historial/visitas"),
+          api.get("/api/historial/paquetes"),
+          api.get("/api/historial/parqueadero"),
+        ]);
 
       setOriginalVisits(visitsResponse.data || []);
       setOriginalPackages(packagesResponse.data || []);
+      setOriginalParkingLogs(parkingLogsResponse.data || []);
     } catch (err) {
       setError("Error al cargar el historial. Intenta recargar la página.");
       toast.error("No se pudo cargar el historial.");
@@ -82,7 +86,11 @@ export const useDashboardHistorial = () => {
 
     // 1. Seleccionar qué datos usar (visitas o paquetes)
     const sourceData =
-      activeTab === "visitas" ? originalVisits : originalPackages;
+      activeTab === "visitas"
+        ? originalVisits
+        : activeTab === "paquetes"
+        ? originalPackages
+        : originalParkingLogs;
 
     // 2. Filtrar los datos
     const filtered = sourceData.filter((item) => {
@@ -101,7 +109,7 @@ export const useDashboardHistorial = () => {
           destinatario.includes(term) ||
           area.includes(term)
         );
-      } else {
+      } else if (activeTab === "paquetes") {
         // Lógica de búsqueda para Paquetes
         const guia = (item.guia || "").toLowerCase();
         const destinatario = (item.nombre_destinatario || "").toLowerCase();
@@ -115,6 +123,26 @@ export const useDashboardHistorial = () => {
           remitente.includes(term) ||
           area.includes(term) ||
           tipoPaquete.includes(term)
+        );
+      } else if (activeTab === "parqueadero") {
+        const placa = (item.vehicle?.placa || "").toLowerCase();
+        const nombre_dueno = (item.Vehicle?.placa || "").toLowerCase();
+        const identificacion_dueno = (
+          item.Vehicle?.identificacion_dueno || ""
+        ).toLowerCase();
+        const nombreUsuarioEntrada = (
+          item.EntryUser.nombre || ""
+        ).toLowerCase();
+        const nombreUsuarioSalida = (item.ExitUser.nombre || "").toLowerCase();
+        const tipo_vehiculo = (item.Vehicle?.tipo_vehiculo || "").toLowerCase();
+
+        return (
+          placa.includes(term) ||
+          nombre_dueno.includes(term) ||
+          identificacion_dueno.includes(term) ||
+          nombreUsuarioEntrada.includes(term) ||
+          nombreUsuarioSalida.includes(term) ||
+          tipo_vehiculo.includes(term)
         );
       }
     });
@@ -133,7 +161,14 @@ export const useDashboardHistorial = () => {
       }
       return dateB - dateA; // 'fecha_desc' (Más reciente primero)
     });
-  }, [activeTab, searchTerm, sortBy, originalVisits, originalPackages]);
+  }, [
+    activeTab,
+    searchTerm,
+    sortBy,
+    originalVisits,
+    originalPackages,
+    originalParkingLogs,
+  ]);
 
   // 4. Estado derivado para "No hay resultados"
   const noResults = filteredData.length === 0 && searchTerm.length > 0;

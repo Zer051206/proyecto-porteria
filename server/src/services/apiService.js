@@ -15,6 +15,7 @@ import * as packageRepository from "../repositories/packageRepository.js";
 import * as areaRepository from "../repositories/areaRepository.js";
 import * as identificationTypeRepository from "../repositories/identificationTypeRepository.js";
 import * as packageTypeRepository from "../repositories/packageTypeRepository.js";
+import * as parkingLogRepository from "../repositories/parkingLogRepository.js";
 import logger from "../config/logger.js";
 
 // --- SERVICIOS DE CATÁLOGO ---
@@ -158,4 +159,20 @@ export const getVisitsHistory = async (user) => {
   }
 
   return visitHistory;
+};
+
+export const getParkingLogs = async () => {
+  const options = {
+    where: {
+      fecha_salida: { [Op.ne]: null },
+    },
+    order: [["fecha_salida", "DESC"]],
+  };
+
+  const parkingLogs = await parkingLogRepository.findAll(options);
+  if (!parkingLogs) {
+    return null;
+  }
+
+  return parkingLogs;
 };

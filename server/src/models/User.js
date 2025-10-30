@@ -71,34 +71,86 @@ export default (sequelize) => {
    * @param {object} models - Un objeto que contiene todos los modelos de la aplicación.
    */
   User.associate = (models) => {
-    // Un Usuario puede registrar la ENTRADA de muchas Visitas.
+    /**
+     * @description Asociación (hasMany): Un Usuario puede registrar la ENTRADA de muchas Visitas.
+     * @param {Model} models.Visit - El modelo de Visita.
+     * @property {string} as - Alias 'VisitsEntered' para acceder a estas visitas desde un usuario.
+     * @property {string} foreignKey - La clave foránea 'id_usuario_entrada' en la tabla `visitas`.
+     */
     User.hasMany(models.Visit, {
       as: "VisitsEntered",
       foreignKey: "id_usuario_entrada",
     });
 
-    // Un Usuario puede registrar la SALIDA de muchas Visitas.
+    /**
+     * @description Asociación (hasMany): Un Usuario puede registrar la SALIDA de muchas Visitas.
+     * @param {Model} models.Visit - El modelo de Visita.
+     * @property {string} as - Alias 'VisitsExited' para acceder a estas visitas desde un usuario.
+     * @property {string} foreignKey - La clave foránea 'id_usuario_salida' en la tabla `visitas`.
+     */
     User.hasMany(models.Visit, {
       as: "VisitsExited",
       foreignKey: "id_usuario_salida",
     });
 
-    // Un Usuario puede RECIBIR muchos Paquetes.
+    /**
+     * @description Asociación (hasMany): Un Usuario puede registrar la ENTRADA de muchos Vehículos
+     * (a través de ParkingLog).
+     * @param {Model} models.ParkingLog - El modelo de historial de parqueadero.
+     * @property {string} as - Alias 'entryUser' (debería ser 'ParkingEntries' para claridad, pero coincide con tu código).
+     * @property {string} foreignKey - La clave foránea 'id_usuario_entrada' en la tabla `parqueadero_registros`.
+     */
+    User.hasMany(models.ParkingLog, {
+      as: "ParkingEntries",
+      foreignKey: "id_usuario_entrada",
+    });
+
+    /**
+     * @description Asociación (hasMany): Un Usuario puede registrar la SALIDA de muchos Vehículos
+     * (a través de ParkingLog).
+     * @param {Model} models.ParkingLog - El modelo de historial de parqueadero.
+     * @property {string} as - Alias 'exitUser' (debería ser 'ParkingExits' para claridad, pero coincide con tu código).
+     * @property {string} foreignKey - La clave foránea 'id_usuario_salida' en la tabla `parqueadero_registros`.
+     */
+    User.hasMany(models.ParkingLog, {
+      as: "ParkingExits",
+      foreignKey: "id_usuario_salida",
+    });
+
+    /**
+     * @description Asociación (hasMany): Un Usuario puede RECIBIR muchos Paquetes.
+     * @param {Model} models.Package - El modelo de Paquete.
+     * @property {string} as - Alias 'PackagesReceived' para acceder a estos paquetes desde un usuario.
+     * @property {string} foreignKey - La clave foránea 'id_usuario_recibir' en la tabla `paquetes`.
+     */
     User.hasMany(models.Package, {
       as: "PackagesReceived",
       foreignKey: "id_usuario_recibir",
     });
 
-    // Un Usuario puede ENVIAR muchos Paquetes.
+    /**
+     * @description Asociación (hasMany): Un Usuario puede ENVIAR muchos Paquetes.
+     * @param {Model} models.Package - El modelo de Paquete.
+     * @property {string} as - Alias 'PackagesSent' para acceder a estos paquetes desde un usuario.
+     * @property {string} foreignKey - La clave foránea 'id_usuario_enviar' en la tabla `paquetes`.
+     */
     User.hasMany(models.Package, {
       as: "PackagesSent",
       foreignKey: "id_usuario_enviar",
     });
 
-    // Un Usuario puede generar muchos Logs.
+    /**
+     * @description Asociación (hasMany): Un Usuario puede generar muchos Logs de auditoría.
+     * @param {Model} models.Log - El modelo de Log.
+     * @property {string} foreignKey - La clave foránea 'id_usuario' en la tabla `logs`.
+     */
     User.hasMany(models.Log, { foreignKey: "id_usuario" });
 
-    // Un Usuario puede tener muchos Refresh Tokens.
+    /**
+     * @description Asociación (hasMany): Un Usuario puede tener muchos Refresh Tokens.
+     * @param {Model} models.RefreshToken - El modelo de RefreshToken.
+     * @property {string} foreignKey - La clave foránea 'id_usuario' en la tabla `refresh_tokens`.
+     */
     User.hasMany(models.RefreshToken, { foreignKey: "id_usuario" });
   };
 

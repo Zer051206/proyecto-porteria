@@ -19,12 +19,29 @@ import {
   faEye,
   faSearch,
   faExclamationTriangle,
+  faCar,
 } from "@fortawesome/free-solid-svg-icons";
 import { useAuthStore } from "../../stores/authStore";
 import { useDashboardHistorial } from "../../hooks/historial/useDashboardHistorial";
 import DetailModal from "../utils/DetailModal";
+import {
+  visitConfig,
+  packageConfig,
+  vehicleConfig,
+} from "../../hooks/utils/detailModalConfig";
 
 const VisitsTable = ({ visits, onAction, formatDate }) => {
+  if (visits.length === 0) {
+    return (
+      <div className="text-center bg-surface text-text-main py-6 rounded-lg shadow-lg">
+        <p className="text-xl font-medium">No se han registrado visitas aún.</p>
+        <p className="text-sm mt-1">
+          Utiliza el botón "Nueva Visita" para registrar una entrada.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full overflow-x-auto rounded-lg shadow-lg shadow-black">
       <table className="min-w-full rounded-lg">
@@ -101,6 +118,19 @@ const VisitsTable = ({ visits, onAction, formatDate }) => {
 };
 
 const PackagesTable = ({ packages, onAction, formatDate }) => {
+  if (packages.length === 0) {
+    return (
+      <div className="text-center bg-surface text-text-main py-6 rounded-lg shadow-lg">
+        <p className="text-xl font-medium">
+          No hay paquetes registrados en este momento.
+        </p>
+        <p className="text-sm mt-1">
+          Navega hacia el módulo de paquetes para registrar un nuevo paquete.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full overflow-x-auto rounded-lg shadow-lg shadow-black">
       <table className="w-full rounded-lg">
@@ -164,6 +194,110 @@ const PackagesTable = ({ packages, onAction, formatDate }) => {
               </td>
             </tr>
           ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+/**
+ * @function ParkingHistoryTable
+ * @description Subcomponente que renderiza la tabla de historial de parqueadero.
+ * @param {object} props
+ * @param {Array<object>} props.parkingLogs - Lista de logs de parqueadero (con 'Vehicle' anidado).
+ * @param {Function} props.onAction - Función para abrir el modal de detalles.
+ * @param {Function} props.formatDate - Función para formatear fechas.
+ * @returns {JSX.Element}
+ */
+const ParkingHistoryTable = ({ parkingLogs, onAction, formatDate }) => {
+  if (parkingLogs.length === 0) {
+    return (
+      <div className="text-center bg-surface text-text-main py-6 rounded-lg shadow-lg">
+        <p className="text-xl font-medium">
+          No hay registros de parquedero para mostrar
+        </p>
+        <p className="text-sm mt-1">
+          Navega hacia el módulo de parqueadero y registra una entrada y salida
+          de un vehiculo.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full overflow-x-auto rounded-lg shadow-lg shadow-black">
+      <table className="min-w-full rounded-lg">
+        {/* Usamos color neutro (ej. 'tertiary' o gris) para el header */}
+        <thead className="bg-neutral-600 text-surface">
+          <tr className="divide-x divide-neutral-700">
+            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              Placa
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              Tipo
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              Dueño
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider hidden md:table-cell">
+              Identificación
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              Entrada
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              Salida
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider hidden sm:table-cell">
+              Portero (Salida)
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              Detalles
+            </th>
+          </tr>
+        </thead>
+        <tbody className="bg-surface divide-y divide-neutral-200 text-text-main">
+          {parkingLogs.map((log) => {
+            return (
+              <tr
+                key={log.id_historial}
+                className="divide-x divide-neutral-200 hover:bg-background"
+              >
+                <td className="px-6 py-4 whitespace-nowrap font-mono">
+                  {log.Vehicle?.placa || "N/A"}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  {log.Vehicle?.tipo_vehiculo || "N/A"}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {log.Vehicle?.nombre_dueno || "N/A"}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap hidden md:table-cell">
+                  {log.Vehicle?.identificacion_dueno || "N/A"}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  {formatDate(log.fecha_entrada)}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  {formatDate(log.fecha_salida)}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm hidden sm:table-cell">
+                  {log.ExitUser?.nombre || "N/A"}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-center">
+                  <button
+                    onClick={() => onAction(log.Vehicle)}
+                    className="text-neutral-600 p-2 rounded-lg hover:bg-neutral-200 transition-colors"
+                    aria-label={`Ver detalles de ${
+                      log.Vehicle?.placa || "vehículo"
+                    }`}
+                  >
+                    <FontAwesomeIcon icon={faEye} />
+                  </button>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
@@ -321,6 +455,14 @@ export default function DashboardHistorial() {
             icon={faBoxesPacking}
             colorClass="border-primary text-primary"
           />
+          <TabButton
+            label="Historial de parqueadero"
+            tabName="parqueadero"
+            activeTab={activeTab}
+            onClick={setActiveTab}
+            icon={faCar}
+            colorClass="border-tertiary text-tertiary"
+          />
         </div>
       </div>
 
@@ -331,8 +473,10 @@ export default function DashboardHistorial() {
             type="text"
             placeholder={
               activeTab === "visitas"
-                ? "Buscar por visitante, documento, destinatario, área..."
-                : "Buscar por guía, remitente, destinatario, área..."
+                ? "Buscar por visitante, documento, destinatario..."
+                : activeTab === "paquetes"
+                ? "Buscar por guía, remitente, destinatario..."
+                : "Buscar por placa, dueño, identificación..."
             }
             value={searchTerm}
             onChange={handleSearchChange}
@@ -394,22 +538,29 @@ export default function DashboardHistorial() {
           </div>
         )}
 
-        {!isLoading &&
-          !error &&
-          !noResults &&
-          (activeTab === "visitas" ? (
-            <VisitsTable
-              visits={data}
-              onAction={openDetailsModal}
-              formatDate={formatDate}
-            />
-          ) : (
-            <PackagesTable
-              packages={data}
-              onAction={openDetailsModal}
-              formatDate={formatDate}
-            />
-          ))}
+        {!isLoading && !error && !noResults && activeTab === "visitas" && (
+          <VisitsTable
+            visits={data}
+            onAction={openDetailsModal}
+            formatDate={formatDate}
+          />
+        )}
+
+        {!isLoading && !error && !noResults && activeTab === "paquetes" && (
+          <PackagesTable
+            packages={data}
+            onAction={openDetailsModal}
+            formatDate={formatDate}
+          />
+        )}
+
+        {!isLoading && !error && !noResults && activeTab === "parqueadero" && (
+          <ParkingHistoryTable
+            parkingLogs={data}
+            onAction={openDetailsModal}
+            formatDate={formatDate}
+          />
+        )}
       </div>
 
       {showDetailsModal && selectedItem && (
@@ -419,10 +570,24 @@ export default function DashboardHistorial() {
           title={
             activeTab === "visitas"
               ? "Detalles de la Visita"
-              : "Detalles del Paquete"
+              : activeTab === "paquetes"
+              ? "Detalles del Paquete"
+              : "Detalles del Vehiculo"
           }
-          config={activeTab === "visitas" ? visitConfig : packageConfig}
-          themeColor={activeTab === "visitas" ? "secondary" : "primary"}
+          config={
+            activeTab === "visitas"
+              ? visitConfig
+              : activeTab === "paquetes"
+              ? packageConfig
+              : vehicleConfig
+          }
+          themeColor={
+            activeTab === "visitas"
+              ? "secondary"
+              : activeTab === "paquetes"
+              ? "primary"
+              : "tertiary"
+          }
           formatDate={formatDate}
         />
       )}

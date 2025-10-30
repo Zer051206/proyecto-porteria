@@ -122,3 +122,12 @@ export const getPackagesHistorial = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getParkingLogs = async (req, res, next) => {
+  try {
+    const parkingLogs = await apiService.getParkingLogs();
+    return res.status(200).json(parkingLogs);
+  } catch (error) {
+    next(error);
+  }
+};
