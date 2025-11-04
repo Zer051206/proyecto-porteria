@@ -16,9 +16,13 @@ import * as areaRepository from "../repositories/areaRepository.js";
 import * as identificationTypeRepository from "../repositories/identificationTypeRepository.js";
 import * as packageTypeRepository from "../repositories/packageTypeRepository.js";
 import * as parkingLogRepository from "../repositories/parkingLogRepository.js";
+
 import logger from "../config/logger.js";
 
-// --- SERVICIOS DE CATÁLOGO ---
+import {
+  exportRadicadosToExcel,
+  exportRadicadosToPDF,
+} from "../utils/exportUtils.js";
 
 /**
  * @async
@@ -175,4 +179,87 @@ export const getParkingLogs = async () => {
   }
 
   return parkingLogs;
+};
+
+/**
+ * @async
+ * @function getFiles
+ * @description Obtiene el historial de todos los paquetes marcados como 'radicado', filtrado por rol.
+ * @param {object} user - El usuario autenticado que realiza la solicitud.
+ * @returns {Promise<Array<object>>}
+ */
+export const getFiles = async (user) => {
+  const options = {
+    where: {
+      es_radicado: true,
+    },
+    order: [["fecha_recibido", "DESC"]],
+  };
+
+  if (user.rol === "portero") {
+    options.where.id_usuario_recibir = user.id_usuario;
+  }
+
+  const files = await packageRepository.findAll(options);
+
+  if (!files) {
+    return null;
+  }
+
+  return files;
+};
+
+/**
+ * @async
+ * @function exportFiles
+ * @description Prepara y genera el archivo (Excel o PDF) para el historial de radicados.
+ * @param {object} user - El usuario autenticado.
+ * @param {'excel' | 'pdf'} format - El formato de archivo deseado.
+ * @returns {Promise<{buffer: Buffer, fileName: string, mimeType: string}>}
+ * @throws {BadRequestError} Si el formato no es soportado.
+ * @throws {NotFoundError} Si no hay datos para exportar.
+ */
+export const exportFiles = async (user, format) => {
+  logger.info(
+    { userId: user.id_usuario, format },
+    `Iniciando exportación de radicados a ${format}.`
+  );
+
+  // 1. Obtener todos los datos (sin paginación)
+  // Reutiliza la lógica de getRadicadosHistory
+  const options = {
+    where: { es_radicado: true },
+    order: [["fecha_recibido", "DESC"]],
+  };
+  if (user.rol === "portero") {
+    options.where.id_usuario_recibir = user.id_usuario;
+  }
+
+  const radicados = await packageRepository.findFiles(options);
+
+  if (!radicados || radicados.length === 0) {
+    throw new NotFoundError("No hay radicados para exportar.");
+  }
+
+  const timestamp = new Date().toISOString().split("T")[0]; // ej. 2025-10-31
+  let buffer, fileName, mimeType;
+
+  // 2. Generar el archivo según el formato
+  if (format === "excel") {
+    buffer = await exportRadicadosToExcel(radicados);
+    fileName = `Historial_Radicados_${timestamp}.xlsx`;
+    mimeType =
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+  } else if (format === "pdf") {
+    buffer = await exportRadicadosToPDF(radicados);
+    fileName = `Historial_Radicados_${timestamp}.pdf`;
+    mimeType = "application/pdf";
+  } else {
+    throw new BadRequestError(
+      "Formato de exportación no soportado. Use 'excel' o 'pdf'."
+    );
+  }
+
+  // 3. Devolver el buffer y metadatos al controlador
+  return { buffer, fileName, mimeType };
 };

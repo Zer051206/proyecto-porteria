@@ -11,7 +11,7 @@
  */
 
 import React from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faDownload,
@@ -28,6 +28,7 @@ import { useDashboardPackage } from "../../hooks/packages/useDashboardPackage";
 import PackagesEnviarForm from "./PackagesEnviarForm";
 import PackagesRecibirForm from "./PackagesRecibirForm";
 import DetailModal from "../utils/DetailModal";
+import { packageConfig } from "../../hooks/utils/detailModalConfig";
 
 /**
  * @function DashboardPackageSkeleton
@@ -181,6 +182,10 @@ export default function DashboardPackage() {
   const goBack = () => navigate("/dashboard");
   const { isLoading: isAuthLoading } = useAuthStore(); // Para el skeleton inicial
 
+  const modalTheme = "primary";
+  const modalTitle = "Detalles del paquete";
+  const modalConfig = packageConfig;
+
   // Usamos el hook principal que ahora maneja todo
   const {
     recentPackages,
@@ -314,10 +319,13 @@ export default function DashboardPackage() {
       {/* Reutiliza HistoryDetailModal para ver detalles */}
       {modalType === "details" && selectedPackage && (
         <DetailModal
-          item={selectedPackage} // Pasa el paquete seleccionado del estado
+          item={selectedPackage}
           onClose={closeModal}
-          type="paquete" // Indica que es un paquete
+          type="paquete"
           formatDate={formatDate}
+          title={modalTitle}
+          config={modalConfig}
+          themeColor={modalTheme}
         />
       )}
     </div>

@@ -44,6 +44,7 @@ const usePackagesRecibir = (onSuccess) => {
   const recibeSigPadRef = useRef(null);
   const validadorSigPadRef = useRef(null);
   const entregadorSigPadRef = useRef(null);
+
   /**
    * @type {Array<object>}
    * Estado para almacenar los tipos de paquetes disponibles.
@@ -112,13 +113,12 @@ const usePackagesRecibir = (onSuccess) => {
 
     id_area: Yup.number()
       .required("El área es obligatoria.")
-      // Validación condicional: Si es radicado, DEBE ser Contabilidad
       .when("es_radicado", {
         is: true,
         then: (schema) =>
           schema.equals(
             [ID_AREA_CONTABILIDAD],
-            "Los radicados solo pueden ir a Contabilidad."
+            'Los "radicados" solo pueden ir a Contabilidad.'
           ),
       }),
 
@@ -144,7 +144,7 @@ const usePackagesRecibir = (onSuccess) => {
         schema
           .trim()
           .min(1, "La referencia es obligatoria.")
-          .required("El N° de Referencia es obligatorio para radicados."),
+          .required('El N° de Referencia es obligatorio para "radicados".'),
       otherwise: (schema) => schema.nullable().optional(),
     }),
 
@@ -204,30 +204,55 @@ const usePackagesRecibir = (onSuccess) => {
         }
 
         let isValid = true;
+        let base64Recibe, base64Validador, base64Entregador;
 
-        if (payload.id_tipo_paquete === ID_TIPO_DOCUMENTO) {
-          if (recibeSigPadRef.current?.isEmpty()) {
+        // --- Extracción de firmas Base64 ---
+
+        const recibeSigPad = recibeSigPadRef.current;
+        const isDocumento = payload.id_tipo_paquete === ID_TIPO_DOCUMENTO;
+        const isRadicado = payload.es_radicado;
+
+        // 1. Firma de RECIBE (Receptor) - Obligatoria si es Documento O Radicado
+        if (isDocumento || isRadicado) {
+          if (recibeSigPad?.isEmpty()) {
             setFieldError(
               "path_firma_recibe_documento",
               "La firma de quien recibe es obligatoria."
             );
             isValid = false;
+          } else {
+            base64Recibe = recibeSigPad.toDataURL("image/png");
           }
+        } else if (recibeSigPad && !recibeSigPad.isEmpty()) {
+          // Si NO es documento/radicado, pero el usuario sí firmó, la extraemos para subirla
+          base64Recibe = recibeSigPad.toDataURL("image/png");
         }
-        if (payload.es_radicado) {
-          if (validadorSigPadRef.current?.isEmpty()) {
+
+        // 2. Firmas de RADICADO
+        const validadorSigPad = validadorSigPadRef.current;
+        const entregadorSigPad = entregadorSigPadRef.current;
+
+        if (isRadicado) {
+          // Firma Validador (Obligatoria para Radicado)
+          if (validadorSigPad?.isEmpty()) {
             setFieldError(
               "path_firma_validador",
               "La firma del validador es obligatoria."
             );
             isValid = false;
+          } else {
+            base64Validador = validadorSigPad.toDataURL("image/png");
           }
-          if (entregadorSigPadRef.current?.isEmpty()) {
+
+          // Firma Entregador (Obligatoria para Radicado)
+          if (entregadorSigPad?.isEmpty()) {
             setFieldError(
               "path_firma_entregador",
               "La firma del entregador es obligatoria."
             );
             isValid = false;
+          } else {
+            base64Entregador = entregadorSigPad.toDataURL("image/png");
           }
         }
 
@@ -237,17 +262,52 @@ const usePackagesRecibir = (onSuccess) => {
           return; // Detiene el envío
         }
 
-        if (payload.id_tipo_paquete === ID_TIPO_DOCUMENTO) {
-          payload.path_firma_recibe_documento =
-            recibeSigPadRef.current.toDataURL("image/png");
-        }
-        if (payload.es_radicado) {
-          payload.path_firma_validador =
-            validadorSigPadRef.current.toDataURL("image/png");
-          payload.path_firma_entregador =
-            entregadorSigPadRef.current.toDataURL("image/png");
+        /**
+         * Función auxiliar para subir la imagen base64 de la firma al servidor
+         * y obtener el path relativo.
+         * @async
+         * @param {string} base64Data - La imagen en formato Data URL (base64).
+         * @param {string} folderName - El nombre de la subcarpeta donde guardar la firma.
+         * @returns {Promise<string|null>} La ruta relativa del archivo en el servidor, o null si el backend lo omite.
+         */
+        const uploadSignature = async (base64Data, folderName) => {
+          if (!base64Data) return null;
+
+          // Endpoint dedicado para la subida de Base64
+          const uploadRes = await api.post("/api/signatures/upload", {
+            image_data: base64Data,
+            folder: folderName, // <--- Aquí se envía la carpeta al backend
+          });
+          // Retorna el path relativo que el backend ha devuelto (puede ser null si el backend
+          // detectó Base64 vacío y lo omitió).
+          return uploadRes.data.path;
+        };
+
+        // --- LÓGICA PARA DETERMINAR LA CARPETA DE CADA FIRMA ---
+
+        // La firma del Receptor siempre va a 'radicados' si es un radicado.
+        let folderRecibe = null;
+        if (base64Recibe) {
+          folderRecibe = isRadicado ? "radicados" : "paquetes";
         }
 
+        // Determinar la carpeta para Validador/Entregador (solo si existen base64Validador/Entregador)
+        const folderValidador = base64Validador ? "radicados" : null;
+        const folderEntregador = base64Entregador ? "radicados" : null;
+
+        // Se suben las firmas concurrentemente para optimizar el tiempo
+        const [pathRecibe, pathValidador, pathEntregador] = await Promise.all([
+          // Usar la carpeta determinada o null si no hay firma Base64
+          uploadSignature(base64Recibe, folderRecibe),
+          uploadSignature(base64Validador, folderValidador),
+          uploadSignature(base64Entregador, folderEntregador),
+        ]);
+
+        payload.path_firma_recibe_documento = pathRecibe;
+        payload.path_firma_validador = pathValidador;
+        payload.path_firma_entregador = pathEntregador;
+
+        // Limpia el campo 'conGuia' que no es parte del modelo de la DB
         delete payload.conGuia;
 
         await api.post("/api/paquetes/recibir", payload);
@@ -271,7 +331,8 @@ const usePackagesRecibir = (onSuccess) => {
           toast.error("Por favor, corrige los errores en el formulario.");
         } else {
           toast.error(
-            error.response?.data?.message || "Ha ocurrido un error inesperado."
+            error.response?.data?.message ||
+              "Ha ocurrido un error inesperado al registrar el paquete."
           );
         }
       } finally {
@@ -288,13 +349,9 @@ const usePackagesRecibir = (onSuccess) => {
     }
   }, [formik.values.es_radicado, formik.setFieldValue]);
 
-  // Limpia los campos de documento/radicado si el tipo ya no es 'Documento'
   useEffect(() => {
     if (formik.values) {
-      // Asegura que formik esté inicializado
-      // Si el tipo seleccionado NO es Documento (usando '==' por si acaso)
       if (formik.values.id_tipo_paquete != ID_TIPO_DOCUMENTO) {
-        // Y si 'es_radicado' (o cualquier campo de documento) seguía con datos
         if (
           formik.values.es_radicado ||
           formik.values.nombre_recibe_documento
@@ -316,7 +373,6 @@ const usePackagesRecibir = (onSuccess) => {
         }
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formik.values.id_tipo_paquete, formik.setFieldValue]);
 
   /**

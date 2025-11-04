@@ -23,6 +23,9 @@ export const receivePackageSchema = z
       .number({ required_error: "El tipo de paquete es obligatorio." })
       .int()
       .positive("Debe seleccionar un tipo de paquete."),
+    tipo_operacion: z.string({
+      required_error: "El tipo de operacion es obligatorio.",
+    }),
     id_area: z.coerce
       .number({ required_error: "El área es obligatoria." })
       .int()
@@ -115,6 +118,9 @@ export const sendPackageSchema = z.object({
     .number()
     .int()
     .positive("Debe seleccionar un tipo."),
+  tipo_operacion: z.string({
+    required_error: "El tipo de operacion es obligatorio.",
+  }),
   id_area: z.coerce
     .number()
     .int()

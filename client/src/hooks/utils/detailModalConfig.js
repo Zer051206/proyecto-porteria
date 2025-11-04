@@ -57,3 +57,29 @@ export const packageConfig = [
   { label: "Fecha Enviado", key: "fecha_envio", format: "date" },
   { label: "Observaciones", key: "observaciones", conditional: true },
 ];
+
+/**
+ * @const {Array<object>} radicadoConfig
+ * @description Configuración para el DetailModal al mostrar un 'radicado'.
+ * Se enfoca en los campos específicos de la gestión de documentos (firmas, referencias).
+ */
+export const radicadoConfig = [
+  {
+    label: "N° Radicado",
+    key: "referencia_radicado",
+    conditional: false,
+  },
+  { label: "Operación", key: "tipo_operacion" },
+  {
+    label: "Recibido por (Empleado)",
+    key: "nombre_recibe_documento",
+    conditional: true,
+  },
+  { label: "Tipo de Paquete", key: "PackageType.descripcion" },
+  { label: "Área", key: "Area.nombre_area" },
+  { label: "Mensajero", key: "mensajero_nombre", conditional: true },
+  { label: "Receptor", key: "nombre_recibe_document", conditional: true },
+  { label: "Fecha Recibido", key: "fecha_recibido", format: "date" },
+  { label: "Fecha Envío", key: "fecha_envio", format: "date" },
+  { label: "Observaciones", key: "observaciones", conditional: true },
+];

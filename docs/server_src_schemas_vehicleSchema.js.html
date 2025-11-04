@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: server/src/schemas/vehicleSchema.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: server/src/schemas/vehicleSchema.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @file vehicleSchema.js
+ * @module Schemas
+ * @description Define los esquemas de validación (usando Zod) para las operaciones de gestión de vehículos.
+ * Incluye esquemas para la creación de uno o múltiples vehículos y para la actualización.
+ * @requires zod
+ */
+import { z } from "zod";
+
+/**
+ * @const {z.ZodObject} vehicleBaseSchema
+ * @description Esquema base para la validación de los datos de un único vehículo.
+ * Incluye validaciones para todos los campos de la tabla `vehiculos` y
+ * refinamientos para lógica condicional (placa requerida según tipo, género requerido para motos).
+ * Este esquema es la base para los esquemas de creación y actualización.
+ */
+const vehicleBaseSchema = z
+  .object({
+    placa: z
+      .string()
+      .max(10, { message: "La placa no debe exceder los 10 caracteres." })
+      .regex(/^(|[A-Z0-9]{1,10})$/, {
+        message: "Placa inválida. Use mayúsculas y números.",
+      })
+      .nullable() // Permite null
+      .optional(), // Permite undefined o no incluirlo
+    tipo_vehiculo: z.enum(["Carro", "Moto", "Bicicleta", "Otros"], {
+      required_error: "El tipo de vehículo es obligatorio.",
+      invalid_type_error:
+        "Seleccione un tipo de vehículo válido (Carro, Moto, Bicicleta, Otros).",
+    }),
+    modelo_descripcion: z
+      .string()
+      .max(100, {
+        message: "El modelo/descripción no debe exceder los 100 caracteres.",
+      })
+      .nullable()
+      .optional(),
+    nombre_dueno: z
+      .string()
+      .min(3, {
+        message: "El nombre del dueño debe tener al menos 3 caracteres.",
+      })
+      .max(150, {
+        message: "El nombre del dueño no debe exceder los 150 caracteres.",
+      })
+      .regex(/^[a-zA-Z\sñÑáéíóúÁÉÍÓÚ]+$/, {
+        message: "Nombre inválido. Use solo letras y espacios.",
+      }), // Regex para nombres (incluye ñ y acentos)
+    identificacion_dueno: z.coerce
+      .string()
+      .min(5, {
+        message: "La identificación debe tener al menos 5 caracteres.",
+      })
+      .max(20, {
+        message: "La identificación no debe exceder los 20 caracteres.",
+      })
+      .regex(/^[A-Za-z0-9]+$/, {
+        message: "Identificación inválida. Use solo letras y números.",
+      }),
+    genero_dueno: z
+      .enum(["Masculino", "Femenino", "N/A"], {
+        invalid_type_error: "Seleccione un género válido.",
+      })
+      .default("N/A"),
+    lugar_asignado_default: z
+      .string()
+      .max(100, {
+        message: "El lugar asignado no debe exceder los 100 caracteres.",
+      })
+      .nullable()
+      .optional(),
+    activo: z.boolean().optional().default(true),
+    codigo_sensor: z
+      .string()
+      .max(100, {
+        message: "El código del sensor no debe exceder los 100 caracteres.",
+      })
+      .nullable()
+      .optional()
+      .refine((val) => !val || val.trim().length > 0, {
+        // Si se proporciona, no debe estar vacío
+        message: "El código del sensor no puede estar vacío si se proporciona.",
+        path: ["codigo_sensor"],
+      }),
+  })
+  // Refinamiento 1: Placa obligatoria excepto para Bicicleta y Otros
+  .refine(
+    (data) => {
+      // Si NO es Bicicleta, la placa es requerida y no debe ser null/undefined/vacía
+      if (
+        data.tipo_vehiculo !== "Bicicleta" &amp;&amp;
+        data.tipo_vehiculo !== "Otros"
+      ) {
+        return data.placa &amp;&amp; data.placa.trim().length > 0;
+      }
+      return true; // Si es Bicicleta, la placa puede ser null o string vacío
+    },
+    {
+      message: "La placa es obligatoria para Carros y Motos.",
+      path: ["placa"],
+    }
+  );
+
+/**
+ * @const {z.ZodArray} createVehiclesSchema
+ * @description Esquema para la validación de la creación de uno o más vehículos.
+ * Asegura que la entrada sea un array que contenga al menos un objeto
+ * que cumpla con `vehicleBaseSchema`.
+ */
+export const createVehiclesSchema = z
+  .array(vehicleBaseSchema)
+  .min(1, { message: "Debe agregar al menos un vehículo." });
+
+/**
+ * @const {z.ZodObject} updateVehicleSchema
+ * @description Esquema para la validación de la actualización de un vehículo.
+ * Utiliza `.partial()` sobre `vehicleBaseSchema`, lo que hace que todos los campos
+ * sean opcionales. Permite enviar solo los campos que se desean modificar.
+ * Las validaciones internas de cada campo (longitud, regex, etc.) se mantienen.
+ */
+export const updateVehicleSchema = vehicleBaseSchema.partial();
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="component_AuthRedirect.module_jsx.html">component/AuthRedirect.jsx</a></li><li><a href="component_auth_LoginForm.module_jsx.html">component/auth/LoginForm.jsx</a></li><li><a href="component_auth_RegisterForm.module_jsx.html">component/auth/RegisterForm.jsx</a></li><li><a href="components_Dashboard.module_jsx.html">components/Dashboard.jsx</a></li><li><a href="components_Layout.module_jsx.html">components/Layout.jsx</a></li><li><a href="components_PrivateRoute.module_jsx.html">components/PrivateRoute.jsx</a></li><li><a href="components_WelcomePage.module_jsx.html">components/WelcomePage.jsx</a></li><li><a href="components_packages_DashboardPackage.module_jsx.html">components/packages/DashboardPackage.jsx</a></li><li><a href="components_packages_PackagesEnviarForm.module_jsx.html">components/packages/PackagesEnviarForm.jsx</a></li><li><a href="components_packages_RecibirPaqueteForm.module_jsx.html">components/packages/RecibirPaqueteForm.jsx</a></li><li><a href="components_parking_DashboardParking.module_jsx.html">components/parking/DashboardParking.jsx</a></li><li><a href="components_visits_VisitEntryForm.module_jsx.html">components/visits/VisitEntryForm.jsx</a></li><li><a href="module-App.html">App</a></li><li><a href="module-AxiosClient.html">AxiosClient</a></li><li><a href="module-Components_Historial_DashboardHistorial.html">Components/Historial/DashboardHistorial</a></li><li><a href="module-Components_Parking.html">Components/Parking</a></li><li><a href="module-Components_UI.html">Components/UI</a></li><li><a href="module-Config.html">Config</a></li><li><a href="module-Controllers.html">Controllers</a></li><li><a href="module-Controllers_Signatures.html">Controllers/Signatures</a></li><li><a href="module-DateUtils.html">DateUtils</a></li><li><a href="module-EntryPoint.html">EntryPoint</a></li><li><a href="module-Hooks.html">Hooks</a></li><li><a href="module-Hooks_Auth.html">Hooks/Auth</a></li><li><a href="module-Hooks_Historial.html">Hooks/Historial</a></li><li><a href="module-Hooks_Packages.html">Hooks/Packages</a></li><li><a href="module-Hooks_Paquetes.html">Hooks/Paquetes</a></li><li><a href="module-Hooks_Parking.html">Hooks/Parking</a></li><li><a href="module-Hooks_Utils.html">Hooks/Utils</a></li><li><a href="module-Hooks_Visits.html">Hooks/Visits</a></li><li><a href="module-Hooks_usePackagesRecibir.html">Hooks/usePackagesRecibir</a></li><li><a href="module-InputHandlers.html">InputHandlers</a></li><li><a href="module-Middlewares.html">Middlewares</a></li><li><a href="module-Models.html">Models</a></li><li><a href="module-Models_Catalogues.html">Models/Catalogues</a></li><li><a href="module-Repositories.html">Repositories</a></li><li><a href="module-Repositories_Parking.html">Repositories/Parking</a></li><li><a href="module-Routes.html">Routes</a></li><li><a href="module-Routes_Parking.html">Routes/Parking</a></li><li><a href="module-Routes_Signatures.html">Routes/Signatures</a></li><li><a href="module-Schemas.html">Schemas</a></li><li><a href="module-Services.html">Services</a></li><li><a href="module-Services_Parking.html">Services/Parking</a></li><li><a href="module-Stores.html">Stores</a></li><li><a href="module-Utils.html">Utils</a></li><li><a href="module-Utils_Errors.html">Utils/Errors</a></li><li><a href="module-apiController.html">apiController</a></li><li><a href="module-apiRoutes.html">apiRoutes</a></li><li><a href="module-authRoutes.html">authRoutes</a></li><li><a href="module-hooks_parking_.html">hooks/parking</a></li><li><a href="module-packageController.html">packageController</a></li><li><a href="module-packageRoutes.html">packageRoutes</a></li><li><a href="module-passportConfig.html">passportConfig</a></li><li><a href="module-visitController.html">visitController</a></li><li><a href="module-visitRoutes.html">visitRoutes</a></li></ul><h3>Classes</h3><ul><li><a href="module-Models_Catalogues-Area.html">Area</a></li><li><a href="module-Models_Catalogues-IdentificationType.html">IdentificationType</a></li><li><a href="module-Models_Catalogues-PackageType.html">PackageType</a></li><li><a href="module-Models-Log.html">Log</a></li><li><a href="module-Models-Package.html">Package</a></li><li><a href="module-Models-ParkingLog.html">ParkingLog</a></li><li><a href="module-Models-RefreshToken.html">RefreshToken</a></li><li><a href="module-Models-User.html">User</a></li><li><a href="module-Models-Vehicle.html">Vehicle</a></li><li><a href="module-Models-Visit.html">Visit</a></li><li><a href="module-Utils_Errors.AppError.html">AppError</a></li><li><a href="module-Utils_Errors-AccountDisabledError.html">AccountDisabledError</a></li><li><a href="module-Utils_Errors-ActiveVisitDontExistsError.html">ActiveVisitDontExistsError</a></li><li><a href="module-Utils_Errors-AppError.html">AppError</a></li><li><a href="module-Utils_Errors-BadRequestError.html">BadRequestError</a></li><li><a href="module-Utils_Errors-ConflictError.html">ConflictError</a></li><li><a href="module-Utils_Errors-DuplicateError.html">DuplicateError</a></li><li><a href="module-Utils_Errors-ForbiddenError.html">ForbiddenError</a></li><li><a href="module-Utils_Errors-InvalidIdError.html">InvalidIdError</a></li><li><a href="module-Utils_Errors-InvalidTokenError.html">InvalidTokenError</a></li><li><a href="module-Utils_Errors-MissingApiKeyError.html">MissingApiKeyError</a></li><li><a href="module-Utils_Errors-NotFoundError.html">NotFoundError</a></li><li><a href="module-Utils_Errors-UserAlreadyExistsError.html">UserAlreadyExistsError</a></li><li><a href="module-Utils_Errors-UserNotFoundOrInvalidPasswordError.html">UserNotFoundOrInvalidPasswordError</a></li></ul><h3>Global</h3><ul><li><a href="global.html#createVehicle">createVehicle</a></li><li><a href="global.html#getAllVehicles">getAllVehicles</a></li><li><a href="global.html#getOccupancyController">getOccupancyController</a></li><li><a href="global.html#handleScan">handleScan</a></li><li><a href="global.html#packageConfig">packageConfig</a></li><li><a href="global.html#radicadoConfig">radicadoConfig</a></li><li><a href="global.html#registerEntry">registerEntry</a></li><li><a href="global.html#registerExit">registerExit</a></li><li><a href="global.html#updateVehicle">updateVehicle</a></li><li><a href="global.html#vehicleConfig">vehicleConfig</a></li><li><a href="global.html#visitConfig">visitConfig</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Tue Nov 04 2025 16:47:25 GMT-0500 (hora estándar de Colombia)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

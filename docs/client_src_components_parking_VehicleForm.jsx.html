@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: client/src/components/parking/VehicleForm.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: client/src/components/parking/VehicleForm.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @file VehicleForm.jsx
+ * @module Components/Parking
+ * @description Componente de React que renderiza un formulario modal para la creación de uno o más vehículos.
+ * Utiliza un patrón de formulario dinámico con Formik y FieldArray, permitiendo al usuario añadir o quitar
+ * formularios para vehículos individuales dentro de una misma transacción.
+ * @requires react
+ * @requires formik
+ * @requires @fortawesome/react-fontawesome
+ * @requires ../../hooks/parking/useVehicleForm.js // (Contiene useVehicleForm)
+ * @requires ../../utils/inputUtilities.js // Asumido para onKeyDown
+ */
+import React from "react";
+import {
+  useVehicleForm,
+  initialVehicleValues,
+} from "../../hooks/parking/useVehicleForm.js";
+import { FieldArray, FormikProvider, getIn, Field } from "formik";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faPlus,
+  faTrash,
+  faTimes,
+  faCar,
+} from "@fortawesome/free-solid-svg-icons";
+import {
+  handleKeyNumberDown,
+  handleKeyTextDown,
+} from "../../utils/inputUtilities.js";
+
+/**
+ * @function VehicleSubForm
+ * @description Subcomponente que renderiza un conjunto de campos para un único Vehículo dentro del FieldArray.
+ * @param {object} props - Propiedades del componente.
+ * @param {object} props.formik - La instancia de Formik del formulario principal.
+ * @param {number} props.index - El índice del vehículo actual en el array `vehicles`.
+ * @param {Function} props.onRemove - Función de FieldArray para eliminar este sub-formulario.
+ * @returns {JSX.Element}
+ */
+const VehicleSubForm = ({ formik, index, onRemove }) => {
+  // Obtiene el estado actual de este vehículo específico
+  const vehicle = formik.values.vehicles[index];
+  // Obtiene el tipo de vehículo seleccionado para lógica condicional
+  const tipoVehiculo = vehicle.tipo_vehiculo;
+
+  /**
+   * @function getError
+   * @description Función auxiliar para obtener el mensaje de error de un campo anidado en Formik.
+   * @param {string} fieldName - El nombre del campo (ej. "placa").
+   * @returns {string|null} El mensaje de error si el campo ha sido tocado y tiene un error.
+   */
+  const getError = (fieldName) => {
+    const error = getIn(formik.errors, `vehicles[${index}].${fieldName}`);
+    const touched = getIn(formik.touched, `vehicles[${index}].${fieldName}`);
+    return touched &amp;&amp; error ? error : null;
+  };
+
+  const inputClasses =
+    "mt-1 block w-full rounded-md font-semibold border-2 border-neutral-300 p-2 outline-none bg-background focus:border-secondary focus:ring-1 focus:ring-secondary-light transition-all duration-200";
+  const errorTextClasses = "text-error text-sm mt-1";
+
+  return (
+    // Contenedor para un sub-formulario, con borde y botón de eliminar
+    &lt;div className="bg-background/50 p-4 md:p-6 rounded-lg shadow-inner relative border border-neutral-200">
+      &lt;div className="flex justify-between items-center mb-4">
+        &lt;h3 className="text-lg font-bold text-secondary">
+          Vehículo #{index + 1}
+        &lt;/h3>
+        {/* Solo muestra el botón de eliminar si hay más de un vehículo */}
+        {formik.values.vehicles.length > 1 &amp;&amp; (
+          &lt;button
+            type="button"
+            onClick={() => onRemove(index)}
+            className="text-accent hover:text-error transition-colors"
+            title="Eliminar este vehículo"
+          >
+            &lt;FontAwesomeIcon icon={faTrash} />
+          &lt;/button>
+        )}
+      &lt;/div>
+
+      {/* --- Campos del Formulario --- */}
+      &lt;div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
+        {/* --- CAMPO: TIPO DE VEHÍCULO (Obligatorio) --- */}
+        &lt;label className="block">
+          &lt;span className="text-text-main font-semibold">
+            Tipo de Vehículo:
+          &lt;/span>
+          &lt;Field
+            as="select"
+            name={`vehicles[${index}].tipo_vehiculo`}
+            className={inputClasses}
+          >
+            &lt;option value="" disabled hidden>
+              Seleccione un tipo...
+            &lt;/option>
+            &lt;option value="Carro">Carro&lt;/option>
+            &lt;option value="Moto">Moto&lt;/option>
+            &lt;option value="Bicicleta">Bicicleta&lt;/option>
+            &lt;option value="Otros">Otros&lt;/option>
+          &lt;/Field>
+          {getError("tipo_vehiculo") &amp;&amp; (
+            &lt;div className={errorTextClasses}>{getError("tipo_vehiculo")}&lt;/div>
+          )}
+        &lt;/label>
+        {/* --- CAMPO: PLACA (Condicional) --- */}
+        {/* Solo se muestra si es Carro o Moto */}
+        {(tipoVehiculo === "Carro" || tipoVehiculo === "Moto") &amp;&amp; (
+          &lt;label className="block animate-fade-in">
+            &lt;span className="text-text-main font-semibold">Placa:&lt;/span>
+            &lt;Field
+              type="text"
+              name={`vehicles[${index}].placa`}
+              placeholder="AAA123"
+              autoComplete="off"
+              className={`${inputClasses} uppercase`}
+              onInput={(e) => (e.target.value = e.target.value.toUpperCase())}
+            />
+            {getError("placa") &amp;&amp; (
+              &lt;div className={errorTextClasses}>{getError("placa")}&lt;/div>
+            )}
+          &lt;/label>
+        )}
+        {/* --- CAMPO: CÓDIGO SENSOR (Opcional) --- */}
+        &lt;label className="block">
+          &lt;span className="text-text-main font-semibold">
+            Código Sensor (Opcional):
+          &lt;/span>
+          &lt;Field
+            type="text"
+            name={`vehicles[${index}].codigo_sensor`}
+            placeholder="ID del tag NFC/Barras"
+            autoComplete="off"
+            className={inputClasses}
+          />
+          {getError("codigo_sensor") &amp;&amp; (
+            &lt;div className={errorTextClasses}>{getError("codigo_sensor")}&lt;/div>
+          )}
+        &lt;/label>
+        {/* --- CAMPO: NOMBRE DUEÑO --- */}
+        &lt;label className="block">
+          &lt;span className="text-text-main font-semibold">
+            Nombre del Dueño:
+          &lt;/span>
+          &lt;Field
+            type="text"
+            name={`vehicles[${index}].nombre_dueno`}
+            placeholder="Nombre Apellido"
+            autoComplete="off"
+            className={inputClasses}
+            onKeyDown={handleKeyTextDown}
+          />
+          {getError("nombre_dueno") &amp;&amp; (
+            &lt;div className={errorTextClasses}>{getError("nombre_dueno")}&lt;/div>
+          )}
+        &lt;/label>
+        {/* --- CAMPO: IDENTIFICACIÓN DUEÑO --- */}
+        &lt;label className="block">
+          &lt;span className="text-text-main font-semibold">
+            Identificación del Dueño:
+          &lt;/span>
+          &lt;Field
+            type="number"
+            name={`vehicles[${index}].identificacion_dueno`}
+            placeholder="Número de documento"
+            autoComplete="off"
+            className={inputClasses}
+            onKeyDown={handleKeyNumberDown}
+          />
+          {getError("identificacion_dueno") &amp;&amp; (
+            &lt;div className={errorTextClasses}>
+              {getError("identificacion_dueno")}
+            &lt;/div>
+          )}
+        &lt;/label>
+        &lt;label className="block animate-fade-in">
+          &lt;span className="text-text-main font-semibold">
+            Género del Dueño:
+          &lt;/span>
+          &lt;Field
+            as="select"
+            name={`vehicles[${index}].genero_dueno`}
+            className={inputClasses}
+          >
+            &lt;option value="N/A" disabled hidden>
+              Seleccione género...
+            &lt;/option>
+            &lt;option value="Masculino">Masculino&lt;/option>
+            &lt;option value="Femenino">Femenino&lt;/option>
+          &lt;/Field>
+          {getError("genero_dueno") &amp;&amp; (
+            &lt;div className={errorTextClasses}>{getError("genero_dueno")}&lt;/div>
+          )}
+        &lt;/label>
+        {/* --- CAMPO: MODELO/DESCRIPCIÓN (Opcional) --- */}
+        &lt;label className="block">
+          &lt;span className="text-text-main font-semibold">
+            Modelo/Descripción (Opcional):
+          &lt;/span>
+          &lt;Field
+            type="text"
+            name={`vehicles[${index}].modelo_descripcion`}
+            placeholder="Ej: Bici roja, Patineta"
+            autoComplete="off"
+            className={inputClasses}
+          />
+          {getError("modelo_descripcion") &amp;&amp; (
+            &lt;div className={errorTextClasses}>
+              {getError("modelo_descripcion")}
+            &lt;/div>
+          )}
+        &lt;/label>
+        {/* --- CAMPO: LUGAR ASIGNADO (Opcional) --- */}
+        &lt;label className="block">
+          &lt;span className="text-text-main font-semibold">
+            Lugar Asignado (Opcional):
+          &lt;/span>
+          &lt;Field
+            type="text"
+            name={`vehicles[${index}].lugar_asignado_default`}
+            placeholder="Ej: Gerencia, E-05"
+            autoComplete="off"
+            className={inputClasses}
+          />
+          {getError("lugar_asignado_default") &amp;&amp; (
+            &lt;div className={errorTextClasses}>
+              {getError("lugar_asignado_default")}
+            &lt;/div>
+          )}
+        &lt;/label>
+      &lt;/div>
+    &lt;/div>
+  );
+};
+
+/**
+ * @function VehicleForm
+ * @description Componente principal del modal para crear Vehículos.
+ * Orquesta el formulario dinámico con Formik y FieldArray.
+ * @param {object} props - Propiedades del componente.
+ * @param {Function} props.onClose - Callback para cerrar el modal.
+ * @param {Function} props.onSuccess - Callback a ejecutar tras una creación exitosa.
+ * @returns {JSX.Element}
+ */
+export default function VehicleForm({ onClose, onSuccess }) {
+  // Usa el hook para la lógica de Formik y submit
+  const formik = useVehicleForm(onSuccess);
+
+  // No necesitamos cargar catálogos (centros, etc.) como en CreateDevicesForm
+
+  return (
+    // Fondo oscuro semi-transparente y contenedor del modal
+    &lt;div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 p-4 pt-12 overflow-y-auto animate-fade-in">
+      {/* Contenedor principal del modal */}
+      &lt;div className="bg-background rounded-lg shadow-xl w-full max-w-4xl flex flex-col my-8">
+        {" "}
+        {/* Encabezado del Modal */}
+        &lt;header className="p-4 flex justify-between items-center border-b border-neutral-300 bg-background z-10">
+          &lt;h2 className="text-2xl font-bold text-secondary flex items-center gap-3">
+            &lt;FontAwesomeIcon icon={faCar} />
+            Añadir Nuevo(s) Vehículo(s)
+          &lt;/h2>
+          &lt;button
+            onClick={onClose}
+            className="text-text-main hover:text-error transition-colors"
+            aria-label="Cerrar modal"
+          >
+            &lt;FontAwesomeIcon icon={faTimes} size="lg" />
+          &lt;/button>
+        &lt;/header>
+        {/* Proveedor de Formik que envuelve el formulario */}
+        &lt;FormikProvider value={formik}>
+          &lt;form onSubmit={formik.handleSubmit} noValidate className="p-6">
+            {/* FieldArray para los sub-formularios de vehículos */}
+            &lt;FieldArray name="vehicles">
+              {({ push, remove }) => (
+                &lt;div className="space-y-8">
+                  {formik.values.vehicles.map((vehicle, index) => (
+                    &lt;VehicleSubForm
+                      key={index}
+                      formik={formik}
+                      index={index}
+                      onRemove={remove}
+                      // No pasamos catálogos
+                    />
+                  ))}
+                  {/* Botón para añadir otro formulario de vehículo */}
+                  &lt;button
+                    type="button"
+                    onClick={() => push(initialVehicleValues)} // Añade un nuevo objeto vacío
+                    className="flex items-center gap-2 py-2 px-4 bg-secondary text-surface font-semibold rounded-lg hover:bg-secondary-hover transition-colors"
+                  >
+                    &lt;FontAwesomeIcon icon={faPlus} /> Añadir otro vehículo
+                  &lt;/button>
+                &lt;/div>
+              )}
+            &lt;/FieldArray>
+
+            {/* Línea divisoria y footer con botones */}
+            &lt;hr className="my-8 border-neutral-300" />
+
+            &lt;footer className="flex justify-end items-center gap-4">
+              {/* Muestra error general de API si existe */}
+              {formik.errors.apiError &amp;&amp; (
+                &lt;div className="text-error text-sm mr-auto">
+                  {formik.errors.apiError}
+                &lt;/div>
+              )}
+
+              {/* Botón Cancelar */}
+              &lt;button
+                type="button"
+                onClick={onClose}
+                disabled={formik.isSubmitting}
+                className="py-2 px-4 rounded-lg bg-neutral-200 hover:bg-neutral-300 text-text-main font-semibold transition-colors"
+              >
+                Cancelar
+              &lt;/button>
+
+              {/* Botón Guardar (Submit) */}
+              &lt;button
+                type="submit"
+                disabled={
+                  formik.isSubmitting || !(formik.isValid &amp;&amp; formik.dirty)
+                }
+                className="py-2 px-4 rounded-lg bg-secondary text-surface font-bold hover:bg-secondary-hover disabled:bg-secondary/50 disabled:cursor-not-allowed transition-colors"
+              >
+                {formik.isSubmitting
+                  ? "Guardando..."
+                  : `Guardar ${formik.values.vehicles.length} Vehículo(s)`}
+              &lt;/button>
+            &lt;/footer>
+          &lt;/form>
+        &lt;/FormikProvider>
+      &lt;/div>
+    &lt;/div>
+  );
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="component_AuthRedirect.module_jsx.html">component/AuthRedirect.jsx</a></li><li><a href="component_auth_LoginForm.module_jsx.html">component/auth/LoginForm.jsx</a></li><li><a href="component_auth_RegisterForm.module_jsx.html">component/auth/RegisterForm.jsx</a></li><li><a href="components_Dashboard.module_jsx.html">components/Dashboard.jsx</a></li><li><a href="components_Layout.module_jsx.html">components/Layout.jsx</a></li><li><a href="components_PrivateRoute.module_jsx.html">components/PrivateRoute.jsx</a></li><li><a href="components_WelcomePage.module_jsx.html">components/WelcomePage.jsx</a></li><li><a href="components_packages_DashboardPackage.module_jsx.html">components/packages/DashboardPackage.jsx</a></li><li><a href="components_packages_PackagesEnviarForm.module_jsx.html">components/packages/PackagesEnviarForm.jsx</a></li><li><a href="components_packages_RecibirPaqueteForm.module_jsx.html">components/packages/RecibirPaqueteForm.jsx</a></li><li><a href="components_parking_DashboardParking.module_jsx.html">components/parking/DashboardParking.jsx</a></li><li><a href="components_visits_VisitEntryForm.module_jsx.html">components/visits/VisitEntryForm.jsx</a></li><li><a href="module-App.html">App</a></li><li><a href="module-AxiosClient.html">AxiosClient</a></li><li><a href="module-Components_Historial_DashboardHistorial.html">Components/Historial/DashboardHistorial</a></li><li><a href="module-Components_Parking.html">Components/Parking</a></li><li><a href="module-Components_UI.html">Components/UI</a></li><li><a href="module-Config.html">Config</a></li><li><a href="module-Controllers.html">Controllers</a></li><li><a href="module-Controllers_Signatures.html">Controllers/Signatures</a></li><li><a href="module-DateUtils.html">DateUtils</a></li><li><a href="module-EntryPoint.html">EntryPoint</a></li><li><a href="module-Hooks.html">Hooks</a></li><li><a href="module-Hooks_Auth.html">Hooks/Auth</a></li><li><a href="module-Hooks_Historial.html">Hooks/Historial</a></li><li><a href="module-Hooks_Packages.html">Hooks/Packages</a></li><li><a href="module-Hooks_Paquetes.html">Hooks/Paquetes</a></li><li><a href="module-Hooks_Parking.html">Hooks/Parking</a></li><li><a href="module-Hooks_Utils.html">Hooks/Utils</a></li><li><a href="module-Hooks_Visits.html">Hooks/Visits</a></li><li><a href="module-Hooks_usePackagesRecibir.html">Hooks/usePackagesRecibir</a></li><li><a href="module-InputHandlers.html">InputHandlers</a></li><li><a href="module-Middlewares.html">Middlewares</a></li><li><a href="module-Models.html">Models</a></li><li><a href="module-Models_Catalogues.html">Models/Catalogues</a></li><li><a href="module-Repositories.html">Repositories</a></li><li><a href="module-Repositories_Parking.html">Repositories/Parking</a></li><li><a href="module-Routes.html">Routes</a></li><li><a href="module-Routes_Parking.html">Routes/Parking</a></li><li><a href="module-Routes_Signatures.html">Routes/Signatures</a></li><li><a href="module-Schemas.html">Schemas</a></li><li><a href="module-Services.html">Services</a></li><li><a href="module-Services_Parking.html">Services/Parking</a></li><li><a href="module-Stores.html">Stores</a></li><li><a href="module-Utils.html">Utils</a></li><li><a href="module-Utils_Errors.html">Utils/Errors</a></li><li><a href="module-apiController.html">apiController</a></li><li><a href="module-apiRoutes.html">apiRoutes</a></li><li><a href="module-authRoutes.html">authRoutes</a></li><li><a href="module-hooks_parking_.html">hooks/parking</a></li><li><a href="module-packageController.html">packageController</a></li><li><a href="module-packageRoutes.html">packageRoutes</a></li><li><a href="module-passportConfig.html">passportConfig</a></li><li><a href="module-visitController.html">visitController</a></li><li><a href="module-visitRoutes.html">visitRoutes</a></li></ul><h3>Classes</h3><ul><li><a href="module-Models_Catalogues-Area.html">Area</a></li><li><a href="module-Models_Catalogues-IdentificationType.html">IdentificationType</a></li><li><a href="module-Models_Catalogues-PackageType.html">PackageType</a></li><li><a href="module-Models-Log.html">Log</a></li><li><a href="module-Models-Package.html">Package</a></li><li><a href="module-Models-ParkingLog.html">ParkingLog</a></li><li><a href="module-Models-RefreshToken.html">RefreshToken</a></li><li><a href="module-Models-User.html">User</a></li><li><a href="module-Models-Vehicle.html">Vehicle</a></li><li><a href="module-Models-Visit.html">Visit</a></li><li><a href="module-Utils_Errors.AppError.html">AppError</a></li><li><a href="module-Utils_Errors-AccountDisabledError.html">AccountDisabledError</a></li><li><a href="module-Utils_Errors-ActiveVisitDontExistsError.html">ActiveVisitDontExistsError</a></li><li><a href="module-Utils_Errors-AppError.html">AppError</a></li><li><a href="module-Utils_Errors-BadRequestError.html">BadRequestError</a></li><li><a href="module-Utils_Errors-ConflictError.html">ConflictError</a></li><li><a href="module-Utils_Errors-DuplicateError.html">DuplicateError</a></li><li><a href="module-Utils_Errors-ForbiddenError.html">ForbiddenError</a></li><li><a href="module-Utils_Errors-InvalidIdError.html">InvalidIdError</a></li><li><a href="module-Utils_Errors-InvalidTokenError.html">InvalidTokenError</a></li><li><a href="module-Utils_Errors-MissingApiKeyError.html">MissingApiKeyError</a></li><li><a href="module-Utils_Errors-NotFoundError.html">NotFoundError</a></li><li><a href="module-Utils_Errors-UserAlreadyExistsError.html">UserAlreadyExistsError</a></li><li><a href="module-Utils_Errors-UserNotFoundOrInvalidPasswordError.html">UserNotFoundOrInvalidPasswordError</a></li></ul><h3>Global</h3><ul><li><a href="global.html#createVehicle">createVehicle</a></li><li><a href="global.html#getAllVehicles">getAllVehicles</a></li><li><a href="global.html#getOccupancyController">getOccupancyController</a></li><li><a href="global.html#handleScan">handleScan</a></li><li><a href="global.html#packageConfig">packageConfig</a></li><li><a href="global.html#radicadoConfig">radicadoConfig</a></li><li><a href="global.html#registerEntry">registerEntry</a></li><li><a href="global.html#registerExit">registerExit</a></li><li><a href="global.html#updateVehicle">updateVehicle</a></li><li><a href="global.html#vehicleConfig">vehicleConfig</a></li><li><a href="global.html#visitConfig">visitConfig</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Tue Nov 04 2025 16:47:25 GMT-0500 (hora estándar de Colombia)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

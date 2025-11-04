@@ -11,7 +11,6 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import api from "../../config/axios.js";
 import { toast } from "react-hot-toast";
 import { formatDate } from "../../utils/dateFormat.js";
-
 /**
  * @typedef {'visitas' | 'paquetes'} TabType
  */
@@ -21,15 +20,17 @@ export const useDashboardHistorial = () => {
   const [originalVisits, setOriginalVisits] = useState([]);
   const [originalPackages, setOriginalPackages] = useState([]);
   const [originalParkingLogs, setOriginalParkingLogs] = useState([]);
+  const [originalFiles, setOriginalFiles] = useState([]);
 
   // --- Estados de UI ---
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   // --- Estados de Control ---
   const [activeTab, setActiveTab] = useState("visitas");
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState("fecha_desc"); // 'fecha_desc', 'fecha_asc'
+  const [sortBy, setSortBy] = useState("fecha_desc");
 
   // --- Estados de Modal ---
   /**
@@ -51,17 +52,22 @@ export const useDashboardHistorial = () => {
     setIsLoading(true);
     setError(null);
     try {
-      // Hacemos ambas peticiones al mismo tiempo para más eficiencia
-      const [visitsResponse, packagesResponse, parkingLogsResponse] =
-        await Promise.all([
-          api.get("/api/historial/visitas"),
-          api.get("/api/historial/paquetes"),
-          api.get("/api/historial/parqueadero"),
-        ]);
+      const [
+        visitsResponse,
+        packagesResponse,
+        parkingLogsResponse,
+        filesResponse,
+      ] = await Promise.all([
+        api.get("/api/historial/visitas"),
+        api.get("/api/historial/paquetes"),
+        api.get("/api/historial/parqueadero"),
+        api.get("/api/historial/radicados"),
+      ]);
 
       setOriginalVisits(visitsResponse.data || []);
       setOriginalPackages(packagesResponse.data || []);
       setOriginalParkingLogs(parkingLogsResponse.data || []);
+      setOriginalFiles(filesResponse.data || []);
     } catch (err) {
       setError("Error al cargar el historial. Intenta recargar la página.");
       toast.error("No se pudo cargar el historial.");
@@ -90,7 +96,9 @@ export const useDashboardHistorial = () => {
         ? originalVisits
         : activeTab === "paquetes"
         ? originalPackages
-        : originalParkingLogs;
+        : activeTab === "parqueadero"
+        ? originalParkingLogs
+        : originalFiles;
 
     // 2. Filtrar los datos
     const filtered = sourceData.filter((item) => {
@@ -144,6 +152,18 @@ export const useDashboardHistorial = () => {
           nombreUsuarioSalida.includes(term) ||
           tipo_vehiculo.includes(term)
         );
+      } else if (activeTab === "radicados") {
+        const referenciaRadicado = (
+          item.files?.referencia_radicado || ""
+        ).toLowerCase();
+        const receptor = (item.files?.nombre_quien_recibe || "").toLowerCase();
+        const area = item.files?.Area?.nombre_area;
+
+        return (
+          referenciaRadicado.includes(term) ||
+          receptor.includes(term) ||
+          area.includes(term)
+        );
       }
     });
 
@@ -168,10 +188,127 @@ export const useDashboardHistorial = () => {
     originalVisits,
     originalPackages,
     originalParkingLogs,
+    originalFiles,
   ]);
 
   // 4. Estado derivado para "No hay resultados"
   const noResults = filteredData.length === 0 && searchTerm.length > 0;
+
+  /**
+   * @function handleExport
+   * @description Llama al endpoint de exportación en el backend y fuerza la descarga del archivo.
+   * @param {'xlsx' | 'pdf'} format - El formato de archivo a exportar.
+   */
+  const handleExport = useCallback(
+    async (format) => {
+      if (activeTab !== "radicados") {
+        toast.error(
+          "La función de exportar solo está disponible para la pestaña de Radicados."
+        );
+        return;
+      }
+
+      // Solo permitir exportar si no está cargando datos y si hay algo que exportar
+      if (isLoading || isExporting || filteredData.length === 0) {
+        if (filteredData.length === 0) {
+          toast.error("No hay datos para exportar.");
+        }
+        return;
+      }
+
+      setIsExporting(true);
+      toast.loading(`Generando archivo ${format.toUpperCase()}...`, {
+        id: "export_toast",
+      });
+
+      try {
+        // --- 1. Definir MIME Type para el Blob local ---
+        const mimeType =
+          format === "pdf"
+            ? "application/pdf"
+            : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+        // --- 2. Crear un nombre de archivo de respaldo (fallback) con timestamp ---
+        // Este nombre se usa si la extracción de la cabecera falla.
+        const baseName = activeTab.charAt(0).toUpperCase() + activeTab.slice(1);
+        const fallbackFileName = `Historial_${baseName}_${new Date()
+          .toISOString()
+          .slice(0, 10)}.${format === "excel" ? "xlsx" : format}`;
+
+        // --- 3. Llamada a la API ---
+        const response = await api.get(`/api/historial/radicados/exportar`, {
+          params: {
+            tab: activeTab,
+            format: format,
+          },
+          responseType: "blob",
+        });
+
+        // --- 4. EXTRAER NOMBRE DEL ARCHIVO DE LA CABECERA DEL SERVIDOR ---
+        const contentDisposition = response.headers["content-disposition"];
+
+        // Inicializar con el nombre de respaldo que tiene el timestamp
+        let serverFileName = fallbackFileName;
+
+        if (contentDisposition) {
+          // Busca filename="[nombre]" o filename*=[codificado]
+          const fileNameMatch = contentDisposition.match(
+            /filename\*?=["']?([^;"]+)/i
+          );
+          if (fileNameMatch && fileNameMatch.length > 1) {
+            // Decodificar el nombre capturado (maneja espacios y UTF-8)
+            serverFileName = decodeURIComponent(
+              fileNameMatch[1].replace(/['"]/g, "")
+            );
+          }
+        }
+
+        // --- 5. Crear el Blob y forzar la descarga con el nombre (idealmente, el del servidor) ---
+        const blob = new Blob([response.data], { type: mimeType });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+
+        // USAMOS el nombre que ya incluye el timestamp y la extensión correcta
+        link.setAttribute("download", serverFileName);
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        toast.success(`Exportación a ${format.toUpperCase()} completada.`, {
+          id: "export_toast",
+        });
+      } catch (err) {
+        toast.error(
+          "Error al generar el reporte. Verifica la conexión con el servidor.",
+          {
+            id: "export_toast",
+          }
+        );
+        console.error("Export error:", err);
+        if (err.response && err.response.data) {
+          const reader = new FileReader();
+          reader.onload = function () {
+            try {
+              const errorJson = JSON.parse(reader.result);
+              toast.error(
+                `Error de servidor: ${errorJson.message || "Desconocido"}`,
+                { id: "export_toast" }
+              );
+            } catch (e) {
+              console.error("Server error is not JSON:", reader.result);
+            }
+          };
+          reader.readAsText(err.response.data);
+        }
+      } finally {
+        setIsExporting(false);
+      }
+    },
+    [activeTab, isLoading, isExporting, filteredData.length]
+  );
 
   /**
    * @function openDetailsModal
@@ -217,6 +354,7 @@ export const useDashboardHistorial = () => {
     error,
     noResults,
     searchTerm,
+    isExporting,
     setActiveTab,
     handleSearchChange,
     handleSortChange,
@@ -224,5 +362,6 @@ export const useDashboardHistorial = () => {
     formatDate,
     openDetailsModal,
     closeModal,
+    handleExport,
   };
 };

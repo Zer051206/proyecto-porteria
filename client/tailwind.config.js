@@ -30,6 +30,13 @@ export default {
           hover: "#0f172a", // slate-900
           text: "#ffffff", // white
         },
+        // Color de acento: Violeta (basado en Tailwind Violet)
+        accent: {
+          light: "#f5f3ff", // violet-100
+          DEFAULT: "#7c3aed", // violet-600
+          hover: "#6d28d9", // violet-700
+          text: "#5b21b6", // violet-800
+        },
         // Colores de UI (basados en gris 'slate' que es más frío)
         background: "#f1f5f9", // slate-100
         surface: "#ffffff", // white

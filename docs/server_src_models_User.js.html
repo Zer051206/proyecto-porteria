@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: server/src/models/User.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: server/src/models/User.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @file User.js
+ * @module Models
+ * @description Define el modelo de Sequelize para la tabla 'usuarios'.
+ * Este modelo es central para la aplicación, representando a los usuarios del sistema (admins y porteros)
+ * y estableciendo sus relaciones con todas las acciones que pueden realizar.
+ * @requires sequelize
+ */
+
+import { DataTypes } from "sequelize";
+
+/**
+ * @function defineUserModel
+ * @description Define y devuelve el modelo 'User' de Sequelize.
+ * @param {Sequelize} sequelize - La instancia de Sequelize.
+ * @returns {Model} El modelo 'User' definido.
+ */
+export default (sequelize) => {
+  /**
+   * @class User
+   * @classdesc Modelo de Sequelize para la tabla `usuarios`.
+   * @property {number} id_usuario - La clave primaria del usuario.
+   * @property {string} nombre - El nombre del usuario.
+   * @property {string} apellido - El apellido del usuario.
+   * @property {string} correo - El correo electrónico único del usuario.
+   * @property {string|null} contrasena_hash - El hash de la contraseña (nulo para usuarios OAuth).
+   * @property {string|null} id_oauth - El ID único proporcionado por el proveedor de OAuth.
+   * @property {'google'|'microsoft'|null} proveedor_oauth - El proveedor de autenticación externa.
+   * @property {'admin'|'portero'} rol - El rol del usuario en la aplicación.
+   * @property {Date|null} ultimo_login - La fecha y hora del último inicio de sesión.
+   * @property {boolean} activo - Indica si la cuenta del usuario está activa.
+   * @property {Date} fecha_creacion - La fecha de creación del registro.
+   * @property {Date} fecha_actualizacion - La fecha de la última actualización del registro.
+   */
+  const User = sequelize.define(
+    "User",
+    {
+      id_usuario: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+      },
+      nombre: { type: DataTypes.STRING(80), allowNull: false },
+      apellido: { type: DataTypes.STRING(80), allowNull: false },
+      correo: { type: DataTypes.STRING(255), allowNull: false, unique: true },
+      contrasena_hash: { type: DataTypes.STRING(255), allowNull: true },
+      id_oauth: { type: DataTypes.STRING(255), allowNull: true, unique: true },
+      proveedor_oauth: {
+        type: DataTypes.ENUM("google", "microsoft"),
+        allowNull: true,
+      },
+      rol: { type: DataTypes.ENUM("admin", "portero"), allowNull: false },
+      ultimo_login: { type: DataTypes.DATE, allowNull: true },
+      activo: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+        allowNull: false,
+      },
+    },
+    {
+      tableName: "usuarios",
+      timestamps: true,
+      createdAt: "fecha_creacion",
+      updatedAt: "fecha_actualizacion",
+    }
+  );
+
+  /**
+   * @function associate
+   * @description Define las asociaciones del modelo User con otros modelos.
+   * @param {object} models - Un objeto que contiene todos los modelos de la aplicación.
+   */
+  User.associate = (models) => {
+    /**
+     * @description Asociación (hasMany): Un Usuario puede registrar la ENTRADA de muchas Visitas.
+     * @param {Model} models.Visit - El modelo de Visita.
+     * @property {string} as - Alias 'VisitsEntered' para acceder a estas visitas desde un usuario.
+     * @property {string} foreignKey - La clave foránea 'id_usuario_entrada' en la tabla `visitas`.
+     */
+    User.hasMany(models.Visit, {
+      as: "VisitsEntered",
+      foreignKey: "id_usuario_entrada",
+    });
+
+    /**
+     * @description Asociación (hasMany): Un Usuario puede registrar la SALIDA de muchas Visitas.
+     * @param {Model} models.Visit - El modelo de Visita.
+     * @property {string} as - Alias 'VisitsExited' para acceder a estas visitas desde un usuario.
+     * @property {string} foreignKey - La clave foránea 'id_usuario_salida' en la tabla `visitas`.
+     */
+    User.hasMany(models.Visit, {
+      as: "VisitsExited",
+      foreignKey: "id_usuario_salida",
+    });
+
+    /**
+     * @description Asociación (hasMany): Un Usuario puede registrar la ENTRADA de muchos Vehículos
+     * (a través de ParkingLog).
+     * @param {Model} models.ParkingLog - El modelo de historial de parqueadero.
+     * @property {string} as - Alias 'entryUser' (debería ser 'ParkingEntries' para claridad, pero coincide con tu código).
+     * @property {string} foreignKey - La clave foránea 'id_usuario_entrada' en la tabla `parqueadero_registros`.
+     */
+    User.hasMany(models.ParkingLog, {
+      as: "ParkingEntries",
+      foreignKey: "id_usuario_entrada",
+    });
+
+    /**
+     * @description Asociación (hasMany): Un Usuario puede registrar la SALIDA de muchos Vehículos
+     * (a través de ParkingLog).
+     * @param {Model} models.ParkingLog - El modelo de historial de parqueadero.
+     * @property {string} as - Alias 'exitUser' (debería ser 'ParkingExits' para claridad, pero coincide con tu código).
+     * @property {string} foreignKey - La clave foránea 'id_usuario_salida' en la tabla `parqueadero_registros`.
+     */
+    User.hasMany(models.ParkingLog, {
+      as: "ParkingExits",
+      foreignKey: "id_usuario_salida",
+    });
+
+    /**
+     * @description Asociación (hasMany): Un Usuario puede RECIBIR muchos Paquetes.
+     * @param {Model} models.Package - El modelo de Paquete.
+     * @property {string} as - Alias 'PackagesReceived' para acceder a estos paquetes desde un usuario.
+     * @property {string} foreignKey - La clave foránea 'id_usuario_recibir' en la tabla `paquetes`.
+     */
+    User.hasMany(models.Package, {
+      as: "PackagesReceived",
+      foreignKey: "id_usuario_recibir",
+    });
+
+    /**
+     * @description Asociación (hasMany): Un Usuario puede ENVIAR muchos Paquetes.
+     * @param {Model} models.Package - El modelo de Paquete.
+     * @property {string} as - Alias 'PackagesSent' para acceder a estos paquetes desde un usuario.
+     * @property {string} foreignKey - La clave foránea 'id_usuario_enviar' en la tabla `paquetes`.
+     */
+    User.hasMany(models.Package, {
+      as: "PackagesSent",
+      foreignKey: "id_usuario_enviar",
+    });
+
+    /**
+     * @description Asociación (hasMany): Un Usuario puede generar muchos Logs de auditoría.
+     * @param {Model} models.Log - El modelo de Log.
+     * @property {string} foreignKey - La clave foránea 'id_usuario' en la tabla `logs`.
+     */
+    User.hasMany(models.Log, { foreignKey: "id_usuario" });
+
+    /**
+     * @description Asociación (hasMany): Un Usuario puede tener muchos Refresh Tokens.
+     * @param {Model} models.RefreshToken - El modelo de RefreshToken.
+     * @property {string} foreignKey - La clave foránea 'id_usuario' en la tabla `refresh_tokens`.
+     */
+    User.hasMany(models.RefreshToken, { foreignKey: "id_usuario" });
+  };
+
+  return User;
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="component_AuthRedirect.module_jsx.html">component/AuthRedirect.jsx</a></li><li><a href="component_auth_LoginForm.module_jsx.html">component/auth/LoginForm.jsx</a></li><li><a href="component_auth_RegisterForm.module_jsx.html">component/auth/RegisterForm.jsx</a></li><li><a href="components_Dashboard.module_jsx.html">components/Dashboard.jsx</a></li><li><a href="components_Layout.module_jsx.html">components/Layout.jsx</a></li><li><a href="components_PrivateRoute.module_jsx.html">components/PrivateRoute.jsx</a></li><li><a href="components_WelcomePage.module_jsx.html">components/WelcomePage.jsx</a></li><li><a href="components_packages_DashboardPackage.module_jsx.html">components/packages/DashboardPackage.jsx</a></li><li><a href="components_packages_PackagesEnviarForm.module_jsx.html">components/packages/PackagesEnviarForm.jsx</a></li><li><a href="components_packages_RecibirPaqueteForm.module_jsx.html">components/packages/RecibirPaqueteForm.jsx</a></li><li><a href="components_parking_DashboardParking.module_jsx.html">components/parking/DashboardParking.jsx</a></li><li><a href="components_visits_VisitEntryForm.module_jsx.html">components/visits/VisitEntryForm.jsx</a></li><li><a href="module-App.html">App</a></li><li><a href="module-AxiosClient.html">AxiosClient</a></li><li><a href="module-Components_Historial_DashboardHistorial.html">Components/Historial/DashboardHistorial</a></li><li><a href="module-Components_Parking.html">Components/Parking</a></li><li><a href="module-Components_UI.html">Components/UI</a></li><li><a href="module-Config.html">Config</a></li><li><a href="module-Controllers.html">Controllers</a></li><li><a href="module-Controllers_Signatures.html">Controllers/Signatures</a></li><li><a href="module-DateUtils.html">DateUtils</a></li><li><a href="module-EntryPoint.html">EntryPoint</a></li><li><a href="module-Hooks.html">Hooks</a></li><li><a href="module-Hooks_Auth.html">Hooks/Auth</a></li><li><a href="module-Hooks_Historial.html">Hooks/Historial</a></li><li><a href="module-Hooks_Packages.html">Hooks/Packages</a></li><li><a href="module-Hooks_Paquetes.html">Hooks/Paquetes</a></li><li><a href="module-Hooks_Parking.html">Hooks/Parking</a></li><li><a href="module-Hooks_Utils.html">Hooks/Utils</a></li><li><a href="module-Hooks_Visits.html">Hooks/Visits</a></li><li><a href="module-Hooks_usePackagesRecibir.html">Hooks/usePackagesRecibir</a></li><li><a href="module-InputHandlers.html">InputHandlers</a></li><li><a href="module-Middlewares.html">Middlewares</a></li><li><a href="module-Models.html">Models</a></li><li><a href="module-Models_Catalogues.html">Models/Catalogues</a></li><li><a href="module-Repositories.html">Repositories</a></li><li><a href="module-Repositories_Parking.html">Repositories/Parking</a></li><li><a href="module-Routes.html">Routes</a></li><li><a href="module-Routes_Parking.html">Routes/Parking</a></li><li><a href="module-Routes_Signatures.html">Routes/Signatures</a></li><li><a href="module-Schemas.html">Schemas</a></li><li><a href="module-Services.html">Services</a></li><li><a href="module-Services_Parking.html">Services/Parking</a></li><li><a href="module-Stores.html">Stores</a></li><li><a href="module-Utils.html">Utils</a></li><li><a href="module-Utils_Errors.html">Utils/Errors</a></li><li><a href="module-apiController.html">apiController</a></li><li><a href="module-apiRoutes.html">apiRoutes</a></li><li><a href="module-authRoutes.html">authRoutes</a></li><li><a href="module-hooks_parking_.html">hooks/parking</a></li><li><a href="module-packageController.html">packageController</a></li><li><a href="module-packageRoutes.html">packageRoutes</a></li><li><a href="module-passportConfig.html">passportConfig</a></li><li><a href="module-visitController.html">visitController</a></li><li><a href="module-visitRoutes.html">visitRoutes</a></li></ul><h3>Classes</h3><ul><li><a href="module-Models_Catalogues-Area.html">Area</a></li><li><a href="module-Models_Catalogues-IdentificationType.html">IdentificationType</a></li><li><a href="module-Models_Catalogues-PackageType.html">PackageType</a></li><li><a href="module-Models-Log.html">Log</a></li><li><a href="module-Models-Package.html">Package</a></li><li><a href="module-Models-ParkingLog.html">ParkingLog</a></li><li><a href="module-Models-RefreshToken.html">RefreshToken</a></li><li><a href="module-Models-User.html">User</a></li><li><a href="module-Models-Vehicle.html">Vehicle</a></li><li><a href="module-Models-Visit.html">Visit</a></li><li><a href="module-Utils_Errors.AppError.html">AppError</a></li><li><a href="module-Utils_Errors-AccountDisabledError.html">AccountDisabledError</a></li><li><a href="module-Utils_Errors-ActiveVisitDontExistsError.html">ActiveVisitDontExistsError</a></li><li><a href="module-Utils_Errors-AppError.html">AppError</a></li><li><a href="module-Utils_Errors-BadRequestError.html">BadRequestError</a></li><li><a href="module-Utils_Errors-ConflictError.html">ConflictError</a></li><li><a href="module-Utils_Errors-DuplicateError.html">DuplicateError</a></li><li><a href="module-Utils_Errors-ForbiddenError.html">ForbiddenError</a></li><li><a href="module-Utils_Errors-InvalidIdError.html">InvalidIdError</a></li><li><a href="module-Utils_Errors-InvalidTokenError.html">InvalidTokenError</a></li><li><a href="module-Utils_Errors-MissingApiKeyError.html">MissingApiKeyError</a></li><li><a href="module-Utils_Errors-NotFoundError.html">NotFoundError</a></li><li><a href="module-Utils_Errors-UserAlreadyExistsError.html">UserAlreadyExistsError</a></li><li><a href="module-Utils_Errors-UserNotFoundOrInvalidPasswordError.html">UserNotFoundOrInvalidPasswordError</a></li></ul><h3>Global</h3><ul><li><a href="global.html#createVehicle">createVehicle</a></li><li><a href="global.html#getAllVehicles">getAllVehicles</a></li><li><a href="global.html#getOccupancyController">getOccupancyController</a></li><li><a href="global.html#handleScan">handleScan</a></li><li><a href="global.html#packageConfig">packageConfig</a></li><li><a href="global.html#radicadoConfig">radicadoConfig</a></li><li><a href="global.html#registerEntry">registerEntry</a></li><li><a href="global.html#registerExit">registerExit</a></li><li><a href="global.html#updateVehicle">updateVehicle</a></li><li><a href="global.html#vehicleConfig">vehicleConfig</a></li><li><a href="global.html#visitConfig">visitConfig</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Tue Nov 04 2025 16:47:25 GMT-0500 (hora estándar de Colombia)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

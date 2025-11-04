@@ -12,7 +12,7 @@
  *
  * @param {Function} navigate - Función de navegación de `react-router-dom/useNavigate`.
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import api from "../../config/axios";
@@ -37,7 +37,8 @@ import toast from "react-hot-toast";
  * @property {string | null} error - Mensaje de error general si falló la submission del formulario.
  */
 const usePackagesEnviar = (onSuccess) => {
-  // Estados para la carga de datos iniciales
+  const validadorSigPadRef = useRef(null);
+  const remitenteSigPadRef = useRef(null);
   const [tiposPaquetes, setTiposPaquetes] = useState([]);
   const [areas, setAreas] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -45,15 +46,16 @@ const usePackagesEnviar = (onSuccess) => {
   const [error, setError] = useState(null);
 
   /**
-   * @function handleClearForm
-   * @description Restablece los valores del formulario a su estado inicial y limpia mensajes de error.
-   * @returns {void}
+   * @function handleClickClear
+   * @description Restablece los valores del formulario y limpia las firmas.
    */
-  const handleClearForm = () => {
+  const handleClickClear = () => {
     formik.resetForm();
-    setError(null);
+    validadorSigPadRef.current?.clear();
+    remitenteSigPadRef.current?.clear();
+    formik.setErrors({});
+    formik.setTouched({});
   };
-
   /**
    * @effect
    * @description Hook de efecto para cargar las opciones de tipos de paquetes y áreas
@@ -62,7 +64,6 @@ const usePackagesEnviar = (onSuccess) => {
   useEffect(() => {
     const fetchFormData = async () => {
       try {
-        // Peticiones concurrentes para optimizar la carga
         const [tiposRes, areasRes] = await Promise.all([
           api.get("/api/tipos-paquetes"),
           api.get("/api/areas"),
@@ -110,6 +111,8 @@ const usePackagesEnviar = (onSuccess) => {
     observaciones: Yup.string()
       .nullable()
       .max(500, "Las observaciones no pueden exceder los 500 caracteres."),
+    path_firma_validador_envio: Yup.string().nullable().optional(),
+    path_firma_remitente: Yup.string().nullable().optional(),
   });
 
   /**
@@ -128,7 +131,9 @@ const usePackagesEnviar = (onSuccess) => {
       empresa_transporte: "",
       mensajero_nombre: "",
       observaciones: "",
-      conGuia: false, // Estado del checkbox
+      conGuia: false,
+      path_firma_validador_envio: "",
+      path_firma_remitente: "",
     },
     validationSchema,
     /**
@@ -138,34 +143,117 @@ const usePackagesEnviar = (onSuccess) => {
      * @param {object} values - Valores validados del formulario.
      * @returns {void}
      */
-    onSubmit: async (values, { setErrors, resetForm, setSubmitting }) => {
+    onSubmit: async (
+      values,
+      { setErrors, resetForm, setSubmitting, setFieldError }
+    ) => {
+      setSubmitting(true);
       try {
         const payload = { ...values };
-        if (!payload.conGuia) {
-          payload.guia = null; // Asegura que la guía sea nula si no se marca
+        let isValid = true;
+        let base64Validador, base64Remitente;
+
+        // --- Función Auxiliar de Subida (Definida DENTRO del onSubmit) ---
+        /**
+         * @function uploadSignature
+         * @description Función auxiliar para subir la imagen base64 de la firma al servidor
+         * y obtener el path relativo.
+         * @async
+         * @param {string} base64Data - La imagen en formato Data URL (base64).
+         * @param {string} folderName - El nombre de la subcarpeta donde guardar la firma.
+         * @returns {Promise<string|null>} La ruta relativa del archivo en el servidor.
+         */
+        const uploadSignature = async (base64Data, folderName) => {
+          if (!base64Data) return null;
+          const uploadRes = await api.post("/api/signatures/upload", {
+            image_data: base64Data,
+            folder: folderName,
+          });
+          return uploadRes.data.path;
+        };
+
+        // --- 1. Extracción y Validación de Firmas (Ambas Obligatorias) ---
+
+        // Firma Validador (Obligatoria)
+        const validadorSigPad = validadorSigPadRef.current;
+        if (validadorSigPad?.isEmpty()) {
+          setFieldError(
+            "path_firma_validador_envio",
+            "La firma del validador es obligatoria."
+          );
+          isValid = false;
+        } else {
+          base64Validador = validadorSigPad.toDataURL("image/png");
         }
+
+        // Firma Remitente (Obligatoria)
+        const remitenteSigPad = remitenteSigPadRef.current;
+        if (remitenteSigPad?.isEmpty()) {
+          setFieldError(
+            "path_firma_remitente",
+            "La firma del remitente es obligatoria."
+          );
+          isValid = false;
+        } else {
+          base64Remitente = remitenteSigPad.toDataURL("image/png");
+        }
+
+        if (!isValid) {
+          toast.error("Por favor, complete ambas firmas requeridas.");
+          setSubmitting(false);
+          return; // Detiene el envío si falta alguna firma
+        }
+
+        // --- 2. Subida Concurrente de Firmas ---
+        const [pathValidador, pathRemitente] = await Promise.all([
+          uploadSignature(base64Validador, "paquetes"),
+          uploadSignature(base64Remitente, "paquetes"),
+        ]);
+
+        // Asignar las rutas (path) devueltas por el servidor al payload
+        payload.path_firma_validador_envio = pathValidador;
+        payload.path_firma_remitente = pathRemitente;
+
+        // --- 3. Limpieza y Envío del Payload ---
+        if (!payload.conGuia) {
+          payload.guia = null;
+        }
+        delete payload.conGuia; // Se limpia el campo auxiliar
 
         await api.post("/api/paquetes/enviar", payload);
         toast.success("¡Paquete enviado con éxito!");
         resetForm();
+        validadorSigPadRef.current?.clear();
+        remitenteSigPadRef.current?.clear();
+
         if (onSuccess) {
           onSuccess();
         }
       } catch (error) {
+        // ... (Manejo de errores para Formik y errores de API)
         if (error.response?.data?.errors) {
-          // Errores de validación de Zod
           const formikErrors = {};
-          error.response.data.errors.forEach((e) => {
-            const path = e.path[0];
-            formikErrors[path] = e.message;
-          });
+          const zodErrors = error.response.data.errors.fieldErrors;
+          if (zodErrors) {
+            for (const key in zodErrors) {
+              if (Object.hasOwnProperty.call(zodErrors, key)) {
+                formikErrors[key] = zodErrors[key][0];
+              }
+            }
+          } else if (error.response.data.errors.forEach) {
+            // Soporte para errores de Yup
+            error.response.data.errors.forEach((e) => {
+              const path = e.path[0];
+              formikErrors[path] = e.message;
+            });
+          }
           setErrors(formikErrors);
           toast.error("Por favor, corrige los errores en el formulario.");
         } else {
-          // Error general (ej. guía duplicada)
-          toast.error(
-            error.response?.data?.message || "Ha ocurrido un error inesperado."
-          );
+          const apiError =
+            error.response?.data?.message || "Ha ocurrido un error inesperado.";
+          setFieldError("apiError", apiError);
+          toast.error(apiError);
         }
       } finally {
         setSubmitting(false);
@@ -179,10 +267,12 @@ const usePackagesEnviar = (onSuccess) => {
     areas,
     isLoading,
     errorCarga,
-    handleClearForm,
+    handleClickClear,
     handleKeyTextDown,
     handleAddressKeyDown,
     error: formik.errors.apiError,
+    validadorSigPadRef,
+    remitenteSigPadRef,
   };
 };
 

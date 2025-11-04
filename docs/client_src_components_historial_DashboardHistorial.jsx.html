@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: client/src/components/historial/DashboardHistorial.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: client/src/components/historial/DashboardHistorial.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @file DashboardHistorial.jsx
+ * @module Components/Historial/DashboardHistorial
+ * @description Componente de página que funciona como un menú para acceder al historial de registros de
+ * diferentes categorías (Visitas y Paquetes).
+ * @exports DashboardHistorial
+ * @requires react
+ * @requires react-router-dom - Para la navegación.
+ * @requires @fortawesome/react-fontawesome - Para la renderización de íconos.
+ * @requires @fortawesome/free-solid-svg-icons - Íconos sólidos utilizados (faBoxesPacking, faArrowLeft, faUserClock).
+ */
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faBoxesPacking,
+  faArrowLeft,
+  faUserClock,
+  faEye,
+  faSearch,
+  faExclamationTriangle,
+  faCar,
+  faFileInvoice,
+  faFileExcel,
+  faFilePdf,
+} from "@fortawesome/free-solid-svg-icons";
+import { useAuthStore } from "../../stores/authStore";
+import { useDashboardHistorial } from "../../hooks/historial/useDashboardHistorial";
+import DetailModal from "../utils/DetailModal";
+import {
+  visitConfig,
+  packageConfig,
+  vehicleConfig,
+  radicadoConfig,
+} from "../../hooks/utils/detailModalConfig";
+
+const VisitsTable = ({ visits, onAction, formatDate }) => {
+  if (visits.length === 0) {
+    return (
+      &lt;div className="text-center bg-surface text-text-main py-6 rounded-lg shadow-lg">
+        &lt;p className="text-xl font-medium">No se han registrado visitas aún.&lt;/p>
+        &lt;p className="text-sm mt-1">
+          Utiliza el botón "Nueva Visita" para registrar una entrada.
+        &lt;/p>
+      &lt;/div>
+    );
+  }
+
+  return (
+    &lt;div className="w-full overflow-x-auto rounded-lg shadow-lg shadow-black">
+      &lt;table className="min-w-full rounded-lg">
+        &lt;thead className="bg-secondary text-surface">
+          &lt;tr className="divide-x divide-secondary-hover">
+            &lt;th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              Visitante
+            &lt;/th>
+            &lt;th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              Tipo Doc.
+            &lt;/th>
+            &lt;th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              Documento
+            &lt;/th>
+            &lt;th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              Destinatario
+            &lt;/th>
+            &lt;th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              Área
+            &lt;/th>
+            &lt;th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              Entrada
+            &lt;/th>
+            &lt;th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              Salida
+            &lt;/th>
+            &lt;th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              Detalles
+            &lt;/th>
+          &lt;/tr>
+        &lt;/thead>
+        &lt;tbody className="bg-surface divide-y divide-neutral-200 text-text-main">
+          {visits.map((visit) => (
+            &lt;tr
+              key={visit.id_visita}
+              className="divide-x divide-neutral-200 hover:bg-background"
+            >
+              &lt;td className="px-6 py-4 whitespace-nowrap">
+                {visit.nombre_visitante}
+              &lt;/td>
+              &lt;td className="px-6 py-4 whitespace-nowrap">
+                {visit.IdentificationType?.descripcion}
+              &lt;/td>
+              &lt;td className="px-6 py-4 whitespace-nowrap font-bold text-secondary">
+                {visit.identificacion}
+              &lt;/td>
+              &lt;td className="px-6 py-4 whitespace-nowrap">
+                {visit.nombre_destinatario}
+              &lt;/td>
+              &lt;td className="px-6 py-4 whitespace-nowrap">
+                {visit.Area?.nombre_area}
+              &lt;/td>
+              &lt;td className="px-6 py-4 whitespace-nowrap text-sm">
+                {formatDate(visit.fecha_entrada)}
+              &lt;/td>
+              &lt;td className="px-6 py-4 whitespace-nowrap text-sm">
+                {visit.fecha_salida ? formatDate(visit.fecha_salida) : "-"}
+              &lt;/td>
+              &lt;td className="px-6 py-4 whitespace-nowrap text-center">
+                &lt;button
+                  onClick={() => onAction(visit)}
+                  className="text-secondary p-2 rounded-lg hover:bg-secondary-light transition-colors duration-200 shadow-md shadow-neutral-400"
+                  aria-label={`Ver detalles de ${visit.nombre_visitante}`}
+                >
+                  &lt;FontAwesomeIcon icon={faEye} />
+                &lt;/button>
+              &lt;/td>
+            &lt;/tr>
+          ))}
+        &lt;/tbody>
+      &lt;/table>
+    &lt;/div>
+  );
+};
+
+const PackagesTable = ({ packages, onAction, formatDate }) => {
+  if (packages.length === 0) {
+    return (
+      &lt;div className="text-center bg-surface text-text-main py-6 rounded-lg shadow-lg">
+        &lt;p className="text-xl font-medium">
+          No hay paquetes registrados en este momento.
+        &lt;/p>
+        &lt;p className="text-sm mt-1">
+          Navega hacia el módulo de paquetes para registrar un nuevo paquete.
+        &lt;/p>
+      &lt;/div>
+    );
+  }
+
+  return (
+    &lt;div className="w-full overflow-x-auto rounded-lg shadow-lg shadow-black">
+      &lt;table className="w-full rounded-lg">
+        &lt;thead className="bg-primary text-surface">
+          &lt;tr className="divide-x divide-primary-hover">
+            &lt;th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              Guía
+            &lt;/th>
+            &lt;th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              Tipo Paquete
+            &lt;/th>
+            &lt;th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              Área
+            &lt;/th>
+            &lt;th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              Operación
+            &lt;/th>
+            &lt;th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              Recibido
+            &lt;/th>
+            &lt;th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              Enviado
+            &lt;/th>
+            &lt;th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              Detalles
+            &lt;/th>
+          &lt;/tr>
+        &lt;/thead>
+        &lt;tbody className="bg-surface divide-y divide-neutral-200 text-text-main">
+          {packages.map((pkg) => (
+            &lt;tr
+              key={pkg.id_paquete}
+              className="divide-x divide-neutral-200 hover:bg-background"
+            >
+              &lt;td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-primary">
+                {pkg.guia || "N/A"}
+              &lt;/td>
+              &lt;td className="px-6 py-4 whitespace-nowrap text-sm">
+                {pkg.PackageType?.descripcion || "N/A"}
+              &lt;/td>
+              &lt;td className="px-6 py-4 whitespace-nowrap text-sm">
+                {pkg.Area?.nombre_area || "N/A"}
+              &lt;/td>
+              &lt;td className="px-6 py-4 whitespace-nowrap text-sm">
+                {pkg.tipo_operacion || "N/A"}
+              &lt;/td>
+              &lt;td className="px-6 py-4 whitespace-nowrap text-sm">
+                {formatDate(pkg.fecha_recibido)}
+              &lt;/td>
+              &lt;td className="px-6 py-4 whitespace-nowrap text-sm">
+                {formatDate(pkg.fecha_envio)}
+              &lt;/td>
+              &lt;td className="px-6 py-4 whitespace-nowrap text-center">
+                &lt;button
+                  onClick={() => onAction("paquete", pkg)} // Llama al handler del padre
+                  className="text-primary p-2 rounded-lg hover:bg-primary-light transition-colors duration-200 shadow-md shadow-neutral-400"
+                  aria-label={`Ver detalles del paquete`}
+                >
+                  &lt;FontAwesomeIcon icon={faEye} />
+                &lt;/button>
+              &lt;/td>
+            &lt;/tr>
+          ))}
+        &lt;/tbody>
+      &lt;/table>
+    &lt;/div>
+  );
+};
+
+/**
+ * @function ParkingHistoryTable
+ * @description Subcomponente que renderiza la tabla de historial de parqueadero.
+ * @param {object} props
+ * @param {Array&lt;object>} props.parkingLogs - Lista de logs de parqueadero (con 'Vehicle' anidado).
+ * @param {Function} props.onAction - Función para abrir el modal de detalles.
+ * @param {Function} props.formatDate - Función para formatear fechas.
+ * @returns {JSX.Element}
+ */
+const ParkingHistoryTable = ({ parkingLogs, onAction, formatDate }) => {
+  if (parkingLogs.length === 0) {
+    return (
+      &lt;div className="text-center bg-surface text-text-main py-6 rounded-lg shadow-lg">
+        &lt;p className="text-xl font-medium">
+          No hay registros de parquedero para mostrar
+        &lt;/p>
+        &lt;p className="text-sm mt-1">
+          Navega hacia el módulo de "parqueadero" y registra una entrada y
+          salida de un vehiculo.
+        &lt;/p>
+      &lt;/div>
+    );
+  }
+
+  return (
+    &lt;div className="w-full overflow-x-auto rounded-lg shadow-lg shadow-black">
+      &lt;table className="min-w-full rounded-lg">
+        {/* Usamos color neutro (ej. 'tertiary' o gris) para el header */}
+        &lt;thead className="bg-neutral-600 text-surface">
+          &lt;tr className="divide-x divide-neutral-700">
+            &lt;th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              Placa
+            &lt;/th>
+            &lt;th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              Tipo
+            &lt;/th>
+            &lt;th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              Dueño
+            &lt;/th>
+            &lt;th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider hidden md:table-cell">
+              Identificación
+            &lt;/th>
+            &lt;th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              Entrada
+            &lt;/th>
+            &lt;th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              Salida
+            &lt;/th>
+            &lt;th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider hidden sm:table-cell">
+              Portero (Salida)
+            &lt;/th>
+            &lt;th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              Detalles
+            &lt;/th>
+          &lt;/tr>
+        &lt;/thead>
+        &lt;tbody className="bg-surface divide-y divide-neutral-200 text-text-main">
+          {parkingLogs.map((log) => {
+            return (
+              &lt;tr
+                key={log.id_historial}
+                className="divide-x divide-neutral-200 hover:bg-background"
+              >
+                &lt;td className="px-6 py-4 whitespace-nowrap font-mono font-bold text-tertiary">
+                  {log.Vehicle?.placa || "N/A"}
+                &lt;/td>
+                &lt;td className="px-6 py-4 whitespace-nowrap text-sm">
+                  {log.Vehicle?.tipo_vehiculo || "N/A"}
+                &lt;/td>
+                &lt;td className="px-6 py-4 whitespace-nowrap">
+                  {log.Vehicle?.nombre_dueno || "N/A"}
+                &lt;/td>
+                &lt;td className="px-6 py-4 whitespace-nowrap hidden md:table-cell">
+                  {log.Vehicle?.identificacion_dueno || "N/A"}
+                &lt;/td>
+                &lt;td className="px-6 py-4 whitespace-nowrap text-sm">
+                  {formatDate(log.fecha_entrada)}
+                &lt;/td>
+                &lt;td className="px-6 py-4 whitespace-nowrap text-sm">
+                  {formatDate(log.fecha_salida)}
+                &lt;/td>
+                &lt;td className="px-6 py-4 whitespace-nowrap text-sm hidden sm:table-cell">
+                  {log.ExitUser?.nombre || "N/A"}
+                &lt;/td>
+                &lt;td className="px-6 py-4 whitespace-nowrap text-center">
+                  &lt;button
+                    onClick={() => onAction(log.Vehicle)}
+                    className="text-neutral-600 p-2 rounded-lg hover:bg-neutral-200 transition-colors"
+                    aria-label={`Ver detalles de ${
+                      log.Vehicle?.placa || "vehículo"
+                    }`}
+                  >
+                    &lt;FontAwesomeIcon icon={faEye} />
+                  &lt;/button>
+                &lt;/td>
+              &lt;/tr>
+            );
+          })}
+        &lt;/tbody>
+      &lt;/table>
+    &lt;/div>
+  );
+};
+
+/**
+ * @function RadicadosTable
+ * @description Subcomponente que renderiza la tabla de historial de radicados.
+ * @param {object} props
+ * @returns {JSX.Element}
+ */
+const RadicadosTable = ({ radicados, onAction, formatDate }) => {
+  console.log("🚀 ~ RadicadosTable ~ radicados:", radicados);
+  if (radicados.length === 0) {
+    return (
+      &lt;div className="text-center bg-surface text-text-main py-6 rounded-lg shadow-lg">
+        &lt;p className="text-xl font-medium">No hay registros de radicados&lt;/p>
+        &lt;p className="text-sm mt-1">
+          Navega hacia el módulo de "paquetes" y registra un radicado.
+        &lt;/p>
+      &lt;/div>
+    );
+  }
+  return (
+    &lt;div className="w-full overflow-x-auto rounded-lg shadow-lg shadow-black">
+      &lt;table className="min-w-full rounded-lg">
+        &lt;thead className="bg-accent text-white">
+          {" "}
+          &lt;tr className="divide-x divide-accent-hover">
+            &lt;th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              N° Radicado
+            &lt;/th>
+            &lt;th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              Recibido
+            &lt;/th>
+            &lt;th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              Recibió (Empleado)
+            &lt;/th>
+            &lt;th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider hidden md:table-cell">
+              Mensajero
+            &lt;/th>
+            &lt;th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider hidden sm:table-cell">
+              Portero (Validador)
+            &lt;/th>
+            &lt;th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              Detalles
+            &lt;/th>
+          &lt;/tr>
+        &lt;/thead>
+        &lt;tbody className="bg-surface divide-y divide-neutral-200 text-text-main">
+          {radicados.map((rad) => {
+            return (
+              &lt;tr
+                key={rad.id_paquete}
+                className="divide-x divide-neutral-200 hover:bg-background"
+              >
+                &lt;td className="px-6 py-4 whitespace-nowrap font-mono font-bold text-accent">
+                  {rad.referencia_radicado}
+                &lt;/td>
+                &lt;td className="px-6 py-4 whitespace-nowrap text-sm">
+                  {formatDate(rad.fecha_recibido)}
+                &lt;/td>
+                &lt;td className="px-6 py-4 whitespace-nowrap">
+                  {rad.nombre_recibe_documento || "N/A"}
+                &lt;/td>
+                &lt;td className="px-6 py-4 whitespace-nowrap hidden md:table-cell">
+                  {rad.mensajero_nombre || "N/A"}
+                &lt;/td>
+                &lt;td className="px-6 py-4 whitespace-nowrap hidden sm:table-cell">
+                  {rad.PackagesReceived?.nombre
+                    ? `${rad.PackagesReceived.nombre} ${
+                        rad.PackagesReceived.apellido || ""
+                      }`
+                    : "N/A"}
+                &lt;/td>
+                &lt;td className="px-6 py-4 whitespace-nowrap text-center">
+                  &lt;button
+                    onClick={() => onAction(rad)}
+                    className="text-accent p-2 rounded-lg hover:bg-accent/10 transition-colors"
+                    aria-label={`Ver detalles de ${rad.referencia_radicado}`}
+                  >
+                    &lt;FontAwesomeIcon icon={faEye} />
+                  &lt;/button>
+                &lt;/td>
+              &lt;/tr>
+            );
+          })}
+        &lt;/tbody>
+      &lt;/table>
+    &lt;/div>
+  );
+};
+
+/**
+ * @function TabButton
+ * @description Botón reutilizable para las pestañas.
+ */
+const TabButton = ({
+  label,
+  tabName,
+  activeTab,
+  onClick,
+  icon,
+  colorClass,
+}) => (
+  &lt;button
+    onClick={() => onClick(tabName)}
+    className={`py-3 px-5 font-semibold flex items-center gap-2 ${
+      activeTab === tabName
+        ? `border-b-2 ${colorClass} ${colorClass.replace("border", "text")}` // ej. border-primary text-primary
+        : "text-text-main/60 hover:text-text-main"
+    }`}
+  >
+    &lt;FontAwesomeIcon icon={icon} />
+    &lt;span>{label}&lt;/span>
+  &lt;/button>
+);
+
+/**
+ * @function DashboardHistorialSkeleton
+ * @description Muestra una versión de esqueleto de la UI mientras cargan los datos.
+ * @returns {JSX.Element}
+ */
+const DashboardHistorialSkeleton = () => (
+  &lt;div className="flex flex-col items-center w-full h-full mb-[50px] p-4 animate-pulse">
+    {/* --- Esqueleto del Botón de Volver --- */}
+    &lt;div className="md:absolute md:left-[150px] md:top-[100px] mb-5 bg-gray-200 rounded-full shadow-sm md:w-1/12 w-1/2 h-12">&lt;/div>
+
+    {/* --- Esqueleto del Título --- */}
+    &lt;div className="h-10 sm:h-12 bg-gray-200 rounded w-3/4 max-w-md mx-auto mb-14 mt-10">&lt;/div>
+
+    {/* --- Esqueleto de Pestañas --- */}
+    &lt;div className="w-full max-w-5xl border-b border-neutral-300 mb-6">
+      &lt;div className="flex flex-col sm:flex-row gap-2">
+        &lt;div className="h-12 w-48 bg-gray-200 rounded-t">&lt;/div>
+        &lt;div className="h-12 w-48 bg-gray-200 rounded-t">&lt;/div>
+      &lt;/div>
+    &lt;/div>
+
+    {/* --- Esqueleto de Filtros --- */}
+    &lt;div className="w-full max-w-5xl flex flex-col md:flex-row gap-4 mb-6">
+      &lt;div className="h-12 w-full md:w-1/2 bg-gray-200 rounded-lg">&lt;/div>
+      &lt;div className="h-12 w-full md:w-3/12 bg-gray-200 rounded-lg">&lt;/div>
+    &lt;/div>
+
+    {/* --- Esqueleto de la Tabla --- */}
+    &lt;div className="w-full max-w-5xl">
+      &lt;div className="w-full overflow-x-auto rounded-lg shadow-lg bg-surface p-4">
+        {/* Esqueleto del Encabezado de la Tabla */}
+        &lt;div className="flex justify-between gap-4 mb-4 pb-3 border-b border-gray-200">
+          &lt;div className="h-4 bg-gray-200 rounded w-1/6">&lt;/div>
+          &lt;div className="h-4 bg-gray-200 rounded w-1/6">&lt;/div>
+          &lt;div className="h-4 bg-gray-200 rounded w-1/6">&lt;/div>
+          &lt;div className="h-4 bg-gray-200 rounded w-1/6 hidden sm:block">&lt;/div>
+          &lt;div className="h-4 bg-gray-200 rounded w-1/6 hidden md:block">&lt;/div>
+          &lt;div className="h-4 bg-gray-200 rounded w-1/6 hidden md:block">&lt;/div>
+        &lt;/div>
+
+        {/* Esqueleto de las Filas de la Tabla */}
+        &lt;div className="space-y-4">
+          {[...Array(6)].map((_, i) => (
+            &lt;div key={i} className="flex justify-between items-center gap-4">
+              &lt;div className="h-5 bg-gray-200 rounded w-1/6">&lt;/div>
+              &lt;div className="h-5 bg-gray-200 rounded w-1/6">&lt;/div>
+              &lt;div className="h-5 bg-gray-200 rounded w-1/6">&lt;/div>
+              &lt;div className="h-5 bg-gray-200 rounded w-1/6 hidden sm:block">&lt;/div>
+              &lt;div className="h-5 bg-gray-200 rounded w-1/6 hidden md:block">&lt;/div>
+              &lt;div className="h-5 bg-gray-200 rounded w-1/6 hidden md:block">&lt;/div>
+            &lt;/div>
+          ))}
+        &lt;/div>
+      &lt;/div>
+    &lt;/div>
+  &lt;/div>
+);
+
+/**
+ * @function DashboardHistorial
+ * @description Renderiza el dashboard unificado de historial.
+ * @returns {JSX.Element}
+ */
+export default function DashboardHistorial() {
+  const {
+    data,
+    activeTab,
+    showDetailsModal,
+    selectedItem,
+    isLoading,
+    error,
+    noResults,
+    searchTerm,
+    isExporting,
+    setActiveTab,
+    handleSearchChange,
+    handleSortChange,
+    formatDate,
+    openDetailsModal,
+    closeModal,
+    handleExport,
+  } = useDashboardHistorial();
+
+  const { isLoading: isAuthLoading } = useAuthStore();
+
+  const navigate = useNavigate();
+  const goBack = () => navigate("/dashboard");
+
+  if (isLoading || isAuthLoading) {
+    return &lt;DashboardHistorialSkeleton />;
+  }
+
+  let modalConfig = packageConfig;
+  let modalTitle = "Detalles del Paquete";
+  let modalTheme = "primary";
+
+  if (activeTab === "visitas") {
+    modalConfig = visitConfig;
+    modalTitle = "Detalles de la Visita";
+    modalTheme = "secondary";
+  } else if (activeTab === "parqueadero") {
+    modalConfig = vehicleConfig;
+    modalTitle = "Detalles del Vehículo";
+    modalTheme = "neutral-600";
+  } else if (activeTab === "radicados") {
+    modalConfig = radicadoConfig;
+    modalTitle = "Detalles del Radicado";
+    modalTheme = "accent";
+  }
+
+  return (
+    &lt;div className="flex flex-col items-center w-full h-full mb-[50px] p-4">
+      {/* --- Botón de Volver --- */}
+      &lt;button
+        type="button"
+        onClick={goBack}
+        className="md:absolute md:left-[150px] md:top-[100px] mb-5 bg-surface text-text-main font-bold p-3 rounded-full shadow-sm shadow-black md:w-1/12 w-1/2 hover:bg-background transition-colors"
+        aria-label="Volver al dashboard"
+      >
+        &lt;FontAwesomeIcon icon={faArrowLeft} className="text-xl" />
+      &lt;/button>
+
+      {/* --- Título --- */}
+      &lt;h1 className="text-4xl sm:text-5xl font-bold mb-14 text-center text-secondary">
+        Historial de Registros
+      &lt;/h1>
+
+      {/* --- Pestañas --- */}
+      &lt;div className="w-full max-w-5xl border-b border-neutral-300 mb-6">
+        &lt;div className="flex flex-col sm:flex-row gap-2">
+          &lt;TabButton
+            label="Historial de Visitas"
+            tabName="visitas"
+            activeTab={activeTab}
+            onClick={setActiveTab}
+            icon={faUserClock}
+            colorClass="border-secondary text-secondary"
+          />
+          &lt;TabButton
+            label="Historial de Paquetes"
+            tabName="paquetes"
+            activeTab={activeTab}
+            onClick={setActiveTab}
+            icon={faBoxesPacking}
+            colorClass="border-primary text-primary"
+          />
+          &lt;TabButton
+            label="Historial de Parqueadero"
+            tabName="parqueadero"
+            activeTab={activeTab}
+            onClick={setActiveTab}
+            icon={faCar}
+            colorClass="border-tertiary text-tertiary"
+          />
+          &lt;TabButton
+            label="Historial de Radicados"
+            tabName="radicados"
+            activeTab={activeTab}
+            onClick={setActiveTab}
+            icon={faFileInvoice}
+            colorClass="border-accent text-accent"
+          />
+        &lt;/div>
+      &lt;/div>
+
+      {/* --- Filtros --- */}
+      &lt;div className="w-full max-w-5xl flex flex-col md:flex-row gap-4 mb-6">
+        &lt;div className="relative w-full md:w-1/2">
+          &lt;input
+            type="text"
+            placeholder={
+              activeTab === "visitas"
+                ? "Buscar por visitante, documento, destinatario..."
+                : activeTab === "paquetes"
+                ? "Buscar por guía, remitente, destinatario..."
+                : activeTab === "parqueadero"
+                ? "Buscar por placa, dueño, identificación..."
+                : "Buscar por N° radicado, mensajero..."
+            }
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="w-full p-3 pl-10 border text-text-main border-neutral-300 rounded-lg bg-surface"
+          />
+          &lt;FontAwesomeIcon
+            icon={faSearch}
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-main/70"
+          />
+        &lt;/div>
+        &lt;select
+          onChange={handleSortChange}
+          defaultValue="fecha_desc"
+          className="w-full md:w-3/12 p-3 border border-neutral-300 rounded-lg bg-surface text-text-main"
+        >
+          &lt;option value="fecha_desc">Más Recientes Primero&lt;/option>
+          &lt;option value="fecha_asc">Más Antiguos Primero&lt;/option>
+        &lt;/select>
+
+        {activeTab === "radicados" &amp;&amp; (
+          &lt;>
+            &lt;button
+              onClick={() => handleExport("excel")} // Llama con 'excel'
+              disabled={isExporting}
+              className="w-full md:w-auto p-3 flex items-center justify-center gap-2 bg-green-700 text-white font-semibold rounded-lg shadow hover:bg-green-800 disabled:bg-gray-400"
+            >
+              &lt;FontAwesomeIcon icon={faFileExcel} />
+              {isExporting ? "Exportando..." : "Excel"}
+            &lt;/button>
+            &lt;button
+              onClick={() => handleExport("pdf")} // Llama con 'pdf'
+              disabled={isExporting}
+              className="w-full md:w-auto p-3 flex items-center justify-center gap-2 bg-red-600 text-white font-semibold rounded-lg shadow hover:bg-red-700 disabled:bg-gray-400"
+            >
+              &lt;FontAwesomeIcon icon={faFilePdf} />
+              {isExporting ? "Exportando..." : "PDF"}
+            &lt;/button>
+          &lt;/>
+        )}
+      &lt;/div>
+
+      {/* --- Contenido (Tablas y Estados) --- */}
+      &lt;div className="w-full max-w-5xl">
+        {isLoading &amp;&amp; (
+          &lt;div className="py-8 w-full text-center text-lg font-semibold text-primary">
+            Cargando historial...
+          &lt;/div>
+        )}
+
+        {error &amp;&amp; (
+          &lt;div className="mt-8 w-full">
+            &lt;div
+              className="bg-red-100 border-l-4 w-full font-semibold border-error text-error-hover p-3 rounded-md shadow-md"
+              role="alert"
+            >
+              &lt;div className="flex items-center">
+                &lt;FontAwesomeIcon
+                  icon={faExclamationTriangle}
+                  className="mr-2 text-xl"
+                />
+                &lt;p className="font-bold text-lg">Error de Carga&lt;/p>
+              &lt;/div>
+              &lt;p className="text-lg mt-[10px]">{error}&lt;/p>
+            &lt;/div>
+          &lt;/div>
+        )}
+
+        {noResults &amp;&amp; !isLoading &amp;&amp; !error &amp;&amp; (
+          &lt;div className="py-8 w-full max-w-4xl text-center">
+            &lt;FontAwesomeIcon
+              icon={faExclamationTriangle}
+              className="text-primary text-6xl mb-4"
+            />
+            &lt;p className="text-2xl font-bold text-text-main">
+              ¡No se encontraron resultados!
+            &lt;/p>
+            &lt;p className="text-text-main mt-2">
+              Intenta con otro término de búsqueda.
+            &lt;/p>
+          &lt;/div>
+        )}
+
+        {!isLoading &amp;&amp;
+          !error &amp;&amp;
+          !noResults &amp;&amp;
+          (activeTab === "visitas" ? (
+            &lt;VisitsTable
+              visits={data}
+              onAction={openDetailsModal}
+              formatDate={formatDate}
+            />
+          ) : activeTab === "paquetes" ? (
+            &lt;PackagesTable
+              packages={data}
+              onAction={openDetailsModal}
+              formatDate={formatDate}
+            />
+          ) : activeTab === "parqueadero" ? (
+            &lt;ParkingHistoryTable
+              parkingLogs={data}
+              onAction={openDetailsModal}
+              formatDate={formatDate}
+            />
+          ) : (
+            &lt;RadicadosTable
+              radicados={data}
+              onAction={openDetailsModal}
+              formatDate={formatDate}
+            />
+          ))}
+      &lt;/div>
+
+      {showDetailsModal &amp;&amp; selectedItem &amp;&amp; (
+        &lt;DetailModal
+          item={selectedItem}
+          onClose={closeModal}
+          title={modalTitle}
+          config={modalConfig}
+          themeColor={modalTheme}
+          formatDate={formatDate}
+        />
+      )}
+    &lt;/div>
+  );
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="component_AuthRedirect.module_jsx.html">component/AuthRedirect.jsx</a></li><li><a href="component_auth_LoginForm.module_jsx.html">component/auth/LoginForm.jsx</a></li><li><a href="component_auth_RegisterForm.module_jsx.html">component/auth/RegisterForm.jsx</a></li><li><a href="components_Dashboard.module_jsx.html">components/Dashboard.jsx</a></li><li><a href="components_Layout.module_jsx.html">components/Layout.jsx</a></li><li><a href="components_PrivateRoute.module_jsx.html">components/PrivateRoute.jsx</a></li><li><a href="components_WelcomePage.module_jsx.html">components/WelcomePage.jsx</a></li><li><a href="components_packages_DashboardPackage.module_jsx.html">components/packages/DashboardPackage.jsx</a></li><li><a href="components_packages_PackagesEnviarForm.module_jsx.html">components/packages/PackagesEnviarForm.jsx</a></li><li><a href="components_packages_RecibirPaqueteForm.module_jsx.html">components/packages/RecibirPaqueteForm.jsx</a></li><li><a href="components_parking_DashboardParking.module_jsx.html">components/parking/DashboardParking.jsx</a></li><li><a href="components_visits_VisitEntryForm.module_jsx.html">components/visits/VisitEntryForm.jsx</a></li><li><a href="module-App.html">App</a></li><li><a href="module-AxiosClient.html">AxiosClient</a></li><li><a href="module-Components_Historial_DashboardHistorial.html">Components/Historial/DashboardHistorial</a></li><li><a href="module-Components_Parking.html">Components/Parking</a></li><li><a href="module-Components_UI.html">Components/UI</a></li><li><a href="module-Config.html">Config</a></li><li><a href="module-Controllers.html">Controllers</a></li><li><a href="module-Controllers_Signatures.html">Controllers/Signatures</a></li><li><a href="module-DateUtils.html">DateUtils</a></li><li><a href="module-EntryPoint.html">EntryPoint</a></li><li><a href="module-Hooks.html">Hooks</a></li><li><a href="module-Hooks_Auth.html">Hooks/Auth</a></li><li><a href="module-Hooks_Historial.html">Hooks/Historial</a></li><li><a href="module-Hooks_Packages.html">Hooks/Packages</a></li><li><a href="module-Hooks_Paquetes.html">Hooks/Paquetes</a></li><li><a href="module-Hooks_Parking.html">Hooks/Parking</a></li><li><a href="module-Hooks_Utils.html">Hooks/Utils</a></li><li><a href="module-Hooks_Visits.html">Hooks/Visits</a></li><li><a href="module-Hooks_usePackagesRecibir.html">Hooks/usePackagesRecibir</a></li><li><a href="module-InputHandlers.html">InputHandlers</a></li><li><a href="module-Middlewares.html">Middlewares</a></li><li><a href="module-Models.html">Models</a></li><li><a href="module-Models_Catalogues.html">Models/Catalogues</a></li><li><a href="module-Repositories.html">Repositories</a></li><li><a href="module-Repositories_Parking.html">Repositories/Parking</a></li><li><a href="module-Routes.html">Routes</a></li><li><a href="module-Routes_Parking.html">Routes/Parking</a></li><li><a href="module-Routes_Signatures.html">Routes/Signatures</a></li><li><a href="module-Schemas.html">Schemas</a></li><li><a href="module-Services.html">Services</a></li><li><a href="module-Services_Parking.html">Services/Parking</a></li><li><a href="module-Stores.html">Stores</a></li><li><a href="module-Utils.html">Utils</a></li><li><a href="module-Utils_Errors.html">Utils/Errors</a></li><li><a href="module-apiController.html">apiController</a></li><li><a href="module-apiRoutes.html">apiRoutes</a></li><li><a href="module-authRoutes.html">authRoutes</a></li><li><a href="module-hooks_parking_.html">hooks/parking</a></li><li><a href="module-packageController.html">packageController</a></li><li><a href="module-packageRoutes.html">packageRoutes</a></li><li><a href="module-passportConfig.html">passportConfig</a></li><li><a href="module-visitController.html">visitController</a></li><li><a href="module-visitRoutes.html">visitRoutes</a></li></ul><h3>Classes</h3><ul><li><a href="module-Models_Catalogues-Area.html">Area</a></li><li><a href="module-Models_Catalogues-IdentificationType.html">IdentificationType</a></li><li><a href="module-Models_Catalogues-PackageType.html">PackageType</a></li><li><a href="module-Models-Log.html">Log</a></li><li><a href="module-Models-Package.html">Package</a></li><li><a href="module-Models-ParkingLog.html">ParkingLog</a></li><li><a href="module-Models-RefreshToken.html">RefreshToken</a></li><li><a href="module-Models-User.html">User</a></li><li><a href="module-Models-Vehicle.html">Vehicle</a></li><li><a href="module-Models-Visit.html">Visit</a></li><li><a href="module-Utils_Errors.AppError.html">AppError</a></li><li><a href="module-Utils_Errors-AccountDisabledError.html">AccountDisabledError</a></li><li><a href="module-Utils_Errors-ActiveVisitDontExistsError.html">ActiveVisitDontExistsError</a></li><li><a href="module-Utils_Errors-AppError.html">AppError</a></li><li><a href="module-Utils_Errors-BadRequestError.html">BadRequestError</a></li><li><a href="module-Utils_Errors-ConflictError.html">ConflictError</a></li><li><a href="module-Utils_Errors-DuplicateError.html">DuplicateError</a></li><li><a href="module-Utils_Errors-ForbiddenError.html">ForbiddenError</a></li><li><a href="module-Utils_Errors-InvalidIdError.html">InvalidIdError</a></li><li><a href="module-Utils_Errors-InvalidTokenError.html">InvalidTokenError</a></li><li><a href="module-Utils_Errors-MissingApiKeyError.html">MissingApiKeyError</a></li><li><a href="module-Utils_Errors-NotFoundError.html">NotFoundError</a></li><li><a href="module-Utils_Errors-UserAlreadyExistsError.html">UserAlreadyExistsError</a></li><li><a href="module-Utils_Errors-UserNotFoundOrInvalidPasswordError.html">UserNotFoundOrInvalidPasswordError</a></li></ul><h3>Global</h3><ul><li><a href="global.html#createVehicle">createVehicle</a></li><li><a href="global.html#getAllVehicles">getAllVehicles</a></li><li><a href="global.html#getOccupancyController">getOccupancyController</a></li><li><a href="global.html#handleScan">handleScan</a></li><li><a href="global.html#packageConfig">packageConfig</a></li><li><a href="global.html#radicadoConfig">radicadoConfig</a></li><li><a href="global.html#registerEntry">registerEntry</a></li><li><a href="global.html#registerExit">registerExit</a></li><li><a href="global.html#updateVehicle">updateVehicle</a></li><li><a href="global.html#vehicleConfig">vehicleConfig</a></li><li><a href="global.html#visitConfig">visitConfig</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Tue Nov 04 2025 16:47:25 GMT-0500 (hora estándar de Colombia)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

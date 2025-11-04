@@ -27,11 +27,11 @@ import logger from "../config/logger.js";
  * @throws {DuplicateError} Si uno de los números de guía ya existe para el mismo tipo de operación.
  */
 export const createPackage = async (packageData) => {
+  console.log("🚀 ~ createPackage ~ packageData:", packageData);
   return db.sequelize.transaction(async (t) => {
     const { guia, tipo_operacion, id_usuario, ip_usuario, ...restOfData } =
       packageData;
 
-    // 1. Verificación de Lógica de Negocio: Guía duplicada
     if (guia) {
       const existingPackage = await packageRepository.findByGuide(
         guia,

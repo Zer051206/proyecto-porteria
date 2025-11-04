@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: client/src/hooks/packages/usePackagesEnviar.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: client/src/hooks/packages/usePackagesEnviar.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @file usePackagesEnviar.js
+ * @module Hooks/Paquetes
+ * @description Hook personalizado para gestionar el formulario y la lógica de envío de paquetes.
+ * Se encarga de cargar opciones, definir el esquema de validación, manejar el estado
+ * del formulario con Formik, y enviar los datos a la API.
+ * @requires react/useState, useEffect
+ * @requires formik/useFormik
+ * @requires yup - Para la definición del esquema de validación.
+ * @requires ../../config/axios - Instancia de Axios configurada para la API.
+ * @requires ../../utils/inputUtilities - Funciones de utilidad para el manejo de entradas de teclado.
+ *
+ * @param {Function} navigate - Función de navegación de `react-router-dom/useNavigate`.
+ */
+import { useState, useEffect, useRef } from "react";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import api from "../../config/axios";
+import {
+  handleKeyTextDown,
+  handleAddressKeyDown,
+} from "../../utils/inputUtilities";
+import toast from "react-hot-toast";
+
+/**
+ * @function usePackagesEnviar
+ * @description Gestiona el estado, la validación y el envío del formulario para registrar
+ * la salida de un paquete del almacén.
+ * @property {object} formik - Objeto completo devuelto por `useFormik` para enlazar con los campos del formulario.
+ * @property {Array&lt;object>} tiposPaquetes - Lista de opciones de tipos de paquetes cargada desde la API.
+ * @property {Array&lt;object>} areas - Lista de opciones de áreas cargada desde la API.
+ * @property {boolean} isLoading - Indica si las opciones iniciales del formulario están cargando.
+ * @property {string | null} errorCarga - Mensaje de error si falló la carga inicial de opciones.
+ * @property {Function} handleClearForm - Función para resetear el formulario y limpiar errores.
+ * @property {Function} handleKeyTextDown - Utilidad para restringir caracteres en entradas de texto.
+ * @property {Function} handleAddressKeyDown - Utilidad para restringir caracteres en entradas de dirección/destino.
+ * @property {string | null} error - Mensaje de error general si falló la submission del formulario.
+ */
+const usePackagesEnviar = (onSuccess) => {
+  const validadorSigPadRef = useRef(null);
+  const remitenteSigPadRef = useRef(null);
+  const [tiposPaquetes, setTiposPaquetes] = useState([]);
+  const [areas, setAreas] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorCarga, setErrorCarga] = useState(null);
+  const [error, setError] = useState(null);
+
+  /**
+   * @function handleClickClear
+   * @description Restablece los valores del formulario y limpia las firmas.
+   */
+  const handleClickClear = () => {
+    formik.resetForm();
+    validadorSigPadRef.current?.clear();
+    remitenteSigPadRef.current?.clear();
+    formik.setErrors({});
+    formik.setTouched({});
+  };
+  /**
+   * @effect
+   * @description Hook de efecto para cargar las opciones de tipos de paquetes y áreas
+   * desde la API al montar el componente.
+   */
+  useEffect(() => {
+    const fetchFormData = async () => {
+      try {
+        const [tiposRes, areasRes] = await Promise.all([
+          api.get("/api/tipos-paquetes"),
+          api.get("/api/areas"),
+        ]);
+        setTiposPaquetes(tiposRes.data);
+        setAreas(areasRes.data);
+      } catch (error) {
+        setErrorCarga(
+          "No se pudieron cargar las opciones. Intente recargar la página"
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchFormData();
+  }, []);
+
+  /**
+   * @const {object} validationSchema
+   * @description Esquema de validación para los campos del formulario utilizando Yup.
+   * Incluye validación condicional para el campo `guia`.
+   */
+  const validationSchema = Yup.object({
+    id_tipo_paquete: Yup.number().required(
+      "El tipo de paquete es obligatorio."
+    ),
+    nombre_remitente: Yup.string().required(
+      "El nombre del remitente es obligatorio."
+    ),
+    id_area: Yup.number().required("El área es obligatoria."),
+    guia: Yup.string().when("conGuia", {
+      is: true,
+      then: (schema) => schema.required("El número de guía es obligatorio."),
+    }),
+    empresa_transporte: Yup.string()
+      .nullable()
+      .max(100, "La empresa no puede exceder los 100 caracteres."),
+    mensajero_nombre: Yup.string()
+      .nullable()
+      .max(255, "El nombre no puede exceder los 255 caracteres."),
+    destino_salida: Yup.string()
+      .required("El destino es obligatorio.")
+      .nullable()
+      .max(100, "El destino no puede exceder los 100 caracteres."),
+    observaciones: Yup.string()
+      .nullable()
+      .max(500, "Las observaciones no pueden exceder los 500 caracteres."),
+    path_firma_validador_envio: Yup.string().nullable().optional(),
+    path_firma_remitente: Yup.string().nullable().optional(),
+  });
+
+  /**
+   * @const {object} formik
+   * @description Instancia de Formik configurada para manejar el estado, validación y
+   * submission del formulario.
+   */
+  const formik = useFormik({
+    initialValues: {
+      id_tipo_paquete: "",
+      tipo_operacion: "enviar",
+      guia: "",
+      nombre_remitente: "",
+      id_area: "",
+      destino_salida: "",
+      empresa_transporte: "",
+      mensajero_nombre: "",
+      observaciones: "",
+      conGuia: false,
+      path_firma_validador_envio: "",
+      path_firma_remitente: "",
+    },
+    validationSchema,
+    /**
+     * @async
+     * @function onSubmit
+     * @description Función de submission del formulario. Envía los datos del paquete a la API.
+     * @param {object} values - Valores validados del formulario.
+     * @returns {void}
+     */
+    onSubmit: async (
+      values,
+      { setErrors, resetForm, setSubmitting, setFieldError }
+    ) => {
+      setSubmitting(true);
+      try {
+        const payload = { ...values };
+        let isValid = true;
+        let base64Validador, base64Remitente;
+
+        // --- Función Auxiliar de Subida (Definida DENTRO del onSubmit) ---
+        /**
+         * @function uploadSignature
+         * @description Función auxiliar para subir la imagen base64 de la firma al servidor
+         * y obtener el path relativo.
+         * @async
+         * @param {string} base64Data - La imagen en formato Data URL (base64).
+         * @param {string} folderName - El nombre de la subcarpeta donde guardar la firma.
+         * @returns {Promise&lt;string|null>} La ruta relativa del archivo en el servidor.
+         */
+        const uploadSignature = async (base64Data, folderName) => {
+          if (!base64Data) return null;
+          const uploadRes = await api.post("/api/signatures/upload", {
+            image_data: base64Data,
+            folder: folderName,
+          });
+          return uploadRes.data.path;
+        };
+
+        // --- 1. Extracción y Validación de Firmas (Ambas Obligatorias) ---
+
+        // Firma Validador (Obligatoria)
+        const validadorSigPad = validadorSigPadRef.current;
+        if (validadorSigPad?.isEmpty()) {
+          setFieldError(
+            "path_firma_validador_envio",
+            "La firma del validador es obligatoria."
+          );
+          isValid = false;
+        } else {
+          base64Validador = validadorSigPad.toDataURL("image/png");
+        }
+
+        // Firma Remitente (Obligatoria)
+        const remitenteSigPad = remitenteSigPadRef.current;
+        if (remitenteSigPad?.isEmpty()) {
+          setFieldError(
+            "path_firma_remitente",
+            "La firma del remitente es obligatoria."
+          );
+          isValid = false;
+        } else {
+          base64Remitente = remitenteSigPad.toDataURL("image/png");
+        }
+
+        if (!isValid) {
+          toast.error("Por favor, complete ambas firmas requeridas.");
+          setSubmitting(false);
+          return; // Detiene el envío si falta alguna firma
+        }
+
+        // --- 2. Subida Concurrente de Firmas ---
+        const [pathValidador, pathRemitente] = await Promise.all([
+          uploadSignature(base64Validador, "paquetes"),
+          uploadSignature(base64Remitente, "paquetes"),
+        ]);
+
+        // Asignar las rutas (path) devueltas por el servidor al payload
+        payload.path_firma_validador_envio = pathValidador;
+        payload.path_firma_remitente = pathRemitente;
+
+        // --- 3. Limpieza y Envío del Payload ---
+        if (!payload.conGuia) {
+          payload.guia = null;
+        }
+        delete payload.conGuia; // Se limpia el campo auxiliar
+
+        await api.post("/api/paquetes/enviar", payload);
+        toast.success("¡Paquete enviado con éxito!");
+        resetForm();
+        validadorSigPadRef.current?.clear();
+        remitenteSigPadRef.current?.clear();
+
+        if (onSuccess) {
+          onSuccess();
+        }
+      } catch (error) {
+        // ... (Manejo de errores para Formik y errores de API)
+        if (error.response?.data?.errors) {
+          const formikErrors = {};
+          const zodErrors = error.response.data.errors.fieldErrors;
+          if (zodErrors) {
+            for (const key in zodErrors) {
+              if (Object.hasOwnProperty.call(zodErrors, key)) {
+                formikErrors[key] = zodErrors[key][0];
+              }
+            }
+          } else if (error.response.data.errors.forEach) {
+            // Soporte para errores de Yup
+            error.response.data.errors.forEach((e) => {
+              const path = e.path[0];
+              formikErrors[path] = e.message;
+            });
+          }
+          setErrors(formikErrors);
+          toast.error("Por favor, corrige los errores en el formulario.");
+        } else {
+          const apiError =
+            error.response?.data?.message || "Ha ocurrido un error inesperado.";
+          setFieldError("apiError", apiError);
+          toast.error(apiError);
+        }
+      } finally {
+        setSubmitting(false);
+      }
+    },
+  });
+
+  return {
+    formik,
+    tiposPaquetes,
+    areas,
+    isLoading,
+    errorCarga,
+    handleClickClear,
+    handleKeyTextDown,
+    handleAddressKeyDown,
+    error: formik.errors.apiError,
+    validadorSigPadRef,
+    remitenteSigPadRef,
+  };
+};
+
+export default usePackagesEnviar;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="component_AuthRedirect.module_jsx.html">component/AuthRedirect.jsx</a></li><li><a href="component_auth_LoginForm.module_jsx.html">component/auth/LoginForm.jsx</a></li><li><a href="component_auth_RegisterForm.module_jsx.html">component/auth/RegisterForm.jsx</a></li><li><a href="components_Dashboard.module_jsx.html">components/Dashboard.jsx</a></li><li><a href="components_Layout.module_jsx.html">components/Layout.jsx</a></li><li><a href="components_PrivateRoute.module_jsx.html">components/PrivateRoute.jsx</a></li><li><a href="components_WelcomePage.module_jsx.html">components/WelcomePage.jsx</a></li><li><a href="components_packages_DashboardPackage.module_jsx.html">components/packages/DashboardPackage.jsx</a></li><li><a href="components_packages_PackagesEnviarForm.module_jsx.html">components/packages/PackagesEnviarForm.jsx</a></li><li><a href="components_packages_RecibirPaqueteForm.module_jsx.html">components/packages/RecibirPaqueteForm.jsx</a></li><li><a href="components_parking_DashboardParking.module_jsx.html">components/parking/DashboardParking.jsx</a></li><li><a href="components_visits_VisitEntryForm.module_jsx.html">components/visits/VisitEntryForm.jsx</a></li><li><a href="module-App.html">App</a></li><li><a href="module-AxiosClient.html">AxiosClient</a></li><li><a href="module-Components_Historial_DashboardHistorial.html">Components/Historial/DashboardHistorial</a></li><li><a href="module-Components_Parking.html">Components/Parking</a></li><li><a href="module-Components_UI.html">Components/UI</a></li><li><a href="module-Config.html">Config</a></li><li><a href="module-Controllers.html">Controllers</a></li><li><a href="module-Controllers_Signatures.html">Controllers/Signatures</a></li><li><a href="module-DateUtils.html">DateUtils</a></li><li><a href="module-EntryPoint.html">EntryPoint</a></li><li><a href="module-Hooks.html">Hooks</a></li><li><a href="module-Hooks_Auth.html">Hooks/Auth</a></li><li><a href="module-Hooks_Historial.html">Hooks/Historial</a></li><li><a href="module-Hooks_Packages.html">Hooks/Packages</a></li><li><a href="module-Hooks_Paquetes.html">Hooks/Paquetes</a></li><li><a href="module-Hooks_Parking.html">Hooks/Parking</a></li><li><a href="module-Hooks_Utils.html">Hooks/Utils</a></li><li><a href="module-Hooks_Visits.html">Hooks/Visits</a></li><li><a href="module-Hooks_usePackagesRecibir.html">Hooks/usePackagesRecibir</a></li><li><a href="module-InputHandlers.html">InputHandlers</a></li><li><a href="module-Middlewares.html">Middlewares</a></li><li><a href="module-Models.html">Models</a></li><li><a href="module-Models_Catalogues.html">Models/Catalogues</a></li><li><a href="module-Repositories.html">Repositories</a></li><li><a href="module-Repositories_Parking.html">Repositories/Parking</a></li><li><a href="module-Routes.html">Routes</a></li><li><a href="module-Routes_Parking.html">Routes/Parking</a></li><li><a href="module-Routes_Signatures.html">Routes/Signatures</a></li><li><a href="module-Schemas.html">Schemas</a></li><li><a href="module-Services.html">Services</a></li><li><a href="module-Services_Parking.html">Services/Parking</a></li><li><a href="module-Stores.html">Stores</a></li><li><a href="module-Utils.html">Utils</a></li><li><a href="module-Utils_Errors.html">Utils/Errors</a></li><li><a href="module-apiController.html">apiController</a></li><li><a href="module-apiRoutes.html">apiRoutes</a></li><li><a href="module-authRoutes.html">authRoutes</a></li><li><a href="module-hooks_parking_.html">hooks/parking</a></li><li><a href="module-packageController.html">packageController</a></li><li><a href="module-packageRoutes.html">packageRoutes</a></li><li><a href="module-passportConfig.html">passportConfig</a></li><li><a href="module-visitController.html">visitController</a></li><li><a href="module-visitRoutes.html">visitRoutes</a></li></ul><h3>Classes</h3><ul><li><a href="module-Models_Catalogues-Area.html">Area</a></li><li><a href="module-Models_Catalogues-IdentificationType.html">IdentificationType</a></li><li><a href="module-Models_Catalogues-PackageType.html">PackageType</a></li><li><a href="module-Models-Log.html">Log</a></li><li><a href="module-Models-Package.html">Package</a></li><li><a href="module-Models-ParkingLog.html">ParkingLog</a></li><li><a href="module-Models-RefreshToken.html">RefreshToken</a></li><li><a href="module-Models-User.html">User</a></li><li><a href="module-Models-Vehicle.html">Vehicle</a></li><li><a href="module-Models-Visit.html">Visit</a></li><li><a href="module-Utils_Errors.AppError.html">AppError</a></li><li><a href="module-Utils_Errors-AccountDisabledError.html">AccountDisabledError</a></li><li><a href="module-Utils_Errors-ActiveVisitDontExistsError.html">ActiveVisitDontExistsError</a></li><li><a href="module-Utils_Errors-AppError.html">AppError</a></li><li><a href="module-Utils_Errors-BadRequestError.html">BadRequestError</a></li><li><a href="module-Utils_Errors-ConflictError.html">ConflictError</a></li><li><a href="module-Utils_Errors-DuplicateError.html">DuplicateError</a></li><li><a href="module-Utils_Errors-ForbiddenError.html">ForbiddenError</a></li><li><a href="module-Utils_Errors-InvalidIdError.html">InvalidIdError</a></li><li><a href="module-Utils_Errors-InvalidTokenError.html">InvalidTokenError</a></li><li><a href="module-Utils_Errors-MissingApiKeyError.html">MissingApiKeyError</a></li><li><a href="module-Utils_Errors-NotFoundError.html">NotFoundError</a></li><li><a href="module-Utils_Errors-UserAlreadyExistsError.html">UserAlreadyExistsError</a></li><li><a href="module-Utils_Errors-UserNotFoundOrInvalidPasswordError.html">UserNotFoundOrInvalidPasswordError</a></li></ul><h3>Global</h3><ul><li><a href="global.html#createVehicle">createVehicle</a></li><li><a href="global.html#getAllVehicles">getAllVehicles</a></li><li><a href="global.html#getOccupancyController">getOccupancyController</a></li><li><a href="global.html#handleScan">handleScan</a></li><li><a href="global.html#packageConfig">packageConfig</a></li><li><a href="global.html#radicadoConfig">radicadoConfig</a></li><li><a href="global.html#registerEntry">registerEntry</a></li><li><a href="global.html#registerExit">registerExit</a></li><li><a href="global.html#updateVehicle">updateVehicle</a></li><li><a href="global.html#vehicleConfig">vehicleConfig</a></li><li><a href="global.html#visitConfig">visitConfig</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Tue Nov 04 2025 16:47:25 GMT-0500 (hora estándar de Colombia)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: server/src/models/Visit.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: server/src/models/Visit.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @file Visit.js
+ * @module Models
+ * @description Define el modelo de Sequelize para la tabla 'visitas'.
+ * Este modelo representa el registro de una visita, desde la entrada hasta la salida,
+ * y establece sus relaciones con los usuarios, áreas y tipos de identificación.
+ * @requires sequelize
+ */
+
+import { DataTypes } from "sequelize";
+
+/**
+ * @function defineVisitModel
+ * @description Define y devuelve el modelo 'Visit' de Sequelize.
+ * @param {Sequelize} sequelize - La instancia de Sequelize.
+ * @returns {Model} El modelo 'Visit' definido.
+ */
+export default (sequelize) => {
+  /**
+   * @class Visit
+   * @classdesc Modelo de Sequelize para la tabla `visitas`.
+   * @property {number} id_visita - La clave primaria de la visita.
+   * @property {string} nombre_visitante - El nombre completo del visitante.
+   * @property {string} telefono - El número de teléfono del visitante.
+   * @property {string} identificacion - El número de identificación del visitante.
+   * @property {number} id_tipo_identificacion - FK al tipo de identificación.
+   * @property {string|null} empresa - La empresa que representa el visitante, si aplica.
+   * @property {string} nombre_destinatario - El nombre del empleado o persona a quien se visita.
+   * @property {number} id_area - FK al área de destino de la visita.
+   * @property {Date} fecha_entrada - La fecha y hora exactas de la entrada.
+   * @property {Date|null} fecha_salida - La fecha y hora exactas de la salida.
+   * @property {boolean} estado - El estado de la visita (true: activa, false: finalizada).
+   * @property {string} motivo - El motivo de la visita.
+   * @property {string|null} observaciones - Observaciones adicionales.
+   * @property {number} id_usuario_entrada - FK al usuario (portero) que registró la entrada.
+   * @property {number|null} id_usuario_salida - FK al usuario (portero) que registró la salida.
+   * @property {string} path_firma - La ruta al archivo de imagen de la firma del visitante.
+   */
+  const Visit = sequelize.define(
+    "Visit",
+    {
+      id_visita: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+      },
+      nombre_visitante: { type: DataTypes.STRING(100), allowNull: false },
+      telefono: { type: DataTypes.STRING(20), allowNull: false },
+      identificacion: { type: DataTypes.STRING(20), allowNull: false },
+      id_tipo_identificacion: { type: DataTypes.INTEGER, allowNull: false },
+      empresa: { type: DataTypes.STRING(100), allowNull: true },
+      nombre_destinatario: { type: DataTypes.STRING(100), allowNull: false },
+      id_area: { type: DataTypes.INTEGER, allowNull: false },
+      fecha_entrada: { type: DataTypes.DATE, allowNull: false },
+      fecha_salida: { type: DataTypes.DATE, allowNull: true },
+      estado: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
+      motivo: { type: DataTypes.TEXT, allowNull: false },
+      observaciones: { type: DataTypes.TEXT, allowNull: true },
+      id_usuario_entrada: { type: DataTypes.INTEGER },
+      id_usuario_salida: { type: DataTypes.INTEGER, allowNull: true },
+      path_firma: { type: DataTypes.STRING(255), allowNull: false },
+    },
+    {
+      tableName: "visitas",
+      timestamps: false,
+    }
+  );
+
+  /**
+   * @function associate
+   * @description Define las asociaciones del modelo Visit con otros modelos.
+   * @param {object} models - Un objeto que contiene todos los modelos de la aplicación.
+   */
+  Visit.associate = (models) => {
+    // Asociación con el usuario que registra la ENTRADA
+    Visit.belongsTo(models.User, {
+      as: "EntryUser",
+      foreignKey: "id_usuario_entrada",
+    });
+
+    // Asociación con el usuario que registra la SALIDA
+    Visit.belongsTo(models.User, {
+      as: "ExitUser",
+      foreignKey: "id_usuario_salida",
+    });
+
+    // Asociación con el área de destino
+    Visit.belongsTo(models.Area, { foreignKey: "id_area" });
+
+    // Asociación con el tipo de identificación
+    Visit.belongsTo(models.IdentificationType, {
+      foreignKey: "id_tipo_identificacion",
+    });
+  };
+
+  return Visit;
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="component_AuthRedirect.module_jsx.html">component/AuthRedirect.jsx</a></li><li><a href="component_auth_LoginForm.module_jsx.html">component/auth/LoginForm.jsx</a></li><li><a href="component_auth_RegisterForm.module_jsx.html">component/auth/RegisterForm.jsx</a></li><li><a href="components_Dashboard.module_jsx.html">components/Dashboard.jsx</a></li><li><a href="components_Layout.module_jsx.html">components/Layout.jsx</a></li><li><a href="components_PrivateRoute.module_jsx.html">components/PrivateRoute.jsx</a></li><li><a href="components_WelcomePage.module_jsx.html">components/WelcomePage.jsx</a></li><li><a href="components_packages_DashboardPackage.module_jsx.html">components/packages/DashboardPackage.jsx</a></li><li><a href="components_packages_PackagesEnviarForm.module_jsx.html">components/packages/PackagesEnviarForm.jsx</a></li><li><a href="components_packages_RecibirPaqueteForm.module_jsx.html">components/packages/RecibirPaqueteForm.jsx</a></li><li><a href="components_parking_DashboardParking.module_jsx.html">components/parking/DashboardParking.jsx</a></li><li><a href="components_visits_VisitEntryForm.module_jsx.html">components/visits/VisitEntryForm.jsx</a></li><li><a href="module-App.html">App</a></li><li><a href="module-AxiosClient.html">AxiosClient</a></li><li><a href="module-Components_Historial_DashboardHistorial.html">Components/Historial/DashboardHistorial</a></li><li><a href="module-Components_Parking.html">Components/Parking</a></li><li><a href="module-Components_UI.html">Components/UI</a></li><li><a href="module-Config.html">Config</a></li><li><a href="module-Controllers.html">Controllers</a></li><li><a href="module-Controllers_Signatures.html">Controllers/Signatures</a></li><li><a href="module-DateUtils.html">DateUtils</a></li><li><a href="module-EntryPoint.html">EntryPoint</a></li><li><a href="module-Hooks.html">Hooks</a></li><li><a href="module-Hooks_Auth.html">Hooks/Auth</a></li><li><a href="module-Hooks_Historial.html">Hooks/Historial</a></li><li><a href="module-Hooks_Packages.html">Hooks/Packages</a></li><li><a href="module-Hooks_Paquetes.html">Hooks/Paquetes</a></li><li><a href="module-Hooks_Parking.html">Hooks/Parking</a></li><li><a href="module-Hooks_Utils.html">Hooks/Utils</a></li><li><a href="module-Hooks_Visits.html">Hooks/Visits</a></li><li><a href="module-Hooks_usePackagesRecibir.html">Hooks/usePackagesRecibir</a></li><li><a href="module-InputHandlers.html">InputHandlers</a></li><li><a href="module-Middlewares.html">Middlewares</a></li><li><a href="module-Models.html">Models</a></li><li><a href="module-Models_Catalogues.html">Models/Catalogues</a></li><li><a href="module-Repositories.html">Repositories</a></li><li><a href="module-Repositories_Parking.html">Repositories/Parking</a></li><li><a href="module-Routes.html">Routes</a></li><li><a href="module-Routes_Parking.html">Routes/Parking</a></li><li><a href="module-Routes_Signatures.html">Routes/Signatures</a></li><li><a href="module-Schemas.html">Schemas</a></li><li><a href="module-Services.html">Services</a></li><li><a href="module-Services_Parking.html">Services/Parking</a></li><li><a href="module-Stores.html">Stores</a></li><li><a href="module-Utils.html">Utils</a></li><li><a href="module-Utils_Errors.html">Utils/Errors</a></li><li><a href="module-apiController.html">apiController</a></li><li><a href="module-apiRoutes.html">apiRoutes</a></li><li><a href="module-authRoutes.html">authRoutes</a></li><li><a href="module-hooks_parking_.html">hooks/parking</a></li><li><a href="module-packageController.html">packageController</a></li><li><a href="module-packageRoutes.html">packageRoutes</a></li><li><a href="module-passportConfig.html">passportConfig</a></li><li><a href="module-visitController.html">visitController</a></li><li><a href="module-visitRoutes.html">visitRoutes</a></li></ul><h3>Classes</h3><ul><li><a href="module-Models_Catalogues-Area.html">Area</a></li><li><a href="module-Models_Catalogues-IdentificationType.html">IdentificationType</a></li><li><a href="module-Models_Catalogues-PackageType.html">PackageType</a></li><li><a href="module-Models-Log.html">Log</a></li><li><a href="module-Models-Package.html">Package</a></li><li><a href="module-Models-ParkingLog.html">ParkingLog</a></li><li><a href="module-Models-RefreshToken.html">RefreshToken</a></li><li><a href="module-Models-User.html">User</a></li><li><a href="module-Models-Vehicle.html">Vehicle</a></li><li><a href="module-Models-Visit.html">Visit</a></li><li><a href="module-Utils_Errors.AppError.html">AppError</a></li><li><a href="module-Utils_Errors-AccountDisabledError.html">AccountDisabledError</a></li><li><a href="module-Utils_Errors-ActiveVisitDontExistsError.html">ActiveVisitDontExistsError</a></li><li><a href="module-Utils_Errors-AppError.html">AppError</a></li><li><a href="module-Utils_Errors-BadRequestError.html">BadRequestError</a></li><li><a href="module-Utils_Errors-ConflictError.html">ConflictError</a></li><li><a href="module-Utils_Errors-DuplicateError.html">DuplicateError</a></li><li><a href="module-Utils_Errors-ForbiddenError.html">ForbiddenError</a></li><li><a href="module-Utils_Errors-InvalidIdError.html">InvalidIdError</a></li><li><a href="module-Utils_Errors-InvalidTokenError.html">InvalidTokenError</a></li><li><a href="module-Utils_Errors-MissingApiKeyError.html">MissingApiKeyError</a></li><li><a href="module-Utils_Errors-NotFoundError.html">NotFoundError</a></li><li><a href="module-Utils_Errors-UserAlreadyExistsError.html">UserAlreadyExistsError</a></li><li><a href="module-Utils_Errors-UserNotFoundOrInvalidPasswordError.html">UserNotFoundOrInvalidPasswordError</a></li></ul><h3>Global</h3><ul><li><a href="global.html#createVehicle">createVehicle</a></li><li><a href="global.html#getAllVehicles">getAllVehicles</a></li><li><a href="global.html#getOccupancyController">getOccupancyController</a></li><li><a href="global.html#handleScan">handleScan</a></li><li><a href="global.html#packageConfig">packageConfig</a></li><li><a href="global.html#radicadoConfig">radicadoConfig</a></li><li><a href="global.html#registerEntry">registerEntry</a></li><li><a href="global.html#registerExit">registerExit</a></li><li><a href="global.html#updateVehicle">updateVehicle</a></li><li><a href="global.html#vehicleConfig">vehicleConfig</a></li><li><a href="global.html#visitConfig">visitConfig</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Tue Nov 04 2025 16:47:25 GMT-0500 (hora estándar de Colombia)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

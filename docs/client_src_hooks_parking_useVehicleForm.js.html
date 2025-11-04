@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: client/src/hooks/parking/useVehicleForm.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: client/src/hooks/parking/useVehicleForm.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @file useVehicleForm.js
+ * @module Hooks/Parking
+ * @description Hook personalizado para gestionar la lógica del formulario dinámico de creación de vehículos.
+ * Encapsula la validación con Yup (incluyendo reglas condicionales), el estado del formulario con Formik
+ * y la lógica de envío de datos a la API.
+ * @requires formik
+ * @requires yup
+ * @requires react-hot-toast
+ * @requires ../../config/axios.js
+ * @requires ../../stores/authStore.js // Aunque no se use para rol, lo mantenemos por consistencia si lo usas en otros hooks
+ */
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import { toast } from "react-hot-toast";
+import api from "../../config/axios.js";
+
+/**
+ * @const {object} initialVehicleValues
+ * @description Define la estructura y los valores iniciales para un nuevo objeto de vehículo en blanco.
+ * Se utiliza para inicializar el formulario y para añadir nuevas filas en el FieldArray.
+ */
+export const initialVehicleValues = {
+  placa: "",
+  codigo_sensor: "",
+  tipo_vehiculo: "",
+  modelo_descripcion: "",
+  nombre_dueno: "",
+  identificacion_dueno: "",
+  genero_dueno: "N/A",
+  lugar_asignado_default: "",
+  activo: true,
+};
+
+/**
+ * @function useVehicleForm
+ * @description Hook de React que proporciona toda la lógica y el estado necesarios para un formulario de creación de múltiples vehículos.
+ * @param {Function} onSuccess - Una función callback que se ejecuta cuando la petición a la API es exitosa.
+ * @returns {object} La instancia completa de Formik.
+ */
+export const useVehicleForm = (onSuccess) => {
+  /**
+   * @const {Yup.ObjectSchema} vehicleValidationSchema
+   * @description Esquema de validación de Yup para UN SOLO objeto de vehículo.
+   * Contiene reglas condicionales (ej. para la placa).
+   */
+  const vehicleValidationSchema = Yup.object({
+    // Lógica condicional para PLACA:
+    // Requerida y con regex si es Carro o Moto.
+    // Nula y opcional si es Bicicleta u Otros.
+    placa: Yup.string().when("tipo_vehiculo", {
+      is: (tipo) => tipo === "Carro" || tipo === "Moto",
+      then: (schema) =>
+        schema
+          .trim()
+          .matches(
+            /^[A-Z0-9]{1,10}$/,
+            "Placa inválida. Use 1-10 caracteres (mayúsculas y números)."
+          )
+          .required("La placa es obligatoria para Carros y Motos."),
+      otherwise: (schema) => schema.nullable().transform(() => null), // Transforma a null si es Bici/Otros
+    }),
+
+    codigo_sensor: Yup.string()
+      .trim()
+      .max(100, "El código del sensor no debe exceder los 100 caracteres.")
+      .test(
+        "is-not-just-spaces",
+        "El código del sensor no puede estar vacío si se proporciona.",
+        (value) => !value || value.trim().length > 0
+      )
+      .nullable()
+      .optional(),
+
+    tipo_vehiculo: Yup.string()
+      .oneOf(
+        ["Carro", "Moto", "Bicicleta", "Otros"],
+        "Tipo de vehículo inválido."
+      )
+      .required("El tipo de vehículo es obligatorio."),
+
+    modelo_descripcion: Yup.string()
+      .trim()
+      .max(100, "Modelo/descripción muy largo.")
+      .nullable()
+      .optional(),
+
+    nombre_dueno: Yup.string()
+      .trim()
+      .min(3, "El nombre del dueño debe tener al menos 3 caracteres.")
+      .max(150, "Nombre muy largo.")
+      .matches(
+        /^[a-zA-Z\sñÑáéíóúÁÉÍÓÚ]+$/,
+        "Nombre inválido. Use solo letras y espacios."
+      )
+      .required("El nombre del dueño es obligatorio."),
+
+    identificacion_dueno: Yup.string()
+      .trim()
+      .min(5, "La identificación debe tener al menos 5 caracteres.")
+      .max(20, "Identificación muy larga.")
+      .matches(
+        /^[A-Za-z0-9]+$/,
+        "Identificación inválida. Use solo letras y números."
+      )
+      .required("La identificación es obligatoria."),
+
+    genero_dueno: Yup.string()
+      .oneOf(["Masculino", "Femenino", "N/A"])
+      .default("N/A"),
+
+    lugar_asignado_default: Yup.string()
+      .trim()
+      .max(100, "Lugar asignado muy largo.")
+      .nullable()
+      .optional(),
+
+    activo: Yup.boolean().default(true),
+  });
+
+  /**
+   * @const {object} formik
+   * @description Instancia de Formik creada con `useFormik`.
+   */
+  const formik = useFormik({
+    // Valor inicial: un objeto que contiene un array 'vehicles'
+    initialValues: {
+      vehicles: [initialVehicleValues],
+    },
+    // Esquema de validación: un objeto que espera un array 'vehicles'
+    validationSchema: Yup.object({
+      vehicles: Yup.array()
+        .of(vehicleValidationSchema) // Cada ítem del array debe cumplir el schema individual
+        .min(1, "Debes agregar al menos un vehículo."),
+    }),
+
+    validateOnChange: true, // Re-valida al cambiar (necesario para campos condicionales)
+    validateOnBlur: true,
+
+    /**
+     * @function onSubmit
+     * @description Se ejecuta al enviar el formulario (si es válido).
+     * @param {object} values - Valores actuales (ej. { vehicles: [...] }).
+     * @param {object} formikHelpers - Ayudantes de Formik.
+     */
+    onSubmit: async (values, { setSubmitting, resetForm, setFieldError }) => {
+      setSubmitting(true);
+      try {
+        // El backend espera el array 'vehiclesData', que es 'values.vehicles'
+        await api.post("/api/parqueadero/vehiculos", values.vehicles);
+
+        toast.success(
+          `¡${values.vehicles.length} vehículo(s) creado(s) exitosamente!`
+        );
+        resetForm(); // Limpia el formulario
+        if (onSuccess) {
+          onSuccess(); // Llama al callback (cierra modal, refresca datos)
+        }
+      } catch (err) {
+        const errorMessage =
+          err.response?.data?.message ||
+          "Ocurrió un error al crear los vehículos.";
+        setFieldError("apiError", errorMessage); // Muestra error en el footer
+        toast.error(errorMessage);
+        console.error("Error al crear vehículos:", err);
+      } finally {
+        setSubmitting(false);
+      }
+    },
+  });
+
+  return formik;
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="component_AuthRedirect.module_jsx.html">component/AuthRedirect.jsx</a></li><li><a href="component_auth_LoginForm.module_jsx.html">component/auth/LoginForm.jsx</a></li><li><a href="component_auth_RegisterForm.module_jsx.html">component/auth/RegisterForm.jsx</a></li><li><a href="components_Dashboard.module_jsx.html">components/Dashboard.jsx</a></li><li><a href="components_Layout.module_jsx.html">components/Layout.jsx</a></li><li><a href="components_PrivateRoute.module_jsx.html">components/PrivateRoute.jsx</a></li><li><a href="components_WelcomePage.module_jsx.html">components/WelcomePage.jsx</a></li><li><a href="components_packages_DashboardPackage.module_jsx.html">components/packages/DashboardPackage.jsx</a></li><li><a href="components_packages_PackagesEnviarForm.module_jsx.html">components/packages/PackagesEnviarForm.jsx</a></li><li><a href="components_packages_RecibirPaqueteForm.module_jsx.html">components/packages/RecibirPaqueteForm.jsx</a></li><li><a href="components_parking_DashboardParking.module_jsx.html">components/parking/DashboardParking.jsx</a></li><li><a href="components_visits_VisitEntryForm.module_jsx.html">components/visits/VisitEntryForm.jsx</a></li><li><a href="module-App.html">App</a></li><li><a href="module-AxiosClient.html">AxiosClient</a></li><li><a href="module-Components_Historial_DashboardHistorial.html">Components/Historial/DashboardHistorial</a></li><li><a href="module-Components_Parking.html">Components/Parking</a></li><li><a href="module-Components_UI.html">Components/UI</a></li><li><a href="module-Config.html">Config</a></li><li><a href="module-Controllers.html">Controllers</a></li><li><a href="module-Controllers_Signatures.html">Controllers/Signatures</a></li><li><a href="module-DateUtils.html">DateUtils</a></li><li><a href="module-EntryPoint.html">EntryPoint</a></li><li><a href="module-Hooks.html">Hooks</a></li><li><a href="module-Hooks_Auth.html">Hooks/Auth</a></li><li><a href="module-Hooks_Historial.html">Hooks/Historial</a></li><li><a href="module-Hooks_Packages.html">Hooks/Packages</a></li><li><a href="module-Hooks_Paquetes.html">Hooks/Paquetes</a></li><li><a href="module-Hooks_Parking.html">Hooks/Parking</a></li><li><a href="module-Hooks_Utils.html">Hooks/Utils</a></li><li><a href="module-Hooks_Visits.html">Hooks/Visits</a></li><li><a href="module-Hooks_usePackagesRecibir.html">Hooks/usePackagesRecibir</a></li><li><a href="module-InputHandlers.html">InputHandlers</a></li><li><a href="module-Middlewares.html">Middlewares</a></li><li><a href="module-Models.html">Models</a></li><li><a href="module-Models_Catalogues.html">Models/Catalogues</a></li><li><a href="module-Repositories.html">Repositories</a></li><li><a href="module-Repositories_Parking.html">Repositories/Parking</a></li><li><a href="module-Routes.html">Routes</a></li><li><a href="module-Routes_Parking.html">Routes/Parking</a></li><li><a href="module-Routes_Signatures.html">Routes/Signatures</a></li><li><a href="module-Schemas.html">Schemas</a></li><li><a href="module-Services.html">Services</a></li><li><a href="module-Services_Parking.html">Services/Parking</a></li><li><a href="module-Stores.html">Stores</a></li><li><a href="module-Utils.html">Utils</a></li><li><a href="module-Utils_Errors.html">Utils/Errors</a></li><li><a href="module-apiController.html">apiController</a></li><li><a href="module-apiRoutes.html">apiRoutes</a></li><li><a href="module-authRoutes.html">authRoutes</a></li><li><a href="module-hooks_parking_.html">hooks/parking</a></li><li><a href="module-packageController.html">packageController</a></li><li><a href="module-packageRoutes.html">packageRoutes</a></li><li><a href="module-passportConfig.html">passportConfig</a></li><li><a href="module-visitController.html">visitController</a></li><li><a href="module-visitRoutes.html">visitRoutes</a></li></ul><h3>Classes</h3><ul><li><a href="module-Models_Catalogues-Area.html">Area</a></li><li><a href="module-Models_Catalogues-IdentificationType.html">IdentificationType</a></li><li><a href="module-Models_Catalogues-PackageType.html">PackageType</a></li><li><a href="module-Models-Log.html">Log</a></li><li><a href="module-Models-Package.html">Package</a></li><li><a href="module-Models-ParkingLog.html">ParkingLog</a></li><li><a href="module-Models-RefreshToken.html">RefreshToken</a></li><li><a href="module-Models-User.html">User</a></li><li><a href="module-Models-Vehicle.html">Vehicle</a></li><li><a href="module-Models-Visit.html">Visit</a></li><li><a href="module-Utils_Errors.AppError.html">AppError</a></li><li><a href="module-Utils_Errors-AccountDisabledError.html">AccountDisabledError</a></li><li><a href="module-Utils_Errors-ActiveVisitDontExistsError.html">ActiveVisitDontExistsError</a></li><li><a href="module-Utils_Errors-AppError.html">AppError</a></li><li><a href="module-Utils_Errors-BadRequestError.html">BadRequestError</a></li><li><a href="module-Utils_Errors-ConflictError.html">ConflictError</a></li><li><a href="module-Utils_Errors-DuplicateError.html">DuplicateError</a></li><li><a href="module-Utils_Errors-ForbiddenError.html">ForbiddenError</a></li><li><a href="module-Utils_Errors-InvalidIdError.html">InvalidIdError</a></li><li><a href="module-Utils_Errors-InvalidTokenError.html">InvalidTokenError</a></li><li><a href="module-Utils_Errors-MissingApiKeyError.html">MissingApiKeyError</a></li><li><a href="module-Utils_Errors-NotFoundError.html">NotFoundError</a></li><li><a href="module-Utils_Errors-UserAlreadyExistsError.html">UserAlreadyExistsError</a></li><li><a href="module-Utils_Errors-UserNotFoundOrInvalidPasswordError.html">UserNotFoundOrInvalidPasswordError</a></li></ul><h3>Global</h3><ul><li><a href="global.html#createVehicle">createVehicle</a></li><li><a href="global.html#getAllVehicles">getAllVehicles</a></li><li><a href="global.html#getOccupancyController">getOccupancyController</a></li><li><a href="global.html#handleScan">handleScan</a></li><li><a href="global.html#packageConfig">packageConfig</a></li><li><a href="global.html#radicadoConfig">radicadoConfig</a></li><li><a href="global.html#registerEntry">registerEntry</a></li><li><a href="global.html#registerExit">registerExit</a></li><li><a href="global.html#updateVehicle">updateVehicle</a></li><li><a href="global.html#vehicleConfig">vehicleConfig</a></li><li><a href="global.html#visitConfig">visitConfig</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Tue Nov 04 2025 16:47:25 GMT-0500 (hora estándar de Colombia)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

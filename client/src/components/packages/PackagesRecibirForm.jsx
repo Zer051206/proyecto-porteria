@@ -110,18 +110,17 @@ export default function PackagesRecibirForm({
   }, [areas, ID_AREA_CONTABILIDAD]);
 
   return (
-    // Fondo oscuro y contenedor del modal
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 p-4 pt-8 overflow-y-auto animate-fade-in">
       <div className="bg-surface rounded-lg shadow-xl w-full h-full max-w-4xl flex flex-col">
         {/* Encabezado del Modal */}
-        <header className="p-4 flex justify-between items-center border-b border-neutral-300 bg-surface z-10">
-          <h2 className="text-2xl font-bold text-primary flex items-center gap-3">
+        <header className="p-4 flex justify-between items-center border-b border-neutral-300 bg-primary z-10">
+          <h2 className="text-xl md:text-2xl font-bold text-surface flex items-center gap-3">
             <FontAwesomeIcon icon={faDownload} />
             Recibir Paquete
           </h2>
           <button
             onClick={onClose}
-            className="text-text-main hover:text-error transition-colors"
+            className="text-text-main hover:text-error transition-colors "
             aria-label="Cerrar modal"
           >
             <FontAwesomeIcon icon={faTimes} size="lg" />
@@ -233,7 +232,6 @@ export default function PackagesRecibirForm({
                     )}
                   </label>
                 ) : (
-                  // Si NO es radicado (sea documento o no), muestra el dropdown
                   <label className="block">
                     <span className="text-text-main text-sm font-medium">
                       Área Destino:
@@ -242,7 +240,7 @@ export default function PackagesRecibirForm({
                       as="select"
                       name="id_area"
                       className={inputClasses}
-                      disabled={false} // Asegura que esté habilitado
+                      disabled={false}
                     >
                       <option value="" disabled hidden>
                         Seleccione un área

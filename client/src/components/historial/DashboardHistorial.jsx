@@ -20,6 +20,9 @@ import {
   faSearch,
   faExclamationTriangle,
   faCar,
+  faFileInvoice,
+  faFileExcel,
+  faFilePdf,
 } from "@fortawesome/free-solid-svg-icons";
 import { useAuthStore } from "../../stores/authStore";
 import { useDashboardHistorial } from "../../hooks/historial/useDashboardHistorial";
@@ -28,6 +31,7 @@ import {
   visitConfig,
   packageConfig,
   vehicleConfig,
+  radicadoConfig,
 } from "../../hooks/utils/detailModalConfig";
 
 const VisitsTable = ({ visits, onAction, formatDate }) => {
@@ -85,7 +89,7 @@ const VisitsTable = ({ visits, onAction, formatDate }) => {
               <td className="px-6 py-4 whitespace-nowrap">
                 {visit.IdentificationType?.descripcion}
               </td>
-              <td className="px-6 py-4 whitespace-nowrap">
+              <td className="px-6 py-4 whitespace-nowrap font-bold text-secondary">
                 {visit.identificacion}
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
@@ -102,7 +106,7 @@ const VisitsTable = ({ visits, onAction, formatDate }) => {
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-center">
                 <button
-                  onClick={() => onAction("visita", visit)} // Llama al handler del padre
+                  onClick={() => onAction(visit)}
                   className="text-secondary p-2 rounded-lg hover:bg-secondary-light transition-colors duration-200 shadow-md shadow-neutral-400"
                   aria-label={`Ver detalles de ${visit.nombre_visitante}`}
                 >
@@ -165,7 +169,7 @@ const PackagesTable = ({ packages, onAction, formatDate }) => {
               key={pkg.id_paquete}
               className="divide-x divide-neutral-200 hover:bg-background"
             >
-              <td className="px-6 py-4 whitespace-nowrap text-sm">
+              <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-primary">
                 {pkg.guia || "N/A"}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -217,8 +221,8 @@ const ParkingHistoryTable = ({ parkingLogs, onAction, formatDate }) => {
           No hay registros de parquedero para mostrar
         </p>
         <p className="text-sm mt-1">
-          Navega hacia el módulo de parqueadero y registra una entrada y salida
-          de un vehiculo.
+          Navega hacia el módulo de "parqueadero" y registra una entrada y
+          salida de un vehiculo.
         </p>
       </div>
     );
@@ -263,7 +267,7 @@ const ParkingHistoryTable = ({ parkingLogs, onAction, formatDate }) => {
                 key={log.id_historial}
                 className="divide-x divide-neutral-200 hover:bg-background"
               >
-                <td className="px-6 py-4 whitespace-nowrap font-mono">
+                <td className="px-6 py-4 whitespace-nowrap font-mono font-bold text-tertiary">
                   {log.Vehicle?.placa || "N/A"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -291,6 +295,94 @@ const ParkingHistoryTable = ({ parkingLogs, onAction, formatDate }) => {
                     aria-label={`Ver detalles de ${
                       log.Vehicle?.placa || "vehículo"
                     }`}
+                  >
+                    <FontAwesomeIcon icon={faEye} />
+                  </button>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+/**
+ * @function RadicadosTable
+ * @description Subcomponente que renderiza la tabla de historial de radicados.
+ * @param {object} props
+ * @returns {JSX.Element}
+ */
+const RadicadosTable = ({ radicados, onAction, formatDate }) => {
+  console.log("🚀 ~ RadicadosTable ~ radicados:", radicados);
+  if (radicados.length === 0) {
+    return (
+      <div className="text-center bg-surface text-text-main py-6 rounded-lg shadow-lg">
+        <p className="text-xl font-medium">No hay registros de radicados</p>
+        <p className="text-sm mt-1">
+          Navega hacia el módulo de "paquetes" y registra un radicado.
+        </p>
+      </div>
+    );
+  }
+  return (
+    <div className="w-full overflow-x-auto rounded-lg shadow-lg shadow-black">
+      <table className="min-w-full rounded-lg">
+        <thead className="bg-accent text-white">
+          {" "}
+          <tr className="divide-x divide-accent-hover">
+            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              N° Radicado
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              Recibido
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              Recibió (Empleado)
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider hidden md:table-cell">
+              Mensajero
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider hidden sm:table-cell">
+              Portero (Validador)
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              Detalles
+            </th>
+          </tr>
+        </thead>
+        <tbody className="bg-surface divide-y divide-neutral-200 text-text-main">
+          {radicados.map((rad) => {
+            return (
+              <tr
+                key={rad.id_paquete}
+                className="divide-x divide-neutral-200 hover:bg-background"
+              >
+                <td className="px-6 py-4 whitespace-nowrap font-mono font-bold text-accent">
+                  {rad.referencia_radicado}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  {formatDate(rad.fecha_recibido)}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {rad.nombre_recibe_documento || "N/A"}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap hidden md:table-cell">
+                  {rad.mensajero_nombre || "N/A"}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap hidden sm:table-cell">
+                  {rad.PackagesReceived?.nombre
+                    ? `${rad.PackagesReceived.nombre} ${
+                        rad.PackagesReceived.apellido || ""
+                      }`
+                    : "N/A"}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-center">
+                  <button
+                    onClick={() => onAction(rad)}
+                    className="text-accent p-2 rounded-lg hover:bg-accent/10 transition-colors"
+                    aria-label={`Ver detalles de ${rad.referencia_radicado}`}
                   >
                     <FontAwesomeIcon icon={faEye} />
                   </button>
@@ -396,18 +488,20 @@ export default function DashboardHistorial() {
   const {
     data,
     activeTab,
-    setActiveTab,
+    showDetailsModal,
+    selectedItem,
     isLoading,
     error,
     noResults,
     searchTerm,
+    isExporting,
+    setActiveTab,
     handleSearchChange,
     handleSortChange,
     formatDate,
-    showDetailsModal,
-    selectedItem,
     openDetailsModal,
     closeModal,
+    handleExport,
   } = useDashboardHistorial();
 
   const { isLoading: isAuthLoading } = useAuthStore();
@@ -417,6 +511,24 @@ export default function DashboardHistorial() {
 
   if (isLoading || isAuthLoading) {
     return <DashboardHistorialSkeleton />;
+  }
+
+  let modalConfig = packageConfig;
+  let modalTitle = "Detalles del Paquete";
+  let modalTheme = "primary";
+
+  if (activeTab === "visitas") {
+    modalConfig = visitConfig;
+    modalTitle = "Detalles de la Visita";
+    modalTheme = "secondary";
+  } else if (activeTab === "parqueadero") {
+    modalConfig = vehicleConfig;
+    modalTitle = "Detalles del Vehículo";
+    modalTheme = "neutral-600";
+  } else if (activeTab === "radicados") {
+    modalConfig = radicadoConfig;
+    modalTitle = "Detalles del Radicado";
+    modalTheme = "accent";
   }
 
   return (
@@ -456,12 +568,20 @@ export default function DashboardHistorial() {
             colorClass="border-primary text-primary"
           />
           <TabButton
-            label="Historial de parqueadero"
+            label="Historial de Parqueadero"
             tabName="parqueadero"
             activeTab={activeTab}
             onClick={setActiveTab}
             icon={faCar}
             colorClass="border-tertiary text-tertiary"
+          />
+          <TabButton
+            label="Historial de Radicados"
+            tabName="radicados"
+            activeTab={activeTab}
+            onClick={setActiveTab}
+            icon={faFileInvoice}
+            colorClass="border-accent text-accent"
           />
         </div>
       </div>
@@ -476,7 +596,9 @@ export default function DashboardHistorial() {
                 ? "Buscar por visitante, documento, destinatario..."
                 : activeTab === "paquetes"
                 ? "Buscar por guía, remitente, destinatario..."
-                : "Buscar por placa, dueño, identificación..."
+                : activeTab === "parqueadero"
+                ? "Buscar por placa, dueño, identificación..."
+                : "Buscar por N° radicado, mensajero..."
             }
             value={searchTerm}
             onChange={handleSearchChange}
@@ -495,6 +617,27 @@ export default function DashboardHistorial() {
           <option value="fecha_desc">Más Recientes Primero</option>
           <option value="fecha_asc">Más Antiguos Primero</option>
         </select>
+
+        {activeTab === "radicados" && (
+          <>
+            <button
+              onClick={() => handleExport("excel")} // Llama con 'excel'
+              disabled={isExporting}
+              className="w-full md:w-auto p-3 flex items-center justify-center gap-2 bg-green-700 text-white font-semibold rounded-lg shadow hover:bg-green-800 disabled:bg-gray-400"
+            >
+              <FontAwesomeIcon icon={faFileExcel} />
+              {isExporting ? "Exportando..." : "Excel"}
+            </button>
+            <button
+              onClick={() => handleExport("pdf")} // Llama con 'pdf'
+              disabled={isExporting}
+              className="w-full md:w-auto p-3 flex items-center justify-center gap-2 bg-red-600 text-white font-semibold rounded-lg shadow hover:bg-red-700 disabled:bg-gray-400"
+            >
+              <FontAwesomeIcon icon={faFilePdf} />
+              {isExporting ? "Exportando..." : "PDF"}
+            </button>
+          </>
+        )}
       </div>
 
       {/* --- Contenido (Tablas y Estados) --- */}
@@ -538,56 +681,43 @@ export default function DashboardHistorial() {
           </div>
         )}
 
-        {!isLoading && !error && !noResults && activeTab === "visitas" && (
-          <VisitsTable
-            visits={data}
-            onAction={openDetailsModal}
-            formatDate={formatDate}
-          />
-        )}
-
-        {!isLoading && !error && !noResults && activeTab === "paquetes" && (
-          <PackagesTable
-            packages={data}
-            onAction={openDetailsModal}
-            formatDate={formatDate}
-          />
-        )}
-
-        {!isLoading && !error && !noResults && activeTab === "parqueadero" && (
-          <ParkingHistoryTable
-            parkingLogs={data}
-            onAction={openDetailsModal}
-            formatDate={formatDate}
-          />
-        )}
+        {!isLoading &&
+          !error &&
+          !noResults &&
+          (activeTab === "visitas" ? (
+            <VisitsTable
+              visits={data}
+              onAction={openDetailsModal}
+              formatDate={formatDate}
+            />
+          ) : activeTab === "paquetes" ? (
+            <PackagesTable
+              packages={data}
+              onAction={openDetailsModal}
+              formatDate={formatDate}
+            />
+          ) : activeTab === "parqueadero" ? (
+            <ParkingHistoryTable
+              parkingLogs={data}
+              onAction={openDetailsModal}
+              formatDate={formatDate}
+            />
+          ) : (
+            <RadicadosTable
+              radicados={data}
+              onAction={openDetailsModal}
+              formatDate={formatDate}
+            />
+          ))}
       </div>
 
       {showDetailsModal && selectedItem && (
         <DetailModal
           item={selectedItem}
           onClose={closeModal}
-          title={
-            activeTab === "visitas"
-              ? "Detalles de la Visita"
-              : activeTab === "paquetes"
-              ? "Detalles del Paquete"
-              : "Detalles del Vehiculo"
-          }
-          config={
-            activeTab === "visitas"
-              ? visitConfig
-              : activeTab === "paquetes"
-              ? packageConfig
-              : vehicleConfig
-          }
-          themeColor={
-            activeTab === "visitas"
-              ? "secondary"
-              : activeTab === "paquetes"
-              ? "primary"
-              : "tertiary"
-          }
+          title={modalTitle}
+          config={modalConfig}
+          themeColor={modalTheme}
           formatDate={formatDate}
         />
       )}

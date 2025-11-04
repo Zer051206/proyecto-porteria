@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: client/src/hooks/packages/usePackagesRecibir.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: client/src/hooks/packages/usePackagesRecibir.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @file useRecibirPaqueteForm.js
+ * @module Hooks/usePackagesRecibir
+ * @description Hook personalizado para gestionar la lógica del formulario de recepción de paquetes.
+ * Utiliza Formik para la gestión de formularios, Yup para la validación de esquemas,
+ * y realiza la carga inicial de datos (tipos de paquetes y áreas) y la sumisión del formulario.
+ * @exports usePackagesRecibir
+ * @requires react
+ * @requires formik
+ * @requires yup
+ * @requires ../utils/inputUtilities - Para la función de restricción de teclas de texto.
+ * @requires ../config/axios - Instancia de cliente HTTP configurada.
+ */
+import { useState, useEffect, useRef } from "react";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import { handleKeyTextDown } from "../../utils/inputUtilities";
+import api from "../../config/axios";
+import toast from "react-hot-toast";
+
+const ID_TIPO_DOCUMENTO = 1;
+const ID_AREA_CONTABILIDAD = 3;
+
+/**
+ * @function usePackagesRecibir
+ * @description Hook personalizado que maneja el estado, la validación y la sumisión del formulario
+ * para el registro de paquetes recibidos.
+ *
+ * @param {Function} navigate - Función de navegación proporcionada por el router (e.g., de React Router DOM)
+ * para redirigir al usuario tras una sumisión exitosa.
+ * @returns {{
+ * formik: object,
+ * tiposPaquetes: Array&lt;object>,
+ * areas: Array&lt;object>,
+ * isLoading: boolean,
+ * errorCarga: (string|null),
+ * handleClickClear: Function,
+ * handleKeyTextDown: Function
+ * }} Un objeto que contiene el objeto Formik, los datos de las opciones (selects),
+ * el estado de carga y las funciones de utilidad.
+ */
+const usePackagesRecibir = (onSuccess) => {
+  // --- Refs para las Firmas ---
+  const recibeSigPadRef = useRef(null);
+  const validadorSigPadRef = useRef(null);
+  const entregadorSigPadRef = useRef(null);
+  /**
+   * @type {Array&lt;object>}
+   * Estado para almacenar los tipos de paquetes disponibles.
+   * */
+  const [tiposPaquetes, setTiposPaquetes] = useState([]);
+  /**
+   * @type {Array&lt;object>}
+   * Estado para almacenar las áreas disponibles.
+   */
+  const [areas, setAreas] = useState([]);
+  /**
+   * @type {boolean}
+   * Indica si los datos iniciales del formulario están cargando.
+   */
+  const [isLoading, setIsLoading] = useState(true);
+  /**
+   * @type {(string|null)}
+   * Almacena un mensaje de error si la carga inicial falla.
+   */
+  const [errorCarga, setErrorCarga] = useState(null);
+  /**
+   * @type {string|null}
+   * Almacena el error general del servidor después de intentar la sumisión.
+   */
+  const [error, setError] = useState(null);
+
+  /**
+   * @function useEffect
+   * @description Hook para realizar la carga inicial de datos (tipos de paquetes y áreas)
+   * al montar el componente. Establece `isLoading` y `errorCarga` según el resultado.
+   */
+  useEffect(() => {
+    const fetchFormData = async () => {
+      try {
+        const [tiposRes, areasRes] = await Promise.all([
+          api.get("/api/tipos-paquetes"),
+          api.get("/api/areas"),
+        ]);
+        setTiposPaquetes(tiposRes.data);
+        setAreas(areasRes.data);
+      } catch (error) {
+        console.error("Error al cargar datos del formulario:", error);
+        setErrorCarga(
+          "No se pudieron cargar las opciones. intente recargar la página."
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchFormData();
+  }, []);
+
+  /**
+   * @constant {object} validationSchema
+   * @description Esquema de validación para el formulario, definido con Yup.
+   */
+  const validationSchema = Yup.object({
+    id_tipo_paquete: Yup.number()
+      .positive("Debe seleccionar un tipo de paquete.")
+      .required("El tipo de paquete es obligatorio."),
+
+    nombre_destinatario: Yup.string()
+      .trim()
+      .min(3, "El destinatario debe tener al menos 3 caracteres.")
+      .required("El nombre del destinatario es obligatorio."),
+
+    id_area: Yup.number()
+      .required("El área es obligatoria.")
+      .when("es_radicado", {
+        is: true,
+        then: (schema) =>
+          schema.equals(
+            [ID_AREA_CONTABILIDAD],
+            'Los "radicados" solo pueden ir a Contabilidad.'
+          ),
+      }),
+
+    guia: Yup.string().when("conGuia", {
+      is: true,
+      then: (schema) =>
+        schema
+          .trim()
+          .min(1, "El número de guía es obligatorio.")
+          .required("El número de guía es obligatorio."),
+      otherwise: (schema) => schema.nullable(),
+    }),
+
+    conGuia: Yup.boolean(),
+    empresa_transporte: Yup.string().trim().max(100).nullable().optional(),
+    mensajero_nombre: Yup.string().trim().max(255).nullable().optional(),
+    observaciones: Yup.string().trim().nullable().optional(),
+    es_radicado: Yup.boolean().default(false),
+
+    referencia_radicado: Yup.string().when("es_radicado", {
+      is: true,
+      then: (schema) =>
+        schema
+          .trim()
+          .min(1, "La referencia es obligatoria.")
+          .required('El N° de Referencia es obligatorio para "radicados".'),
+      otherwise: (schema) => schema.nullable().optional(),
+    }),
+
+    nombre_recibe_documento: Yup.string().when("id_tipo_paquete", {
+      is: ID_TIPO_DOCUMENTO,
+      then: (schema) =>
+        schema
+          .trim()
+          .min(3, "Debe tener al menos 3 caracteres.")
+          .required("El nombre de quien recibe es obligatorio."),
+      otherwise: (schema) => schema.nullable().optional(),
+    }),
+    path_firma_recibe_documento: Yup.string().nullable().optional(),
+    path_firma_validador: Yup.string().nullable().optional(),
+    path_firma_entregador: Yup.string().nullable().optional(),
+  });
+
+  /**
+   * @constant {object} formik
+   * @description Instancia de Formik que gestiona el estado del formulario, la validación y la sumisión.
+   */
+  const formik = useFormik({
+    initialValues: {
+      id_tipo_paquete: "",
+      tipo_operacion: "recibir",
+      guia: "",
+      nombre_destinatario: "",
+      id_area: "",
+      empresa_transporte: "",
+      mensajero_nombre: "",
+      observaciones: "",
+      conGuia: false,
+      es_radicado: false,
+      referencia_radicado: "",
+      nombre_recibe_documento: "",
+      path_firma_recibe_documento: "",
+      path_firma_validador: "",
+      path_firma_entregador: "",
+    },
+    validationSchema: validationSchema,
+    validateOnMount: true,
+    /**
+     * @async
+     * @function onSubmit
+     * @description Función que se ejecuta al enviar el formulario si es válido.
+     * @param {object} values - Valores actuales del formulario.
+     * @param {object} formikBag - Objeto con utilidades de Formik (como `setErrors`).
+     */
+    onSubmit: async (
+      values,
+      { setErrors, resetForm, setSubmitting, setFieldError }
+    ) => {
+      try {
+        const payload = { ...values };
+        if (!payload.conGuia) {
+          payload.guia = null;
+        }
+
+        let isValid = true;
+        let base64Recibe, base64Validador, base64Entregador;
+
+        // --- Extracción de firmas Base64 ---
+
+        const recibeSigPad = recibeSigPadRef.current;
+        const isDocumento = payload.id_tipo_paquete === ID_TIPO_DOCUMENTO;
+        const isRadicado = payload.es_radicado;
+
+        // 1. Firma de RECIBE (Receptor) - Obligatoria si es Documento O Radicado
+        if (isDocumento || isRadicado) {
+          if (recibeSigPad?.isEmpty()) {
+            setFieldError(
+              "path_firma_recibe_documento",
+              "La firma de quien recibe es obligatoria."
+            );
+            isValid = false;
+          } else {
+            base64Recibe = recibeSigPad.toDataURL("image/png");
+          }
+        } else if (recibeSigPad &amp;&amp; !recibeSigPad.isEmpty()) {
+          // Si NO es documento/radicado, pero el usuario sí firmó, la extraemos para subirla
+          base64Recibe = recibeSigPad.toDataURL("image/png");
+        }
+
+        // 2. Firmas de RADICADO
+        const validadorSigPad = validadorSigPadRef.current;
+        const entregadorSigPad = entregadorSigPadRef.current;
+
+        if (isRadicado) {
+          // Firma Validador (Obligatoria para Radicado)
+          if (validadorSigPad?.isEmpty()) {
+            setFieldError(
+              "path_firma_validador",
+              "La firma del validador es obligatoria."
+            );
+            isValid = false;
+          } else {
+            base64Validador = validadorSigPad.toDataURL("image/png");
+          }
+
+          // Firma Entregador (Obligatoria para Radicado)
+          if (entregadorSigPad?.isEmpty()) {
+            setFieldError(
+              "path_firma_entregador",
+              "La firma del entregador es obligatoria."
+            );
+            isValid = false;
+          } else {
+            base64Entregador = entregadorSigPad.toDataURL("image/png");
+          }
+        }
+
+        if (!isValid) {
+          toast.error("Por favor, complete todas las firmas requeridas.");
+          setSubmitting(false);
+          return; // Detiene el envío
+        }
+
+        /**
+         * Función auxiliar para subir la imagen base64 de la firma al servidor
+         * y obtener el path relativo.
+         * @async
+         * @param {string} base64Data - La imagen en formato Data URL (base64).
+         * @param {string} folderName - El nombre de la subcarpeta donde guardar la firma.
+         * @returns {Promise&lt;string|null>} La ruta relativa del archivo en el servidor, o null si el backend lo omite.
+         */
+        const uploadSignature = async (base64Data, folderName) => {
+          if (!base64Data) return null;
+
+          // Endpoint dedicado para la subida de Base64
+          const uploadRes = await api.post("/api/signatures/upload", {
+            image_data: base64Data,
+            folder: folderName, // &lt;--- Aquí se envía la carpeta al backend
+          });
+          // Retorna el path relativo que el backend ha devuelto (puede ser null si el backend
+          // detectó Base64 vacío y lo omitió).
+          return uploadRes.data.path;
+        };
+
+        // --- LÓGICA PARA DETERMINAR LA CARPETA DE CADA FIRMA ---
+
+        // La firma del Receptor siempre va a 'radicados' si es un radicado.
+        let folderRecibe = null;
+        if (base64Recibe) {
+          folderRecibe = isRadicado ? "radicados" : "paquetes";
+        }
+
+        // Determinar la carpeta para Validador/Entregador (solo si existen base64Validador/Entregador)
+        const folderValidador = base64Validador ? "radicados" : null;
+        const folderEntregador = base64Entregador ? "radicados" : null;
+
+        // Se suben las firmas concurrentemente para optimizar el tiempo
+        const [pathRecibe, pathValidador, pathEntregador] = await Promise.all([
+          // Usar la carpeta determinada o null si no hay firma Base64
+          uploadSignature(base64Recibe, folderRecibe),
+          uploadSignature(base64Validador, folderValidador),
+          uploadSignature(base64Entregador, folderEntregador),
+        ]);
+
+        payload.path_firma_recibe_documento = pathRecibe;
+        payload.path_firma_validador = pathValidador;
+        payload.path_firma_entregador = pathEntregador;
+
+        // Limpia el campo 'conGuia' que no es parte del modelo de la DB
+        delete payload.conGuia;
+
+        await api.post("/api/paquetes/recibir", payload);
+        toast.success("¡Paquete recibido con éxito!");
+        resetForm();
+        recibeSigPadRef.current?.clear();
+        validadorSigPadRef.current?.clear();
+        entregadorSigPadRef.current?.clear();
+
+        if (onSuccess) {
+          onSuccess();
+        }
+      } catch (error) {
+        if (error.response?.data?.errors) {
+          const formikErrors = {};
+          error.response.data.errors.forEach((e) => {
+            const path = e.path[0];
+            formikErrors[path] = e.message;
+          });
+          setErrors(formikErrors);
+          toast.error("Por favor, corrige los errores en el formulario.");
+        } else {
+          toast.error(
+            error.response?.data?.message ||
+              "Ha ocurrido un error inesperado al registrar el paquete."
+          );
+        }
+      } finally {
+        setSubmitting(false);
+      }
+    },
+  });
+
+  useEffect(() => {
+    if (formik.values) {
+      if (formik.values.es_radicado) {
+        formik.setFieldValue("id_area", ID_AREA_CONTABILIDAD);
+      }
+    }
+  }, [formik.values.es_radicado, formik.setFieldValue]);
+
+  useEffect(() => {
+    if (formik.values) {
+      if (formik.values.id_tipo_paquete != ID_TIPO_DOCUMENTO) {
+        if (
+          formik.values.es_radicado ||
+          formik.values.nombre_recibe_documento
+        ) {
+          // Resetea todos los campos relacionados
+          formik.setFieldValue("es_radicado", false);
+          formik.setFieldValue("referencia_radicado", "");
+          formik.setFieldValue("nombre_recibe_documento", "");
+          formik.setFieldValue("path_firma_recibe_documento", "");
+          formik.setFieldValue("path_firma_validador", "");
+          formik.setFieldValue("path_firma_entregador", "");
+          recibeSigPadRef.current?.clear();
+          validadorSigPadRef.current?.clear();
+          entregadorSigPadRef.current?.clear();
+
+          if (formik.values.id_area === ID_AREA_CONTABILIDAD) {
+            formik.setFieldValue("id_area", "");
+          }
+        }
+      }
+    }
+  }, [formik.values.id_tipo_paquete, formik.setFieldValue]);
+
+  /**
+   * @function handleClickClear
+   * @description Limpia el formulario y las firmas.
+   */
+  const handleClickClear = () => {
+    formik.resetForm();
+    recibeSigPadRef.current?.clear();
+    validadorSigPadRef.current?.clear();
+    entregadorSigPadRef.current?.clear();
+  };
+
+  /**
+   * @returns {object} Objeto con todos los estados y funciones necesarios para el componente del formulario.
+   */
+  return {
+    formik,
+    tiposPaquetes,
+    areas,
+    isLoading,
+    errorCarga,
+    handleClickClear,
+    handleKeyTextDown,
+    error,
+    recibeSigPadRef,
+    validadorSigPadRef,
+    entregadorSigPadRef,
+    ID_TIPO_DOCUMENTO,
+    ID_AREA_CONTABILIDAD,
+  };
+};
+
+export default usePackagesRecibir;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="component_AuthRedirect.module_jsx.html">component/AuthRedirect.jsx</a></li><li><a href="component_auth_LoginForm.module_jsx.html">component/auth/LoginForm.jsx</a></li><li><a href="component_auth_RegisterForm.module_jsx.html">component/auth/RegisterForm.jsx</a></li><li><a href="components_Dashboard.module_jsx.html">components/Dashboard.jsx</a></li><li><a href="components_Layout.module_jsx.html">components/Layout.jsx</a></li><li><a href="components_PrivateRoute.module_jsx.html">components/PrivateRoute.jsx</a></li><li><a href="components_WelcomePage.module_jsx.html">components/WelcomePage.jsx</a></li><li><a href="components_packages_DashboardPackage.module_jsx.html">components/packages/DashboardPackage.jsx</a></li><li><a href="components_packages_PackagesEnviarForm.module_jsx.html">components/packages/PackagesEnviarForm.jsx</a></li><li><a href="components_packages_RecibirPaqueteForm.module_jsx.html">components/packages/RecibirPaqueteForm.jsx</a></li><li><a href="components_parking_DashboardParking.module_jsx.html">components/parking/DashboardParking.jsx</a></li><li><a href="components_visits_VisitEntryForm.module_jsx.html">components/visits/VisitEntryForm.jsx</a></li><li><a href="module-App.html">App</a></li><li><a href="module-AxiosClient.html">AxiosClient</a></li><li><a href="module-Components_Historial_DashboardHistorial.html">Components/Historial/DashboardHistorial</a></li><li><a href="module-Components_Parking.html">Components/Parking</a></li><li><a href="module-Components_UI.html">Components/UI</a></li><li><a href="module-Config.html">Config</a></li><li><a href="module-Controllers.html">Controllers</a></li><li><a href="module-Controllers_Signatures.html">Controllers/Signatures</a></li><li><a href="module-DateUtils.html">DateUtils</a></li><li><a href="module-EntryPoint.html">EntryPoint</a></li><li><a href="module-Hooks.html">Hooks</a></li><li><a href="module-Hooks_Auth.html">Hooks/Auth</a></li><li><a href="module-Hooks_Historial.html">Hooks/Historial</a></li><li><a href="module-Hooks_Packages.html">Hooks/Packages</a></li><li><a href="module-Hooks_Paquetes.html">Hooks/Paquetes</a></li><li><a href="module-Hooks_Parking.html">Hooks/Parking</a></li><li><a href="module-Hooks_Utils.html">Hooks/Utils</a></li><li><a href="module-Hooks_Visits.html">Hooks/Visits</a></li><li><a href="module-Hooks_usePackagesRecibir.html">Hooks/usePackagesRecibir</a></li><li><a href="module-InputHandlers.html">InputHandlers</a></li><li><a href="module-Middlewares.html">Middlewares</a></li><li><a href="module-Models.html">Models</a></li><li><a href="module-Models_Catalogues.html">Models/Catalogues</a></li><li><a href="module-Repositories.html">Repositories</a></li><li><a href="module-Repositories_Parking.html">Repositories/Parking</a></li><li><a href="module-Routes.html">Routes</a></li><li><a href="module-Routes_Parking.html">Routes/Parking</a></li><li><a href="module-Routes_Signatures.html">Routes/Signatures</a></li><li><a href="module-Schemas.html">Schemas</a></li><li><a href="module-Services.html">Services</a></li><li><a href="module-Services_Parking.html">Services/Parking</a></li><li><a href="module-Stores.html">Stores</a></li><li><a href="module-Utils.html">Utils</a></li><li><a href="module-Utils_Errors.html">Utils/Errors</a></li><li><a href="module-apiController.html">apiController</a></li><li><a href="module-apiRoutes.html">apiRoutes</a></li><li><a href="module-authRoutes.html">authRoutes</a></li><li><a href="module-hooks_parking_.html">hooks/parking</a></li><li><a href="module-packageController.html">packageController</a></li><li><a href="module-packageRoutes.html">packageRoutes</a></li><li><a href="module-passportConfig.html">passportConfig</a></li><li><a href="module-visitController.html">visitController</a></li><li><a href="module-visitRoutes.html">visitRoutes</a></li></ul><h3>Classes</h3><ul><li><a href="module-Models_Catalogues-Area.html">Area</a></li><li><a href="module-Models_Catalogues-IdentificationType.html">IdentificationType</a></li><li><a href="module-Models_Catalogues-PackageType.html">PackageType</a></li><li><a href="module-Models-Log.html">Log</a></li><li><a href="module-Models-Package.html">Package</a></li><li><a href="module-Models-ParkingLog.html">ParkingLog</a></li><li><a href="module-Models-RefreshToken.html">RefreshToken</a></li><li><a href="module-Models-User.html">User</a></li><li><a href="module-Models-Vehicle.html">Vehicle</a></li><li><a href="module-Models-Visit.html">Visit</a></li><li><a href="module-Utils_Errors.AppError.html">AppError</a></li><li><a href="module-Utils_Errors-AccountDisabledError.html">AccountDisabledError</a></li><li><a href="module-Utils_Errors-ActiveVisitDontExistsError.html">ActiveVisitDontExistsError</a></li><li><a href="module-Utils_Errors-AppError.html">AppError</a></li><li><a href="module-Utils_Errors-BadRequestError.html">BadRequestError</a></li><li><a href="module-Utils_Errors-ConflictError.html">ConflictError</a></li><li><a href="module-Utils_Errors-DuplicateError.html">DuplicateError</a></li><li><a href="module-Utils_Errors-ForbiddenError.html">ForbiddenError</a></li><li><a href="module-Utils_Errors-InvalidIdError.html">InvalidIdError</a></li><li><a href="module-Utils_Errors-InvalidTokenError.html">InvalidTokenError</a></li><li><a href="module-Utils_Errors-MissingApiKeyError.html">MissingApiKeyError</a></li><li><a href="module-Utils_Errors-NotFoundError.html">NotFoundError</a></li><li><a href="module-Utils_Errors-UserAlreadyExistsError.html">UserAlreadyExistsError</a></li><li><a href="module-Utils_Errors-UserNotFoundOrInvalidPasswordError.html">UserNotFoundOrInvalidPasswordError</a></li></ul><h3>Global</h3><ul><li><a href="global.html#createVehicle">createVehicle</a></li><li><a href="global.html#getAllVehicles">getAllVehicles</a></li><li><a href="global.html#getOccupancyController">getOccupancyController</a></li><li><a href="global.html#handleScan">handleScan</a></li><li><a href="global.html#packageConfig">packageConfig</a></li><li><a href="global.html#radicadoConfig">radicadoConfig</a></li><li><a href="global.html#registerEntry">registerEntry</a></li><li><a href="global.html#registerExit">registerExit</a></li><li><a href="global.html#updateVehicle">updateVehicle</a></li><li><a href="global.html#vehicleConfig">vehicleConfig</a></li><li><a href="global.html#visitConfig">visitConfig</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Tue Nov 04 2025 16:47:25 GMT-0500 (hora estándar de Colombia)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

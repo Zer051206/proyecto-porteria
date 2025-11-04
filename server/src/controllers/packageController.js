@@ -24,7 +24,7 @@ import {
 export const receivePackage = async (req, res, next) => {
   try {
     const validateData = receivePackageSchema.safeParse(req.body);
-
+    
     const userId = req.user.id_usuario;
     const userIp = req.ip;
 

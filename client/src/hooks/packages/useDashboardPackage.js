@@ -21,6 +21,7 @@ export const useDashboardPackage = () => {
   const [modalType, setModalType] = useState(null);
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
 
   /**
    * @function fetchRecentPackages

@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: server/src/controllers/parkingController.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: server/src/controllers/parkingController.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import {
+  createVehiclesSchema,
+  updateVehicleSchema,
+} from "../schemas/vehicleSchema.js";
+import * as parkingService from "../services/parkingService.js";
+import { BadRequestError } from "../utils/customErrors.js";
+
+/**
+ * @async
+ * @function getOccupancyController
+ * @description Controlador para obtener la ocupación actual del parqueadero.
+ * Llama al servicio `parkingService.getOccupancy`.
+ * @param {object} req - Objeto de solicitud de Express.
+ * @param {object} res - Objeto de respuesta de Express.
+ * @param {function} next - Función middleware para pasar errores.
+ * @returns {Promise&lt;void>} Responde con 200 y el objeto de ocupación, o pasa el error.
+ */
+export const getOccupancy = async (req, res, next) => {
+  try {
+    const occupancyData = await parkingService.getOccupancy();
+    return res.status(200).json({
+      success: true,
+      message: "Ocupación obtenida exitosamente.",
+      data: occupancyData,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @async
+ * @function getAllVehicles
+ * @description Controlador para obtener la lista de todos los vehículos activos registrados.
+ * Llama al servicio `parkingService.getAllVehicles`.
+ * @param {object} req - Objeto de solicitud de Express.
+ * @param {object} res - Objeto de respuesta de Express.
+ * @param {function} next - Función middleware para pasar errores.
+ * @returns {Promise&lt;void>} Responde con 200 y la lista de vehículos, o pasa el error.
+ */
+export const getAllActiveVehicles = async (req, res, next) => {
+  try {
+    const user = req.user;
+    const allVehicles = await parkingService.getAllActiveVehicles(user);
+
+    return res.status(200).json({
+      message: "Vehiculos obtenimos exitosamente.",
+      success: true,
+      vehicles: allVehicles,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @async
+ * @function createVehicle
+ * @description Controlador para crear uno o más vehículos nuevos en el sistema.
+ * Valida el cuerpo de la solicitud (un array de vehículos) usando `createVehiclesSchema`.
+ * Llama al servicio para realizar la creación.
+ * @param {object} req - Objeto de solicitud de Express. `req.body` debe ser un array de objetos vehículo.
+ * @param {object} res - Objeto de respuesta de Express.
+ * @param {function} next - Función middleware para pasar errores.
+ * @returns {Promise&lt;void>} Responde con 201 y los vehículos creados, o pasa el error al middleware.
+ */
+export const createVehicles = async (req, res, next) => {
+  try {
+    const user = req.user;
+    const ip = req.ip;
+
+    const validateData = createVehiclesSchema.safeParse(req.body);
+
+    const createdVehicle = await parkingService.createVehicles(
+      user,
+      validateData.data,
+      ip
+    );
+
+    return res.status(201).json({
+      message: "Vehiculo(s) creado(s) exitosamente.",
+      success: true,
+      vehicle: createdVehicle,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @async
+ * @function updateVehicle
+ * @description Controlador para actualizar los detalles generales de un vehículo existente.
+ * Valida los datos parciales del vehículo en `req.body` usando `updateVehicleSchema`.
+ * Llama al servicio `parkingService.updateVehicleDetails`.
+ * @param {object} req - Objeto de solicitud de Express. `req.params.id` es el ID del vehículo, `req.body` contiene los campos a actualizar.
+ * @param {object} res - Objeto de respuesta de Express.
+ * @param {function} next - Función middleware para pasar errores.
+ * @returns {Promise&lt;void>} Responde con 200 y el vehículo actualizado, o pasa el error al middleware.
+ */
+export const updateVehicle = async (req, res, next) => {
+  try {
+    const id_vehiculo = parseInt(req.params.id, 10);
+    const user = req.user;
+    const ip = req.ip;
+    const validateData = updateVehicleSchema.parse(req.body);
+    const updateData = {
+      validateData,
+      id_vehiculo,
+      user,
+      ip,
+    };
+
+    const updatedVehicle = await parkingService.updateVehicle(updateData);
+
+    return res.status(200).json({
+      message: "Vehiculo actualizado exitosamente.",
+      success: true,
+      vehicle: updatedVehicle,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @async
+ * @function registerEntry
+ * @description Controlador para registrar la entrada de un vehículo **existente**.
+ * Espera el `id_vehiculo` en el cuerpo de la solicitud.
+ * Llama al servicio `parkingService.registerEntry`.
+ * @param {object} req - Objeto de solicitud de Express. `req.body` debe contener `{ id_vehiculo: number }`.
+ * @param {object} res - Objeto de respuesta de Express.
+ * @param {function} next - Función middleware para pasar errores.
+ * @returns {Promise&lt;void>} Responde con 200 y el log de entrada, o pasa el error al middleware.
+ */
+export const registerEntry = async (req, res, next) => {
+  try {
+    const id_usuario = req.user.id_usuario;
+    const ip = req.ip;
+    const { id_vehiculo } = req.body;
+    const entryData = {
+      id_usuario,
+      ip,
+      id_vehiculo,
+    };
+
+    const historyLog = await parkingService.registerEntry(entryData);
+
+    return res.status(200).json({
+      message: "Se registró la entrada del vehículo exitosamente.",
+      success: true,
+      data: historyLog,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @async
+ * @function registerExit
+ * @description Controlador para registrar la salida de un vehículo.
+ * Llama al servicio `parkingService.registerExit`.
+ * @param {object} req - Objeto de solicitud de Express. `req.params.id` contiene el id_vehiculo.
+ * @param {object} res - Objeto de respuesta de Express.
+ * @param {function} next - Función middleware para pasar errores.
+ * @returns {Promise&lt;void>} Responde con 200 y mensaje de éxito, o pasa el error al middleware.
+ */
+export const registerExit = async (req, res, next) => {
+  try {
+    const id_usuario = req.user.id_usuario;
+    const ip = req.ip;
+    const id_vehiculo = parseInt(req.params.id, 10);
+    const exitData = {
+      id_usuario,
+      ip,
+      id_vehiculo,
+    };
+
+    await parkingService.registerExit(exitData);
+
+    return res.status(200).json({
+      message: "Se registró la salida del vehículo exitosamente.",
+      success: true,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @async
+ * @function handleScan
+ * @description Controlador para manejar las peticiones del lector de sensores (NFC/Barras).
+ * Recibe el código del sensor, busca el vehículo asociado y llama al servicio
+ * para registrar automáticamente la entrada o la salida.
+ * @param {object} req - Objeto de solicitud de Express. `req.body` debe contener `{ codigo_sensor: string }`.
+ * @param {object} res - Objeto de respuesta de Express.
+ * @param {function} next - Función middleware para pasar errores.
+ * @returns {Promise&lt;void>} Responde con 200 y el resultado de la operación (entrada/salida), o pasa el error.
+ */
+export const handleScan = async (req, res, next) => {
+  try {
+    // 1. Extraer y validar el código del sensor del body
+    const { codigo_sensor } = req.body;
+    if (
+      !codigo_sensor ||
+      typeof codigo_sensor !== "string" ||
+      codigo_sensor.trim() === ""
+    ) {
+      // Usa BadRequestError para que el middleware de errores lo maneje
+      return next(
+        new BadRequestError(
+          "Falta el 'codigo_sensor' o está vacío en el cuerpo de la solicitud."
+        )
+      );
+    }
+
+    // 2. Obtener IP (útil para logs en el servicio)
+    const ip = req.ip;
+
+    // 3. Llamar al servicio handleVehicleScan
+    const result = await parkingService.handleVehicleScan(codigo_sensor, ip);
+
+    // 4. Formular respuesta basada en el resultado del servicio
+    let message = "Operación registrada exitosamente.";
+    if (result &amp;&amp; result.action === "entry") {
+      message = `Entrada registrada para vehículo con placa ${
+        result.vehicle?.placa || "N/A"
+      }.`;
+    } else if (result &amp;&amp; result.action === "exit") {
+      message = `Salida registrada para vehículo con placa ${
+        result.vehicle?.placa || "N/A"
+      }.`;
+    }
+
+    return res.status(200).json({
+      message: message,
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="component_AuthRedirect.module_jsx.html">component/AuthRedirect.jsx</a></li><li><a href="component_auth_LoginForm.module_jsx.html">component/auth/LoginForm.jsx</a></li><li><a href="component_auth_RegisterForm.module_jsx.html">component/auth/RegisterForm.jsx</a></li><li><a href="components_Dashboard.module_jsx.html">components/Dashboard.jsx</a></li><li><a href="components_Layout.module_jsx.html">components/Layout.jsx</a></li><li><a href="components_PrivateRoute.module_jsx.html">components/PrivateRoute.jsx</a></li><li><a href="components_WelcomePage.module_jsx.html">components/WelcomePage.jsx</a></li><li><a href="components_packages_DashboardPackage.module_jsx.html">components/packages/DashboardPackage.jsx</a></li><li><a href="components_packages_PackagesEnviarForm.module_jsx.html">components/packages/PackagesEnviarForm.jsx</a></li><li><a href="components_packages_RecibirPaqueteForm.module_jsx.html">components/packages/RecibirPaqueteForm.jsx</a></li><li><a href="components_parking_DashboardParking.module_jsx.html">components/parking/DashboardParking.jsx</a></li><li><a href="components_visits_VisitEntryForm.module_jsx.html">components/visits/VisitEntryForm.jsx</a></li><li><a href="module-App.html">App</a></li><li><a href="module-AxiosClient.html">AxiosClient</a></li><li><a href="module-Components_Historial_DashboardHistorial.html">Components/Historial/DashboardHistorial</a></li><li><a href="module-Components_Parking.html">Components/Parking</a></li><li><a href="module-Components_UI.html">Components/UI</a></li><li><a href="module-Config.html">Config</a></li><li><a href="module-Controllers.html">Controllers</a></li><li><a href="module-Controllers_Signatures.html">Controllers/Signatures</a></li><li><a href="module-DateUtils.html">DateUtils</a></li><li><a href="module-EntryPoint.html">EntryPoint</a></li><li><a href="module-Hooks.html">Hooks</a></li><li><a href="module-Hooks_Auth.html">Hooks/Auth</a></li><li><a href="module-Hooks_Historial.html">Hooks/Historial</a></li><li><a href="module-Hooks_Packages.html">Hooks/Packages</a></li><li><a href="module-Hooks_Paquetes.html">Hooks/Paquetes</a></li><li><a href="module-Hooks_Parking.html">Hooks/Parking</a></li><li><a href="module-Hooks_Utils.html">Hooks/Utils</a></li><li><a href="module-Hooks_Visits.html">Hooks/Visits</a></li><li><a href="module-Hooks_usePackagesRecibir.html">Hooks/usePackagesRecibir</a></li><li><a href="module-InputHandlers.html">InputHandlers</a></li><li><a href="module-Middlewares.html">Middlewares</a></li><li><a href="module-Models.html">Models</a></li><li><a href="module-Models_Catalogues.html">Models/Catalogues</a></li><li><a href="module-Repositories.html">Repositories</a></li><li><a href="module-Repositories_Parking.html">Repositories/Parking</a></li><li><a href="module-Routes.html">Routes</a></li><li><a href="module-Routes_Parking.html">Routes/Parking</a></li><li><a href="module-Routes_Signatures.html">Routes/Signatures</a></li><li><a href="module-Schemas.html">Schemas</a></li><li><a href="module-Services.html">Services</a></li><li><a href="module-Services_Parking.html">Services/Parking</a></li><li><a href="module-Stores.html">Stores</a></li><li><a href="module-Utils.html">Utils</a></li><li><a href="module-Utils_Errors.html">Utils/Errors</a></li><li><a href="module-apiController.html">apiController</a></li><li><a href="module-apiRoutes.html">apiRoutes</a></li><li><a href="module-authRoutes.html">authRoutes</a></li><li><a href="module-hooks_parking_.html">hooks/parking</a></li><li><a href="module-packageController.html">packageController</a></li><li><a href="module-packageRoutes.html">packageRoutes</a></li><li><a href="module-passportConfig.html">passportConfig</a></li><li><a href="module-visitController.html">visitController</a></li><li><a href="module-visitRoutes.html">visitRoutes</a></li></ul><h3>Classes</h3><ul><li><a href="module-Models_Catalogues-Area.html">Area</a></li><li><a href="module-Models_Catalogues-IdentificationType.html">IdentificationType</a></li><li><a href="module-Models_Catalogues-PackageType.html">PackageType</a></li><li><a href="module-Models-Log.html">Log</a></li><li><a href="module-Models-Package.html">Package</a></li><li><a href="module-Models-ParkingLog.html">ParkingLog</a></li><li><a href="module-Models-RefreshToken.html">RefreshToken</a></li><li><a href="module-Models-User.html">User</a></li><li><a href="module-Models-Vehicle.html">Vehicle</a></li><li><a href="module-Models-Visit.html">Visit</a></li><li><a href="module-Utils_Errors.AppError.html">AppError</a></li><li><a href="module-Utils_Errors-AccountDisabledError.html">AccountDisabledError</a></li><li><a href="module-Utils_Errors-ActiveVisitDontExistsError.html">ActiveVisitDontExistsError</a></li><li><a href="module-Utils_Errors-AppError.html">AppError</a></li><li><a href="module-Utils_Errors-BadRequestError.html">BadRequestError</a></li><li><a href="module-Utils_Errors-ConflictError.html">ConflictError</a></li><li><a href="module-Utils_Errors-DuplicateError.html">DuplicateError</a></li><li><a href="module-Utils_Errors-ForbiddenError.html">ForbiddenError</a></li><li><a href="module-Utils_Errors-InvalidIdError.html">InvalidIdError</a></li><li><a href="module-Utils_Errors-InvalidTokenError.html">InvalidTokenError</a></li><li><a href="module-Utils_Errors-MissingApiKeyError.html">MissingApiKeyError</a></li><li><a href="module-Utils_Errors-NotFoundError.html">NotFoundError</a></li><li><a href="module-Utils_Errors-UserAlreadyExistsError.html">UserAlreadyExistsError</a></li><li><a href="module-Utils_Errors-UserNotFoundOrInvalidPasswordError.html">UserNotFoundOrInvalidPasswordError</a></li></ul><h3>Global</h3><ul><li><a href="global.html#createVehicle">createVehicle</a></li><li><a href="global.html#getAllVehicles">getAllVehicles</a></li><li><a href="global.html#getOccupancyController">getOccupancyController</a></li><li><a href="global.html#handleScan">handleScan</a></li><li><a href="global.html#packageConfig">packageConfig</a></li><li><a href="global.html#radicadoConfig">radicadoConfig</a></li><li><a href="global.html#registerEntry">registerEntry</a></li><li><a href="global.html#registerExit">registerExit</a></li><li><a href="global.html#updateVehicle">updateVehicle</a></li><li><a href="global.html#vehicleConfig">vehicleConfig</a></li><li><a href="global.html#visitConfig">visitConfig</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Tue Nov 04 2025 16:47:25 GMT-0500 (hora estándar de Colombia)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

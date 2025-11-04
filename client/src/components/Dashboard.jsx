@@ -286,7 +286,7 @@ export default function DashboardPage() {
           </button>
           {/* --- Botón de Parqueadero--- */}
           <button
-            onClick={() => navigate("/parqueadero")}x
+            onClick={() => navigate("/parqueadero")}
             className="flex flex-col items-center justify-center p-6 bg-neutral-600 text-surface rounded-lg shadow-md hover:bg-neutral-700 transition-colors h-32" // Alto fijo
           >
             <FontAwesomeIcon icon={faCar} className="text-3xl mb-2" />

@@ -74,6 +74,22 @@ router.get("/historial/visitas", apiController.getVisitsHistorial);
  */
 router.get("/historial/paquetes", apiController.getPackagesHistorial);
 
-router.get("/historial/parqueadero", apiController.getParkingLogs)
+router.get("/historial/parqueadero", apiController.getParkingLogs);
+
+/**
+ * @route GET /api/historial/radicados
+ * @description Obtiene el historial de todos los paquetes marcados como 'radicado'.
+ * @access Private
+ * @middleware authMiddleware
+ */
+router.get("/historial/radicados", apiController.getFiles);
+
+/**
+ * @route GET /api/historial/radicados/exportar
+ * @description Genera y devuelve un archivo Excel (.xlsx) con el historial de radicados.
+ * @access Private
+ * @middleware authMiddleware
+ */
+router.get("/historial/radicados/exportar", apiController.exportFiles);
 
 export default router;

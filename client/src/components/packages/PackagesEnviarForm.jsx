@@ -20,8 +20,43 @@ import {
   faCheckCircle,
   faExclamationTriangle,
   faTimes,
+  faSignature,
 } from "@fortawesome/free-solid-svg-icons";
-import { FormikProvider } from "formik";
+import { FormikProvider, Field } from "formik";
+import SignatureCanvas from "react-signature-canvas";
+
+/**
+ * @function SignatureField
+ * @description Subcomponente reutilizable para un campo de firma.
+ * (Copiado de PackagesRecibirForm.jsx para consistencia)
+ * @param {object} props
+ * @returns {JSX.Element}
+ */
+const SignatureField = ({ label, sigRef, error, onClear }) => (
+  <div className="md:col-span-1 flex flex-col">
+    <label className="block text-text-main text-sm font-medium mb-1">
+      {label}:
+    </label>
+    <div className="relative border-2 border-dashed border-neutral-300 rounded-md h-32">
+      <SignatureCanvas
+        ref={sigRef}
+        penColor="black"
+        canvasProps={{
+          className: "w-full h-full rounded-md",
+        }}
+      />
+      <button
+        type="button"
+        onClick={onClear}
+        className="absolute top-1 right-1 bg-neutral-200 hover:bg-neutral-300 text-neutral-600 p-1 rounded-full w-6 h-6 flex items-center justify-center"
+        title="Limpiar firma"
+      >
+        <FontAwesomeIcon icon={faSignature} size="xs" />
+      </button>
+    </div>
+    {error && <div className="text-error text-sm mt-1">{error}</div>}
+  </div>
+);
 
 /**
  * @function FormSkeleton
@@ -71,10 +106,12 @@ export default function PackagesEnviarForm({
     areas,
     isLoading,
     errorCarga,
-    handleClearForm,
+    handleClickClear,
     handleKeyTextDown,
     handleAddressKeyDown,
     error: submitError,
+    validadorSigPadRef,
+    remitenteSigPadRef,
   } = usePackageEnviar(onSuccess);
 
   const inputClasses =
@@ -85,14 +122,18 @@ export default function PackagesEnviarForm({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 overflow-y-auto animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 p-4 overflow-y-auto animate-fade-in">
       {/* Contenedor principal del modal */}
-      <div className="rounded-lg shadow-xl w-full max-w-4xl flex flex-col my-8">
+      <div className="rounded-lg shadow-xl w-full max-w-4xl flex flex-col">
         <header className="p-4 flex justify-between items-center border-b border-gray-200 bg-secondary z-10">
-          <h2 className="text-2xl font-bold ml-[300px] text-surface">
+          <h2 className="text-xl md:text-2xl font-bold flex items-center text-surface gap-3">
+            <FontAwesomeIcon icon={faUpload} />
             Enviar Nuevo Paquete
           </h2>
-          <button onClick={onClose} className="text-text-main hover:opacity-70">
+          <button
+            onClick={onClose}
+            className="text-text-main hover:text-error transition-colors"
+          >
             <FontAwesomeIcon icon={faTimes} size="lg" />
           </button>
         </header>
@@ -101,6 +142,7 @@ export default function PackagesEnviarForm({
           <form
             onSubmit={formik.handleSubmit}
             className="bg-surface p-6 shadow-xl w-full font-semibold"
+            noValidate
           >
             {/* Mensaje de error de carga inicial */}
             {errorCarga && (
@@ -131,12 +173,10 @@ export default function PackagesEnviarForm({
                   <span className="text-text-main text-sm font-medium">
                     Tipo de Paquete:
                   </span>
-                  <select
+                  <Field
+                    as="select" // Usa Field
                     id="tipo_paquete"
                     name="id_tipo_paquete"
-                    value={formik.values.id_tipo_paquete}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
                     className={inputClasses}
                   >
                     <option value="" disabled hidden>
@@ -150,7 +190,7 @@ export default function PackagesEnviarForm({
                         {tipo.descripcion}
                       </option>
                     ))}
-                  </select>
+                  </Field>
                   {formik.touched.id_tipo_paquete &&
                     formik.errors.id_tipo_paquete && (
                       <div className="text-error text-sm mt-1">
@@ -164,16 +204,13 @@ export default function PackagesEnviarForm({
                   <span className="text-text-main text-sm font-medium">
                     Nombre del remitente:
                   </span>
-                  <input
+                  <Field
                     id="nombre_remitente"
                     type="text"
                     autoComplete="off"
                     onKeyDown={handleKeyTextDown}
                     placeholder="Pepito perez..."
                     name="nombre_remitente"
-                    value={formik.values.nombre_remitente}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
                     className={inputClasses}
                   />
                   {formik.touched.nombre_remitente &&
@@ -189,12 +226,10 @@ export default function PackagesEnviarForm({
                   <span className="text-text-main text-sm font-medium">
                     Área:
                   </span>
-                  <select
+                  <Field
+                    as="select"
                     id="id_area"
                     name="id_area"
-                    value={formik.values.id_area}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
                     className={inputClasses}
                   >
                     <option value="" disabled hidden>
@@ -205,7 +240,7 @@ export default function PackagesEnviarForm({
                         {area.nombre_area}
                       </option>
                     ))}
-                  </select>
+                  </Field>
                   {formik.touched.id_area && formik.errors.id_area && (
                     <div className="text-error text-sm mt-1">
                       {formik.errors.id_area}
@@ -218,17 +253,21 @@ export default function PackagesEnviarForm({
                   <span className="text-text-main text-sm font-medium">
                     Empresa de Transporte (Opcional):
                   </span>
-                  <input
+                  <Field
                     id="empresa_transporte"
                     type="text"
                     autoComplete="off"
                     name="empresa_transporte"
-                    value={formik.values.empresa_transporte}
                     placeholder="En caso de ser necesario"
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
                     className={inputClasses}
                   />
+                  {/* Opcional: mostrar error si existe */}
+                  {formik.touched.empresa_transporte &&
+                    formik.errors.empresa_transporte && (
+                      <div className="text-error text-sm mt-1">
+                        {formik.errors.empresa_transporte}
+                      </div>
+                    )}
                 </label>
 
                 {/* Campo: Nombre del Mensajero */}
@@ -236,18 +275,22 @@ export default function PackagesEnviarForm({
                   <span className="text-text-main text-sm font-medium">
                     Nombre del Mensajero (Opcional):
                   </span>
-                  <input
+                  <Field
                     id="mensajero_nombre"
                     type="text"
                     autoComplete="off"
                     name="mensajero_nombre"
                     placeholder="Juan esteban"
                     onKeyDown={handleKeyTextDown}
-                    value={formik.values.mensajero_nombre}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
                     className={inputClasses}
                   />
+                  {/* Opcional: mostrar error si existe */}
+                  {formik.touched.mensajero_nombre &&
+                    formik.errors.mensajero_nombre && (
+                      <div className="text-error text-sm mt-1">
+                        {formik.errors.mensajero_nombre}
+                      </div>
+                    )}
                 </label>
 
                 {/* Campo: Destino de Salida */}
@@ -255,16 +298,13 @@ export default function PackagesEnviarForm({
                   <span className="text-text-main text-sm font-medium">
                     Destino del paquete:
                   </span>
-                  <input
+                  <Field
                     id="destino_salida"
                     type="text"
                     autoComplete="off"
                     onKeyDown={handleAddressKeyDown}
                     placeholder="Calle 123 # 45 - 6"
                     name="destino_salida"
-                    value={formik.values.destino_salida}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
                     className={inputClasses}
                   />
                   {formik.touched.destino_salida &&
@@ -281,13 +321,11 @@ export default function PackagesEnviarForm({
                     className="flex items-center justify-center space-x-2"
                     htmlFor="conGuia"
                   >
-                    <input
+                    <Field
                       id="conGuia"
                       type="checkbox"
                       name="conGuia"
-                      checked={formik.values.conGuia}
-                      onChange={formik.handleChange}
-                      className="rounded text-primary"
+                      className="rounded text-primary" // Color primario
                     />
                     <span className="text-text-main text-sm font-medium">
                       El paquete tiene número de guía
@@ -299,15 +337,12 @@ export default function PackagesEnviarForm({
                         <span className="text-text-main text-sm font-medium">
                           Número de Guía:
                         </span>
-                        <input
+                        <Field
                           id="guia"
                           type="text"
                           name="guia"
                           placeholder="Ingrese el numero de guia del paquete"
                           autoComplete="off"
-                          value={formik.values.guia}
-                          onChange={formik.handleChange}
-                          onBlur={formik.handleBlur}
                           className={inputClasses}
                         />
                         {formik.touched.guia && formik.errors.guia && (
@@ -323,22 +358,47 @@ export default function PackagesEnviarForm({
                 {/* Campo: Observaciones (Colspan 2) */}
                 <div className="col-span-1 md:col-span-2">
                   <label className="block" htmlFor="observaciones">
-                    <span className="text-gray-300 text-sm font-medium">
+                    <span className="text-text-main text-sm font-medium">
                       Observaciones (Opcional):
                     </span>
-                    <textarea
+                    <Field
+                      as="textarea"
                       id="observaciones"
                       name="observaciones"
                       placeholder="El paquete se encuentra en las mejores condiciones."
                       autoComplete="off"
-                      value={formik.values.observaciones}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
                       className={inputClasses}
                       rows="3"
                     />
                   </label>
                 </div>
+
+                {/* --- AÑADIDO: Sección de Firmas --- */}
+                <div className="md:col-span-2 mt-4 border-t border-neutral-300 pt-4">
+                  <legend className="px-2 font-semibold text-secondary text-base">
+                    Firmas de Envío
+                  </legend>
+                </div>
+
+                <SignatureField
+                  label="Firma Validador (Portero)"
+                  sigRef={validadorSigPadRef}
+                  onClear={() => validadorSigPadRef.current?.clear()}
+                  error={
+                    formik.touched.path_firma_validador_envio &&
+                    formik.errors.path_firma_validador_envio
+                  }
+                />
+                <SignatureField
+                  label="Firma Remitente (Empleado)"
+                  sigRef={remitenteSigPadRef}
+                  onClear={() => remitenteSigPadRef.current?.clear()}
+                  error={
+                    formik.touched.path_firma_remitente &&
+                    formik.errors.path_firma_remitente
+                  }
+                />
+                {/* --- FIN FIRMAS --- */}
               </fieldset>
             )}
 
@@ -352,7 +412,7 @@ export default function PackagesEnviarForm({
             <div className="mt-6 flex justify-center space-x-4">
               <button
                 type="button"
-                onClick={handleClearForm}
+                onClick={handleClickClear}
                 className="flex items-center bg-neutral-400 text-surface font-bold py-2 px-4 sm:px-6 rounded-md hover:bg-tertiary sm: transition-colors"
               >
                 <FontAwesomeIcon icon={faBroom} className="mr-2 text-xl" />

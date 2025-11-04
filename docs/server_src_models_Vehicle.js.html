@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: server/src/models/Vehicle.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: server/src/models/Vehicle.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @file Vehicle.js
+ * @module Models
+ * @description Define el modelo de Sequelize para la tabla 'vehiculos'.
+ * Representa la información única de cada vehículo registrado en el sistema,
+ * así como su estado actual dentro del parqueadero.
+ * @requires sequelize
+ */
+import { DataTypes } from "sequelize";
+
+/**
+ * @function defineVehicleModel
+ * @description Define y devuelve el modelo 'Vehicle' de Sequelize usando sequelize.define.
+ * @param {Sequelize} sequelize - La instancia de Sequelize.
+ * @returns {Model} El constructor del modelo 'Vehicle' definido.
+ */
+export default (sequelize) => {
+  /**
+   * @class Vehicle
+   * @classdesc Modelo de Sequelize para la tabla `vehiculos`. Almacena datos identificativos
+   * y el estado actual de cada vehículo (dentro/fuera, activo/inactivo).
+   * @property {number} id_vehiculo - Clave primaria autoincremental.
+   * @property {string|null} placa - Placa del vehículo. Única si no es NULL. Nulo para bicicletas.
+   * @property {string} tipo_vehiculo - Tipo de vehículo ('Carro', 'Moto', 'Bicicleta', 'Otros').
+   * @property {string|null} modelo_descripcion - Modelo o descripción adicional del vehículo (opcional).
+   * @property {string} nombre_dueno - Nombre completo del dueño o conductor principal.
+   * @property {string} identificacion_dueno - Número de identificación del dueño.
+   * @property {string} genero_dueno - Género del dueño ('Masculino', 'Femenino', 'N/A'). Relevante para capacidad de motos.
+   * @property {string|null} lugar_asignado_default - Descripción del lugar habitual de parqueo (opcional).
+   * @property {boolean} esta_dentro - Indica si el vehículo está actualmente dentro del parqueadero (TRUE) o fuera (FALSE).
+   * @property {boolean} activo - Indica si el vehículo está activo en el sistema (TRUE) o desactivado (FALSE).
+   * @property {string|null} codigo_sensor - Código único asociado al tag/lector para identificación automática (opcional, único si no es NULL).
+   */
+  const Vehicle = sequelize.define(
+    "Vehicle",
+    {
+      // Definición de las columnas de la tabla 'vehiculos'
+      id_vehiculo: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true,
+      },
+      placa: {
+        type: DataTypes.STRING(10),
+        allowNull: true,
+        unique: true,
+      },
+      tipo_vehiculo: {
+        type: DataTypes.ENUM("Carro", "Moto", "Bicicleta", "Otros"),
+        allowNull: false,
+      },
+      modelo_descripcion: {
+        type: DataTypes.STRING(100),
+        allowNull: true,
+      },
+      nombre_dueno: {
+        type: DataTypes.STRING(150),
+        allowNull: false,
+      },
+      identificacion_dueno: {
+        type: DataTypes.STRING(20),
+        allowNull: false,
+      },
+      genero_dueno: {
+        type: DataTypes.ENUM("Masculino", "Femenino", "N/A"),
+        allowNull: false,
+        defaultValue: "N/A",
+      },
+      lugar_asignado_default: {
+        type: DataTypes.STRING(100),
+        allowNull: true,
+      },
+      esta_dentro: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
+      activo: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: true,
+      },
+      codigo_sensor: {
+        type: DataTypes.STRING(100),
+        allowNull: true,
+        unique: true,
+      },
+    },
+    {
+      // Opciones del modelo
+      tableName: "vehiculos",
+      timestamps: false,
+      indexes: [
+        {
+          name: "idx_estado_tipo_genero",
+          fields: ["esta_dentro", "tipo_vehiculo", "genero_dueno"],
+        },
+        {
+          name: "idx_identificacion",
+          fields: ["identificacion_dueno"],
+        },
+        {
+          name: "idx_placa_activo_estado",
+          fields: ["placa", "activo", "esta_dentro"],
+        },
+      ],
+    }
+  );
+
+  /**
+   * @function associate
+   * @description Define las asociaciones del modelo Vehicle con otros modelos.
+   * @param {object} models - Un objeto que contiene todos los modelos de la aplicación.
+   */
+  Vehicle.associate = (models) => {
+    /**
+     * @description Asociación (hasMany): Un Vehículo puede tener muchos registros en el historial de parqueadero.
+     * @param {Model} models.ParkingLog - El modelo ParkingLog.
+     * @property {string} foreignKey - La clave foránea en la tabla `parqueadero_registros`.
+     * @property {string} as - Alias para acceder a los registros desde una instancia de vehículo (`vehicleInstance.getParkingLogs()`).
+     */
+    Vehicle.hasMany(models.ParkingLog, {
+      foreignKey: "id_vehiculo",
+      as: "ParkingLogs",
+    });
+  };
+
+  // Devuelve el constructor del modelo definido
+  return Vehicle;
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="component_AuthRedirect.module_jsx.html">component/AuthRedirect.jsx</a></li><li><a href="component_auth_LoginForm.module_jsx.html">component/auth/LoginForm.jsx</a></li><li><a href="component_auth_RegisterForm.module_jsx.html">component/auth/RegisterForm.jsx</a></li><li><a href="components_Dashboard.module_jsx.html">components/Dashboard.jsx</a></li><li><a href="components_Layout.module_jsx.html">components/Layout.jsx</a></li><li><a href="components_PrivateRoute.module_jsx.html">components/PrivateRoute.jsx</a></li><li><a href="components_WelcomePage.module_jsx.html">components/WelcomePage.jsx</a></li><li><a href="components_packages_DashboardPackage.module_jsx.html">components/packages/DashboardPackage.jsx</a></li><li><a href="components_packages_PackagesEnviarForm.module_jsx.html">components/packages/PackagesEnviarForm.jsx</a></li><li><a href="components_packages_RecibirPaqueteForm.module_jsx.html">components/packages/RecibirPaqueteForm.jsx</a></li><li><a href="components_parking_DashboardParking.module_jsx.html">components/parking/DashboardParking.jsx</a></li><li><a href="components_visits_VisitEntryForm.module_jsx.html">components/visits/VisitEntryForm.jsx</a></li><li><a href="module-App.html">App</a></li><li><a href="module-AxiosClient.html">AxiosClient</a></li><li><a href="module-Components_Historial_DashboardHistorial.html">Components/Historial/DashboardHistorial</a></li><li><a href="module-Components_Parking.html">Components/Parking</a></li><li><a href="module-Components_UI.html">Components/UI</a></li><li><a href="module-Config.html">Config</a></li><li><a href="module-Controllers.html">Controllers</a></li><li><a href="module-Controllers_Signatures.html">Controllers/Signatures</a></li><li><a href="module-DateUtils.html">DateUtils</a></li><li><a href="module-EntryPoint.html">EntryPoint</a></li><li><a href="module-Hooks.html">Hooks</a></li><li><a href="module-Hooks_Auth.html">Hooks/Auth</a></li><li><a href="module-Hooks_Historial.html">Hooks/Historial</a></li><li><a href="module-Hooks_Packages.html">Hooks/Packages</a></li><li><a href="module-Hooks_Paquetes.html">Hooks/Paquetes</a></li><li><a href="module-Hooks_Parking.html">Hooks/Parking</a></li><li><a href="module-Hooks_Utils.html">Hooks/Utils</a></li><li><a href="module-Hooks_Visits.html">Hooks/Visits</a></li><li><a href="module-Hooks_usePackagesRecibir.html">Hooks/usePackagesRecibir</a></li><li><a href="module-InputHandlers.html">InputHandlers</a></li><li><a href="module-Middlewares.html">Middlewares</a></li><li><a href="module-Models.html">Models</a></li><li><a href="module-Models_Catalogues.html">Models/Catalogues</a></li><li><a href="module-Repositories.html">Repositories</a></li><li><a href="module-Repositories_Parking.html">Repositories/Parking</a></li><li><a href="module-Routes.html">Routes</a></li><li><a href="module-Routes_Parking.html">Routes/Parking</a></li><li><a href="module-Routes_Signatures.html">Routes/Signatures</a></li><li><a href="module-Schemas.html">Schemas</a></li><li><a href="module-Services.html">Services</a></li><li><a href="module-Services_Parking.html">Services/Parking</a></li><li><a href="module-Stores.html">Stores</a></li><li><a href="module-Utils.html">Utils</a></li><li><a href="module-Utils_Errors.html">Utils/Errors</a></li><li><a href="module-apiController.html">apiController</a></li><li><a href="module-apiRoutes.html">apiRoutes</a></li><li><a href="module-authRoutes.html">authRoutes</a></li><li><a href="module-hooks_parking_.html">hooks/parking</a></li><li><a href="module-packageController.html">packageController</a></li><li><a href="module-packageRoutes.html">packageRoutes</a></li><li><a href="module-passportConfig.html">passportConfig</a></li><li><a href="module-visitController.html">visitController</a></li><li><a href="module-visitRoutes.html">visitRoutes</a></li></ul><h3>Classes</h3><ul><li><a href="module-Models_Catalogues-Area.html">Area</a></li><li><a href="module-Models_Catalogues-IdentificationType.html">IdentificationType</a></li><li><a href="module-Models_Catalogues-PackageType.html">PackageType</a></li><li><a href="module-Models-Log.html">Log</a></li><li><a href="module-Models-Package.html">Package</a></li><li><a href="module-Models-ParkingLog.html">ParkingLog</a></li><li><a href="module-Models-RefreshToken.html">RefreshToken</a></li><li><a href="module-Models-User.html">User</a></li><li><a href="module-Models-Vehicle.html">Vehicle</a></li><li><a href="module-Models-Visit.html">Visit</a></li><li><a href="module-Utils_Errors.AppError.html">AppError</a></li><li><a href="module-Utils_Errors-AccountDisabledError.html">AccountDisabledError</a></li><li><a href="module-Utils_Errors-ActiveVisitDontExistsError.html">ActiveVisitDontExistsError</a></li><li><a href="module-Utils_Errors-AppError.html">AppError</a></li><li><a href="module-Utils_Errors-BadRequestError.html">BadRequestError</a></li><li><a href="module-Utils_Errors-ConflictError.html">ConflictError</a></li><li><a href="module-Utils_Errors-DuplicateError.html">DuplicateError</a></li><li><a href="module-Utils_Errors-ForbiddenError.html">ForbiddenError</a></li><li><a href="module-Utils_Errors-InvalidIdError.html">InvalidIdError</a></li><li><a href="module-Utils_Errors-InvalidTokenError.html">InvalidTokenError</a></li><li><a href="module-Utils_Errors-MissingApiKeyError.html">MissingApiKeyError</a></li><li><a href="module-Utils_Errors-NotFoundError.html">NotFoundError</a></li><li><a href="module-Utils_Errors-UserAlreadyExistsError.html">UserAlreadyExistsError</a></li><li><a href="module-Utils_Errors-UserNotFoundOrInvalidPasswordError.html">UserNotFoundOrInvalidPasswordError</a></li></ul><h3>Global</h3><ul><li><a href="global.html#createVehicle">createVehicle</a></li><li><a href="global.html#getAllVehicles">getAllVehicles</a></li><li><a href="global.html#getOccupancyController">getOccupancyController</a></li><li><a href="global.html#handleScan">handleScan</a></li><li><a href="global.html#packageConfig">packageConfig</a></li><li><a href="global.html#radicadoConfig">radicadoConfig</a></li><li><a href="global.html#registerEntry">registerEntry</a></li><li><a href="global.html#registerExit">registerExit</a></li><li><a href="global.html#updateVehicle">updateVehicle</a></li><li><a href="global.html#vehicleConfig">vehicleConfig</a></li><li><a href="global.html#visitConfig">visitConfig</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Tue Nov 04 2025 16:47:25 GMT-0500 (hora estándar de Colombia)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

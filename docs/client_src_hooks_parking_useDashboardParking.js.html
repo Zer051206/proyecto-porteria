@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: client/src/hooks/parking/useDashboardParking.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: client/src/hooks/parking/useDashboardParking.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @file useDashboardParking.js
+ * @module hooks/parking
+ * @description Hook de React para manejar la lógica y el estado del dashboard de parqueadero.
+ * Obtiene vehículos, gestiona filtros, estado de modales y acciones de entrada/salida.
+ * @requires react
+ * @requires react-hot-toast
+ * @requires ../../config/axios.js
+ */
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { toast } from "react-hot-toast";
+import api from "../../config/axios.js";
+import { formatDate } from "../../utils/dateFormat.js";
+
+export const useDashboardParking = () => {
+  /**
+   * @state {Array&lt;object>} allVehicles
+   * @description Lista completa de *todos* los vehículos activos registrados en el sistema.
+   */
+  const [allVehicles, setAllVehicles] = useState([]);
+
+  /**
+   * @state {object} ocupacion
+   * @description Objeto con los conteos actuales vs. límites de capacidad.
+   */
+  const [ocupacion, setOcupacion] = useState({
+    carros: { actual: 0, limite: 0 },
+    motos: { actual: 0, limite: 0 },
+    bicicletas: { actual: 0, limite: 0 },
+    otros: { actual: 0, limite: 0 },
+  });
+
+  /**
+   * @state {boolean} isLoading
+   * @description Verdadero durante la carga inicial de datos.
+   */
+  const [isLoading, setIsLoading] = useState(true);
+
+  /**
+   * @state {boolean} showDetailsModal
+   * @description Controla la visibilidad del modal "Detalles del Vehículo".
+   */
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+
+  /**
+   * @state {string|null} error
+   * @description Mensaje de error si falla la carga de datos.
+   */
+  const [error, setError] = useState(null);
+
+  /**
+   * @state {object|null} selectedVehicle
+   * @description Almacena el vehículo seleccionado para el modal de detalles.
+   */
+  const [selectedVehicle, setSelectedVehicle] = useState(null);
+
+  /**
+   * @state {boolean} isSubmitting
+   * @description Verdadero mientras se procesa una solicitud de entrada/salida (para deshabilitar switches).
+   */
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  /**
+   * @state {boolean} showAddModal
+   * @description Controla la visibilidad del modal "Añadir Vehículo(s)".
+   */
+  const [showAddModal, setShowAddModal] = useState(false);
+
+  // --- Estados de Control ---
+  /**
+   * @state {string} searchTerm
+   * @description Valor actual del campo de búsqueda.
+   */
+  const [searchTerm, setSearchTerm] = useState("");
+
+  /**
+   * @function fetchInitialData
+   * @description Obtiene todos los datos necesarios para el dashboard (lista de vehículos y ocupación).
+   * Se usa `useCallback` para evitar re-creaciones innecesarias.
+   */
+  const fetchInitialData = useCallback(async () => {
+    setError(null);
+    try {
+      const [vehiclesResponse, occupancyResponse] = await Promise.all([
+        api.get("/api/parqueadero/vehiculos"),
+        api.get("/api/parqueadero/ocupacion"),
+      ]);
+      setAllVehicles(vehiclesResponse.data.vehicles || []);
+      setOcupacion(occupancyResponse.data.data || {});
+    } catch (err) {
+      const errorMsg =
+        err.response?.data?.message ||
+        "Error al cargar los datos del parqueadero.";
+      setError(errorMsg);
+      toast.error(errorMsg);
+      console.error("Error fetching parking data:", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    setIsLoading(true); // Pone loading
+    fetchInitialData().finally(() => setIsLoading(false)); // Llama al fetch y quita loading
+  }, [fetchInitialData]);
+
+  // Efecto para la carga inicial de datos al montar el componente
+  useEffect(() => {
+    fetchInitialData();
+  }, [fetchInitialData]); // Se ejecuta solo una vez al montar
+
+  /**
+   * @function handleSearchChange
+   * @description Actualiza el estado `searchTerm` cada vez que el usuario escribe en el input.
+   * @param {React.ChangeEvent&lt;HTMLInputElement>} event
+   */
+  const handleSearchChange = (event) => {
+    setSearchTerm(event.target.value);
+  };
+
+  /**
+   * @const {Array&lt;object>} filteredVehicles
+   * @description Lista de vehículos filtrada por el `searchTerm`.
+   * Se usa `useMemo` para recalcular solo si `allVehicles` o `searchTerm` cambian.
+   * La lógica de filtrado (búsqueda) se maneja aquí en el frontend.
+   */
+  const filteredVehicles = useMemo(() => {
+    const term = searchTerm.toLowerCase().trim();
+    if (!term) {
+      return allVehicles; // Si no hay búsqueda, devuelve todos
+    }
+    return allVehicles.filter(
+      (vehicle) =>
+        // Busca por placa (asegurándose que no sea null)
+        (vehicle.placa &amp;&amp; vehicle.placa.toLowerCase().includes(term)) ||
+        // Busca por identificación del dueño
+        (vehicle.identificacion_dueno &amp;&amp;
+          vehicle.identificacion_dueno.toLowerCase().includes(term)) ||
+        // busca por nombre de dueño
+        (vehicle.nombre_dueno &amp;&amp;
+          vehicle.nombre_dueno.toLowerCase().includes(term))
+    );
+  }, [allVehicles, searchTerm]);
+
+  // --- Handlers para Modales ---
+
+  const openAddModal = () => setShowAddModal(true);
+
+  /**
+   * @function closeModal
+   * @description Cierra CUALQUIER modal abierto y limpia los estados de selección.
+   */
+  const closeModal = () => {
+    setShowAddModal(false);
+    setShowDetailsModal(false);
+    setSelectedVehicle(null);
+  };
+
+  /**
+   * @function openDetailsModal
+   * @description Abre el modal de detalles y guarda el vehículo seleccionado.
+   * @param {object} vehicle - El vehículo a mostrar.
+   */
+  const openDetailsModal = (vehicle) => {
+    setSelectedVehicle(vehicle);
+    setShowDetailsModal(true);
+  };
+
+  /**
+   * @function handleAddVehicleSuccess
+   * @description Callback que se ejecuta cuando el modal `AddVehicleModal` termina exitosamente.
+   * Cierra el modal y refresca los datos.
+   */
+  const handleAddVehicleSuccess = () => {
+    closeModal();
+    fetchInitialData();
+  };
+
+  /**
+   * @function toggleVehiculoStatus
+   * @description Maneja la lógica de registrar ENTRADA o SALIDA al cambiar el switch.
+   * Llama a los endpoints del backend que contienen la validación de capacidad.
+   * @param {object} vehicle - El objeto vehículo de la fila (requiere `id_vehiculo` y `esta_dentro`).
+   */
+  const toggleVehiculoStatus = useCallback(
+    async (vehicle) => {
+      if (isSubmitting) return;
+
+      const { id_vehiculo, esta_dentro, placa, tipo_vehiculo } = vehicle;
+      const actionText = esta_dentro ? "salida" : "entrada";
+      const toastId = toast.loading(
+        `Registrando ${actionText} para ${placa || tipo_vehiculo}...`
+      );
+      setIsSubmitting(true);
+
+      try {
+        if (esta_dentro) {
+          // --- REGISTRAR SALIDA ---
+          // El vehículo está DENTRO, va a SALIR
+          await api.patch(`/api/parqueadero/vehiculos/salida/${id_vehiculo}`);
+          toast.success(`Salida registrada para ${placa || tipo_vehiculo}.`, {
+            id: toastId,
+          });
+        } else {
+          // --- REGISTRAR ENTRADA ---
+          // El vehículo está FUERA, va a ENTRAR
+          let ocupKey = "";
+          if (tipo_vehiculo === "Carro") ocupKey = "carros";
+          else if (tipo_vehiculo === "Moto") ocupKey = "motos";
+          else if (tipo_vehiculo === "Bicicleta") ocupKey = "bicicletas";
+          else if (tipo_vehiculo === "Otros") ocupKey = "otros";
+
+          const ocup = ocupacion[ocupKey];
+
+          if (ocup &amp;&amp; ocup.actual >= ocup.limite) {
+            throw new Error(
+              `Capacidad máxima alcanzada para ${tipo_vehiculo}.`
+            ); // Error local
+          }
+
+          await api.post("/api/parqueadero/vehiculos/entrada", { id_vehiculo });
+          toast.success(`Entrada registrada para ${placa || tipo_vehiculo}.`, {
+            id: toastId,
+          });
+        }
+
+        await fetchInitialData();
+      } catch (err) {
+        const errorMsg =
+          err.response?.data?.message ||
+          err.message ||
+          `Error al registrar la ${actionText}.`;
+        toast.error(errorMsg, { id: toastId });
+        console.error(`Error al registrar ${actionText}:`, err);
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [isSubmitting, fetchInitialData, ocupacion]
+  ); // Depende de estas variables
+
+  return {
+    filteredVehicles,
+    ocupacion,
+    isLoading,
+    error,
+    searchTerm,
+    showAddModal,
+    showDetailsModal,
+    selectedVehicle,
+    isSubmitting,
+    handleSearchChange,
+    openAddModal,
+    closeModal,
+    openDetailsModal,
+    handleAddVehicleSuccess,
+    toggleVehiculoStatus,
+    refetch: fetchInitialData,
+    formatDate,
+  };
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="component_AuthRedirect.module_jsx.html">component/AuthRedirect.jsx</a></li><li><a href="component_auth_LoginForm.module_jsx.html">component/auth/LoginForm.jsx</a></li><li><a href="component_auth_RegisterForm.module_jsx.html">component/auth/RegisterForm.jsx</a></li><li><a href="components_Dashboard.module_jsx.html">components/Dashboard.jsx</a></li><li><a href="components_Layout.module_jsx.html">components/Layout.jsx</a></li><li><a href="components_PrivateRoute.module_jsx.html">components/PrivateRoute.jsx</a></li><li><a href="components_WelcomePage.module_jsx.html">components/WelcomePage.jsx</a></li><li><a href="components_packages_DashboardPackage.module_jsx.html">components/packages/DashboardPackage.jsx</a></li><li><a href="components_packages_PackagesEnviarForm.module_jsx.html">components/packages/PackagesEnviarForm.jsx</a></li><li><a href="components_packages_RecibirPaqueteForm.module_jsx.html">components/packages/RecibirPaqueteForm.jsx</a></li><li><a href="components_parking_DashboardParking.module_jsx.html">components/parking/DashboardParking.jsx</a></li><li><a href="components_visits_VisitEntryForm.module_jsx.html">components/visits/VisitEntryForm.jsx</a></li><li><a href="module-App.html">App</a></li><li><a href="module-AxiosClient.html">AxiosClient</a></li><li><a href="module-Components_Historial_DashboardHistorial.html">Components/Historial/DashboardHistorial</a></li><li><a href="module-Components_Parking.html">Components/Parking</a></li><li><a href="module-Components_UI.html">Components/UI</a></li><li><a href="module-Config.html">Config</a></li><li><a href="module-Controllers.html">Controllers</a></li><li><a href="module-Controllers_Signatures.html">Controllers/Signatures</a></li><li><a href="module-DateUtils.html">DateUtils</a></li><li><a href="module-EntryPoint.html">EntryPoint</a></li><li><a href="module-Hooks.html">Hooks</a></li><li><a href="module-Hooks_Auth.html">Hooks/Auth</a></li><li><a href="module-Hooks_Historial.html">Hooks/Historial</a></li><li><a href="module-Hooks_Packages.html">Hooks/Packages</a></li><li><a href="module-Hooks_Paquetes.html">Hooks/Paquetes</a></li><li><a href="module-Hooks_Parking.html">Hooks/Parking</a></li><li><a href="module-Hooks_Utils.html">Hooks/Utils</a></li><li><a href="module-Hooks_Visits.html">Hooks/Visits</a></li><li><a href="module-Hooks_usePackagesRecibir.html">Hooks/usePackagesRecibir</a></li><li><a href="module-InputHandlers.html">InputHandlers</a></li><li><a href="module-Middlewares.html">Middlewares</a></li><li><a href="module-Models.html">Models</a></li><li><a href="module-Models_Catalogues.html">Models/Catalogues</a></li><li><a href="module-Repositories.html">Repositories</a></li><li><a href="module-Repositories_Parking.html">Repositories/Parking</a></li><li><a href="module-Routes.html">Routes</a></li><li><a href="module-Routes_Parking.html">Routes/Parking</a></li><li><a href="module-Routes_Signatures.html">Routes/Signatures</a></li><li><a href="module-Schemas.html">Schemas</a></li><li><a href="module-Services.html">Services</a></li><li><a href="module-Services_Parking.html">Services/Parking</a></li><li><a href="module-Stores.html">Stores</a></li><li><a href="module-Utils.html">Utils</a></li><li><a href="module-Utils_Errors.html">Utils/Errors</a></li><li><a href="module-apiController.html">apiController</a></li><li><a href="module-apiRoutes.html">apiRoutes</a></li><li><a href="module-authRoutes.html">authRoutes</a></li><li><a href="module-hooks_parking_.html">hooks/parking</a></li><li><a href="module-packageController.html">packageController</a></li><li><a href="module-packageRoutes.html">packageRoutes</a></li><li><a href="module-passportConfig.html">passportConfig</a></li><li><a href="module-visitController.html">visitController</a></li><li><a href="module-visitRoutes.html">visitRoutes</a></li></ul><h3>Classes</h3><ul><li><a href="module-Models_Catalogues-Area.html">Area</a></li><li><a href="module-Models_Catalogues-IdentificationType.html">IdentificationType</a></li><li><a href="module-Models_Catalogues-PackageType.html">PackageType</a></li><li><a href="module-Models-Log.html">Log</a></li><li><a href="module-Models-Package.html">Package</a></li><li><a href="module-Models-ParkingLog.html">ParkingLog</a></li><li><a href="module-Models-RefreshToken.html">RefreshToken</a></li><li><a href="module-Models-User.html">User</a></li><li><a href="module-Models-Vehicle.html">Vehicle</a></li><li><a href="module-Models-Visit.html">Visit</a></li><li><a href="module-Utils_Errors.AppError.html">AppError</a></li><li><a href="module-Utils_Errors-AccountDisabledError.html">AccountDisabledError</a></li><li><a href="module-Utils_Errors-ActiveVisitDontExistsError.html">ActiveVisitDontExistsError</a></li><li><a href="module-Utils_Errors-AppError.html">AppError</a></li><li><a href="module-Utils_Errors-BadRequestError.html">BadRequestError</a></li><li><a href="module-Utils_Errors-ConflictError.html">ConflictError</a></li><li><a href="module-Utils_Errors-DuplicateError.html">DuplicateError</a></li><li><a href="module-Utils_Errors-ForbiddenError.html">ForbiddenError</a></li><li><a href="module-Utils_Errors-InvalidIdError.html">InvalidIdError</a></li><li><a href="module-Utils_Errors-InvalidTokenError.html">InvalidTokenError</a></li><li><a href="module-Utils_Errors-MissingApiKeyError.html">MissingApiKeyError</a></li><li><a href="module-Utils_Errors-NotFoundError.html">NotFoundError</a></li><li><a href="module-Utils_Errors-UserAlreadyExistsError.html">UserAlreadyExistsError</a></li><li><a href="module-Utils_Errors-UserNotFoundOrInvalidPasswordError.html">UserNotFoundOrInvalidPasswordError</a></li></ul><h3>Global</h3><ul><li><a href="global.html#createVehicle">createVehicle</a></li><li><a href="global.html#getAllVehicles">getAllVehicles</a></li><li><a href="global.html#getOccupancyController">getOccupancyController</a></li><li><a href="global.html#handleScan">handleScan</a></li><li><a href="global.html#packageConfig">packageConfig</a></li><li><a href="global.html#radicadoConfig">radicadoConfig</a></li><li><a href="global.html#registerEntry">registerEntry</a></li><li><a href="global.html#registerExit">registerExit</a></li><li><a href="global.html#updateVehicle">updateVehicle</a></li><li><a href="global.html#vehicleConfig">vehicleConfig</a></li><li><a href="global.html#visitConfig">visitConfig</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Tue Nov 04 2025 16:47:25 GMT-0500 (hora estándar de Colombia)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

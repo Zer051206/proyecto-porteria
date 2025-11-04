@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: client/src/components/parking/DashboardParking.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: client/src/components/parking/DashboardParking.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @file DasboardParking.jsx
+ * @module components/parking/DashboardParking.jsx
+ * @description Dashboard principal para la gestión del parqueadero. Muestra vehículos,
+ * permite añadir nuevos y registrar entradas/salidas.
+ * @requires react
+ * @requires react-router-dom
+ * @requires @fortawesome/react-fontawesome
+ * @requires ../../hooks/parking/useDasboardParking.js
+ * @requires ../../components/parking/VehicleTable.jsx
+ * @requires ../../components/parking/VehicleForm.jsx
+ * @requires ../../components/historial/HistoryDetailModal.jsx
+ */
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faArrowLeft,
+  faSearch,
+  faPlus,
+  faCar,
+  faMotorcycle,
+  faBicycle,
+  faQuestionCircle,
+  faExclamationTriangle,
+  faEye,
+} from "@fortawesome/free-solid-svg-icons";
+import { useAuthStore } from "../../stores/authStore.js";
+import { useDashboardParking } from "../../hooks/parking/useDashboardParking.js";
+import DetailModal from "../utils/DetailModal.jsx";
+import VehicleForm from "./VehicleForm.jsx";
+import { vehicleConfig } from "../../hooks/utils/detailModalConfig.js";
+
+/**
+ * @function DasboardParkingSkeleton
+ * @description Componente de esqueleto para el Dashboard de Parqueadero.
+ * @returns {JSX.Element}
+ */
+const DasboardParkingSkeleton = () => (
+  &lt;div className="flex flex-col items-center w-full animate-pulse p-4 mb-[50px]">
+    {/* Esqueleto Botón Volver */}
+    &lt;div className="md:absolute md:left-[150px] md:top-[100px] mb-5 bg-gray-200 rounded-full h-12 md:w-1/12 w-1/2">&lt;/div>
+    {/* Esqueleto Título */}
+    &lt;div className="h-10 sm:h-12 bg-gray-200 rounded w-3/4 max-w-md mx-auto mb-10 mt-10">&lt;/div>
+
+    {/* Esqueleto Header */}
+    &lt;header className="w-full max-w-5xl flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+      &lt;div className="h-10 bg-gray-300 rounded w-48">&lt;/div>{" "}
+      {/* Botón Añadir Vehículo */}
+      {/* Esqueleto Contadores Ocupación */}
+      &lt;div className="flex gap-2 sm:gap-4 p-2 bg-gray-100 rounded-lg shadow-inner order-1 md:order-2 flex-wrap justify-center">
+        &lt;div className="h-14 w-20 bg-gray-200 rounded">&lt;/div>
+        &lt;div className="h-14 w-20 bg-gray-200 rounded">&lt;/div>
+        &lt;div className="h-14 w-20 bg-gray-200 rounded">&lt;/div>
+        &lt;div className="h-14 w-20 bg-gray-200 rounded">&lt;/div>
+      &lt;/div>
+    &lt;/header>
+
+    {/* Esqueleto Búsqueda */}
+    &lt;div className="w-full max-w-5xl flex flex-col md:flex-row gap-4 mb-6">
+      &lt;div className="h-12 w-full md:w-1/2 bg-gray-200 rounded-lg">&lt;/div>{" "}
+      {/* Search */}
+    &lt;/div>
+
+    {/* Esqueleto Tabla */}
+    &lt;div className="w-full max-w-5xl bg-surface rounded-lg shadow-md p-4">
+      {/* Header Tabla */}
+      &lt;div className="flex justify-between gap-4 pb-3 border-b border-gray-200 mb-4">
+        {[...Array(6)].map((_, i) => (
+          &lt;div key={i} className="h-4 bg-gray-200 rounded flex-1">&lt;/div>
+        ))}
+      &lt;/div>
+      {/* Filas Tabla */}
+      &lt;div className="space-y-4">
+        {[...Array(5)].map((_, i) => (
+          &lt;div key={i} className="flex justify-between items-center gap-4">
+            &lt;div className="h-6 w-8 bg-gray-300 rounded">&lt;/div> {/* Icono */}
+            &lt;div className="h-5 bg-gray-200 rounded w-1/6">&lt;/div> {/* Placa */}
+            &lt;div className="h-5 bg-gray-200 rounded w-1/5">&lt;/div> {/* Dueño */}
+            &lt;div className="h-5 bg-gray-200 rounded w-1/6 hidden md:block">&lt;/div>{" "}
+            {/* ID */}
+            &lt;div className="h-5 bg-gray-200 rounded w-1/6 hidden lg:block">&lt;/div>{" "}
+            {/* Modelo */}
+            &lt;div className="h-8 w-24 bg-gray-300 rounded-full">&lt;/div>{" "}
+            {/* Switch */}
+          &lt;/div>
+        ))}
+      &lt;/div>
+    &lt;/div>
+  &lt;/div>
+);
+
+/**
+ * @function OccupancyCounter
+ * @description Muestra el contador de ocupación para un tipo de vehículo.
+ * @returns {JSX.Element}
+ */
+const OccupancyCounter = ({ label, count, limit, icon }) => (
+  &lt;div className="flex flex-col items-center px-3 py-1 bg-gray-200 rounded">
+    &lt;FontAwesomeIcon icon={icon} className="text-lg text-neutral-600 mb-1" />
+    &lt;span className="text-xs text-neutral-500 font-medium">{label}&lt;/span>
+    &lt;span
+      className={`font-bold text-sm ${
+        count >= limit ? "text-error" : "text-text-main"
+      }`}
+    >
+      {count}/{limit}
+    &lt;/span>
+  &lt;/div>
+);
+
+/**
+ * @function SwitchToggle
+ * @description Un componente de switch (interruptor) estilizado con Tailwind.
+ * @returns {JSX.Element}
+ */
+const SwitchToggle = ({ id, checked, onChange, disabled, ariaLabel }) => (
+  &lt;label htmlFor={id} className="flex items-center cursor-pointer">
+    &lt;div className="relative">
+      &lt;input
+        id={id}
+        type="checkbox"
+        className="sr-only peer"
+        checked={checked}
+        onChange={onChange}
+        disabled={disabled}
+        aria-label={ariaLabel}
+      />
+      {/* Fondo del switch */}
+      &lt;div
+        className={`block w-14 h-8 rounded-full transition ${
+          checked ? "bg-success" : "bg-neutral-300"
+        } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+      >&lt;/div>
+      {/* Círculo (Knob) */}
+      &lt;div
+        className={`dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform ${
+          checked ? "translate-x-6" : ""
+        } ${disabled ? "bg-neutral-100" : ""}`}
+      >&lt;/div>
+    &lt;/div>
+  &lt;/label>
+);
+
+/**
+ * @file VehicleTable.jsx
+ * @description Tabla que muestra los vehículos registrados y permite cambiar su estado (dentro/fuera).
+ * @param {object} props
+ * @param {Array&lt;object>} props.vehicles - Lista de vehículos a mostrar (ya filtrada).
+ * @param {Function} props.onToggleStatus - Función a llamar al cambiar el switch.
+ * @param {boolean} props.isSubmitting - Estado para deshabilitar los switches.
+ * @param {Function} props.onViewDetails - Función para abrir modal de detalles.
+ * @returns {JSX.Element}
+ */
+const VehicleTable = ({
+  vehicles,
+  onToggleStatus,
+  isSubmitting,
+  onViewDetails,
+}) => {
+  const getVehicleIcon = (type) => {
+    switch (type) {
+      case "Carro":
+        return faCar;
+      case "Moto":
+        return faMotorcycle;
+      case "Bicicleta":
+        return faBicycle;
+      case "Otros":
+        return faQuestionCircle;
+      default:
+        return faQuestionCircle;
+    }
+  };
+
+  if (vehicles.length === 0) {
+    return (
+      &lt;div className="text-center bg-surface text-text-main py-6 rounded-lg shadow-lg">
+        &lt;p className="text-xl font-medium">No hay vehiculos registrados aún.&lt;/p>
+        &lt;p className="text-sm mt-1">
+          Utiliza el botón "Añadir vehiculo" para registrar uno nuevo.
+        &lt;/p>
+      &lt;/div>
+    );
+  }
+
+  return (
+    &lt;div className="w-full overflow-x-auto rounded-lg shadow-md shadow-black bg-surface">
+      &lt;table className="min-w-full rounded-lg">
+        &lt;thead className="bg-gray-100 border-b border-neutral-300">
+          &lt;tr>
+            &lt;th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 bg-background uppercase tracking-wider">
+              Tipo
+            &lt;/th>
+            &lt;th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 bg-background uppercase tracking-wider">
+              Placa / Código Sensor
+            &lt;/th>
+            &lt;th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 bg-background uppercase tracking-wider">
+              Dueño
+            &lt;/th>
+            &lt;th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 bg-background uppercase tracking-wider hidden md:table-cell">
+              Identificación
+            &lt;/th>
+            &lt;th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 bg-background uppercase tracking-wider hidden lg:table-cell">
+              Modelo/Lugar
+            &lt;/th>
+            &lt;th className="px-6 py-3 text-center text-xs font-medium text-neutral-500 bg-background uppercase tracking-wider">
+              Estado (Dentro/Fuera)
+            &lt;/th>
+            &lt;th className="px-6 py-3 text-center text-xs font-medium text-neutral-500 bg-background uppercase tracking-wider">
+              Detalles
+            &lt;/th>
+          &lt;/tr>
+        &lt;/thead>
+        &lt;tbody className="divide-y divide-neutral-200 text-text-main">
+          {vehicles.map((vehicle) => (
+            &lt;tr
+              key={vehicle.id_vehiculo}
+              className="hover:bg-background transition-colors duration-150"
+            >
+              &lt;td className="px-6 py-4 whitespace-nowrap bg-surface text-center">
+                &lt;FontAwesomeIcon
+                  icon={getVehicleIcon(vehicle.tipo_vehiculo)}
+                  className="text-xl text-neutral-500"
+                  title={vehicle.tipo_vehiculo}
+                />
+              &lt;/td>
+              &lt;td className="px-6 py-4 whitespace-nowrap bg-surface">
+                &lt;span className="font-semibold font-mono text-base">
+                  {vehicle.placa || "N/A"}
+                &lt;/span>
+                {vehicle.codigo_sensor &amp;&amp; (
+                  &lt;span className="block text-xs text-neutral-500 font-mono">
+                    Sensor: {vehicle.codigo_sensor}
+                  &lt;/span>
+                )}
+              &lt;/td>
+              &lt;td className="px-6 py-4 whitespace-nowrap bg-surface">
+                {vehicle.nombre_dueno}
+              &lt;/td>
+              &lt;td className="px-6 py-4 whitespace-nowrap hidden bg-surface md:table-cell">
+                {vehicle.identificacion_dueno}
+              &lt;/td>
+              &lt;td className="px-6 py-4 whitespace-nowrap hidden bg-surface lg:table-cell text-sm text-neutral-600">
+                &lt;span className="block">
+                  {vehicle.modelo_descripcion || "-"}
+                &lt;/span>
+                {vehicle.lugar_asignado_default &amp;&amp; (
+                  &lt;span className="block text-xs font-semibold text-blue-600">
+                    Lugar: {vehicle.lugar_asignado_default}
+                  &lt;/span>
+                )}
+              &lt;/td>
+              &lt;td className="px-6 py-4 whitespace-nowrap bg-surface text-center">
+                &lt;div className="flex flex-col items-center justify-center">
+                  &lt;SwitchToggle
+                    id={`vehicle-toggle-${vehicle.id_vehiculo}`}
+                    checked={vehicle.esta_dentro}
+                    onChange={() => onToggleStatus(vehicle)}
+                    disabled={isSubmitting} // Deshabilita mientras se procesa
+                    ariaLabel={`Marcar ${
+                      vehicle.esta_dentro ? "salida" : "entrada"
+                    } para ${
+                      vehicle.placa || "vehículo " + vehicle.id_vehiculo
+                    }`}
+                  />
+                  &lt;span
+                    className={`mt-1 text-xs font-semibold ${
+                      vehicle.esta_dentro ? "text-success" : "text-neutral-500"
+                    }`}
+                  >
+                    {vehicle.esta_dentro ? "Dentro" : "Fuera"}
+                  &lt;/span>
+                &lt;/div>
+              &lt;/td>
+              &lt;td className="px-6 py-4 whitespace-nowrap bg-surface text-center">
+                &lt;button
+                  onClick={() => onViewDetails(vehicle)}
+                  className="text-primary hover:text-primary-hover disabled:text-neutral-300"
+                  title="Ver Detalles"
+                >
+                  &lt;FontAwesomeIcon icon={faEye} />
+                &lt;/button>
+              &lt;/td>
+            &lt;/tr>
+          ))}
+        &lt;/tbody>
+      &lt;/table>
+    &lt;/div>
+  );
+};
+
+/**
+ * @function DasboardParking
+ * @description Renderiza el dashboard de gestión de parqueadero.
+ * @returns {JSX.Element}
+ */
+export default function DasboardParking() {
+  const navigate = useNavigate();
+  const goBack = () => navigate("/dashboard");
+  const { isLoading: isAuthLoading } = useAuthStore();
+
+  const {
+    filteredVehicles,
+    ocupacion,
+    isLoading,
+    error,
+    searchTerm,
+    showAddModal,
+    showDetailsModal,
+    selectedVehicle,
+    isSubmitting,
+    handleSearchChange,
+    openAddModal,
+    closeModal,
+    openDetailsModal,
+    handleAddVehicleSuccess,
+    toggleVehiculoStatus,
+    refetch,
+    formatDate,
+  } = useDashboardParking();
+
+  const showSkeleton = isAuthLoading || isLoading;
+
+  if (showSkeleton) {
+    return &lt;DasboardParkingSkeleton />;
+  }
+
+  return (
+    &lt;div className="flex flex-col items-center w-full h-full mb-[50px] p-4">
+      {/* --- Botón Volver --- */}
+      &lt;button
+        type="button"
+        onClick={goBack}
+        className="md:absolute md:left-[150px]  md:top-[100px] mb-5 bg-surface text-text-main font-bold p-3 rounded-full shadow-sm  shadow-black md:w-1/12 w-1/2 hover:bg-background transition-colors"
+        aria-label="Volver al dashboard"
+      >
+        &lt;FontAwesomeIcon icon={faArrowLeft} className="text-xl" />
+      &lt;/button>
+
+      {/* --- Título Principal --- */}
+      &lt;h1 className="text-4xl sm:text-5xl font-bold mb-10 text-center text-primary mt-5">
+        Gestión de Parqueadero
+      &lt;/h1>
+
+      {/* --- Header con Botón Añadir y Ocupación --- */}
+      &lt;header className="w-full max-w-5xl flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+        &lt;button
+          onClick={openAddModal} // Llama a la función del hook
+          className="bg-primary text-surface font-semibold py-2 px-4 rounded-lg flex items-center gap-2 hover:bg-primary-hover transition-colors shadow order-2 md:order-1"
+          aria-label="Añadir nuevo vehículo"
+        >
+          &lt;FontAwesomeIcon icon={faPlus} /> Añadir Vehículo
+        &lt;/button>
+        {/* Contadores de Ocupación */}
+        &lt;div className="flex gap-2 sm:gap-4 p-2 bg-gray-100 rounded-lg shadow-inner order-1 md:order-2 flex-wrap justify-center">
+          &lt;OccupancyCounter
+            label="Carros"
+            count={ocupacion.carros?.actual}
+            limit={ocupacion.carros?.limite}
+            icon={faCar}
+          />
+          &lt;OccupancyCounter
+            label="Motos"
+            count={ocupacion.motos?.actual}
+            limit={ocupacion.motos?.limite}
+            icon={faMotorcycle}
+          />
+          &lt;OccupancyCounter
+            label="Bicis"
+            count={ocupacion.bicicletas?.actual}
+            limit={ocupacion.bicicletas?.limite}
+            icon={faBicycle}
+          />
+          &lt;OccupancyCounter
+            label="Otros"
+            count={ocupacion.otros?.actual}
+            limit={ocupacion.otros?.limite}
+            icon={faQuestionCircle}
+          />
+        &lt;/div>
+      &lt;/header>
+
+      {/* --- Barra de Búsqueda --- */}
+      &lt;div className="w-full max-w-5xl flex flex-col md:flex-row gap-4 mb-6">
+        &lt;div className="relative w-full md:w-1/2">
+          &lt;input
+            type="text"
+            placeholder="Buscar por Placa o Identificación..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="w-full p-3 pl-10 border text-text-main border-neutral-300 rounded-lg bg-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+          />
+          &lt;FontAwesomeIcon
+            icon={faSearch}
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-main/70"
+          />
+        &lt;/div>
+      &lt;/div>
+
+      {/* --- Tabla de Vehículos / Mensaje de Error / Sin Resultados --- */}
+      &lt;div className="w-full max-w-5xl">
+        {error &amp;&amp; (
+          &lt;div className="mt-8 w-full">
+            &lt;div
+              className="bg-red-100 border-l-4 w-full font-semibold border-error text-error-hover p-3 rounded-md shadow-md"
+              role="alert"
+            >
+              &lt;div className="flex items-center">
+                &lt;FontAwesomeIcon
+                  icon={faExclamationTriangle}
+                  className="mr-2 text-xl"
+                />
+                &lt;p className="font-bold text-lg">Error al Cargar Vehículos&lt;/p>
+              &lt;/div>
+              &lt;p className="text-lg mt-[10px]">{error}&lt;/p>
+              &lt;button
+                onClick={refetch}
+                className="mt-2 text-sm text-blue-600 hover:underline"
+              >
+                Reintentar
+              &lt;/button>
+            &lt;/div>
+          &lt;/div>
+        )}
+        {!error &amp;&amp; filteredVehicles.length === 0 &amp;&amp; (
+          &lt;div className="text-center w-full p-10 text-neutral-500 italic">
+            {searchTerm
+              ? "No se encontraron vehículos con ese criterio."
+              : "No hay vehículos registrados."}
+          &lt;/div>
+        )}
+        {!error &amp;&amp; filteredVehicles.length > 0 &amp;&amp; (
+          &lt;VehicleTable
+            vehicles={filteredVehicles}
+            onToggleStatus={toggleVehiculoStatus}
+            isSubmitting={isSubmitting}
+            onViewDetails={openDetailsModal}
+          />
+        )}
+      &lt;/div>
+
+      {/* --- Modal Condicional para Añadir Vehículo --- */}
+      {showAddModal &amp;&amp; (
+        &lt;VehicleForm onClose={closeModal} onSuccess={handleAddVehicleSuccess} />
+      )}
+
+      {/* Renderiza HistoryDetailModal usando showDetailsModal */}
+      {showDetailsModal &amp;&amp; selectedVehicle &amp;&amp; (
+        &lt;DetailModal
+          item={selectedVehicle}
+          onClose={closeModal}
+          title="Detalles del Vehículo"
+          config={vehicleConfig}
+          themeColor="primary"
+          formatDate={formatDate}
+        />
+      )}
+    &lt;/div>
+  );
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="component_AuthRedirect.module_jsx.html">component/AuthRedirect.jsx</a></li><li><a href="component_auth_LoginForm.module_jsx.html">component/auth/LoginForm.jsx</a></li><li><a href="component_auth_RegisterForm.module_jsx.html">component/auth/RegisterForm.jsx</a></li><li><a href="components_Dashboard.module_jsx.html">components/Dashboard.jsx</a></li><li><a href="components_Layout.module_jsx.html">components/Layout.jsx</a></li><li><a href="components_PrivateRoute.module_jsx.html">components/PrivateRoute.jsx</a></li><li><a href="components_WelcomePage.module_jsx.html">components/WelcomePage.jsx</a></li><li><a href="components_packages_DashboardPackage.module_jsx.html">components/packages/DashboardPackage.jsx</a></li><li><a href="components_packages_PackagesEnviarForm.module_jsx.html">components/packages/PackagesEnviarForm.jsx</a></li><li><a href="components_packages_RecibirPaqueteForm.module_jsx.html">components/packages/RecibirPaqueteForm.jsx</a></li><li><a href="components_parking_DashboardParking.module_jsx.html">components/parking/DashboardParking.jsx</a></li><li><a href="components_visits_VisitEntryForm.module_jsx.html">components/visits/VisitEntryForm.jsx</a></li><li><a href="module-App.html">App</a></li><li><a href="module-AxiosClient.html">AxiosClient</a></li><li><a href="module-Components_Historial_DashboardHistorial.html">Components/Historial/DashboardHistorial</a></li><li><a href="module-Components_Parking.html">Components/Parking</a></li><li><a href="module-Components_UI.html">Components/UI</a></li><li><a href="module-Config.html">Config</a></li><li><a href="module-Controllers.html">Controllers</a></li><li><a href="module-Controllers_Signatures.html">Controllers/Signatures</a></li><li><a href="module-DateUtils.html">DateUtils</a></li><li><a href="module-EntryPoint.html">EntryPoint</a></li><li><a href="module-Hooks.html">Hooks</a></li><li><a href="module-Hooks_Auth.html">Hooks/Auth</a></li><li><a href="module-Hooks_Historial.html">Hooks/Historial</a></li><li><a href="module-Hooks_Packages.html">Hooks/Packages</a></li><li><a href="module-Hooks_Paquetes.html">Hooks/Paquetes</a></li><li><a href="module-Hooks_Parking.html">Hooks/Parking</a></li><li><a href="module-Hooks_Utils.html">Hooks/Utils</a></li><li><a href="module-Hooks_Visits.html">Hooks/Visits</a></li><li><a href="module-Hooks_usePackagesRecibir.html">Hooks/usePackagesRecibir</a></li><li><a href="module-InputHandlers.html">InputHandlers</a></li><li><a href="module-Middlewares.html">Middlewares</a></li><li><a href="module-Models.html">Models</a></li><li><a href="module-Models_Catalogues.html">Models/Catalogues</a></li><li><a href="module-Repositories.html">Repositories</a></li><li><a href="module-Repositories_Parking.html">Repositories/Parking</a></li><li><a href="module-Routes.html">Routes</a></li><li><a href="module-Routes_Parking.html">Routes/Parking</a></li><li><a href="module-Routes_Signatures.html">Routes/Signatures</a></li><li><a href="module-Schemas.html">Schemas</a></li><li><a href="module-Services.html">Services</a></li><li><a href="module-Services_Parking.html">Services/Parking</a></li><li><a href="module-Stores.html">Stores</a></li><li><a href="module-Utils.html">Utils</a></li><li><a href="module-Utils_Errors.html">Utils/Errors</a></li><li><a href="module-apiController.html">apiController</a></li><li><a href="module-apiRoutes.html">apiRoutes</a></li><li><a href="module-authRoutes.html">authRoutes</a></li><li><a href="module-hooks_parking_.html">hooks/parking</a></li><li><a href="module-packageController.html">packageController</a></li><li><a href="module-packageRoutes.html">packageRoutes</a></li><li><a href="module-passportConfig.html">passportConfig</a></li><li><a href="module-visitController.html">visitController</a></li><li><a href="module-visitRoutes.html">visitRoutes</a></li></ul><h3>Classes</h3><ul><li><a href="module-Models_Catalogues-Area.html">Area</a></li><li><a href="module-Models_Catalogues-IdentificationType.html">IdentificationType</a></li><li><a href="module-Models_Catalogues-PackageType.html">PackageType</a></li><li><a href="module-Models-Log.html">Log</a></li><li><a href="module-Models-Package.html">Package</a></li><li><a href="module-Models-ParkingLog.html">ParkingLog</a></li><li><a href="module-Models-RefreshToken.html">RefreshToken</a></li><li><a href="module-Models-User.html">User</a></li><li><a href="module-Models-Vehicle.html">Vehicle</a></li><li><a href="module-Models-Visit.html">Visit</a></li><li><a href="module-Utils_Errors.AppError.html">AppError</a></li><li><a href="module-Utils_Errors-AccountDisabledError.html">AccountDisabledError</a></li><li><a href="module-Utils_Errors-ActiveVisitDontExistsError.html">ActiveVisitDontExistsError</a></li><li><a href="module-Utils_Errors-AppError.html">AppError</a></li><li><a href="module-Utils_Errors-BadRequestError.html">BadRequestError</a></li><li><a href="module-Utils_Errors-ConflictError.html">ConflictError</a></li><li><a href="module-Utils_Errors-DuplicateError.html">DuplicateError</a></li><li><a href="module-Utils_Errors-ForbiddenError.html">ForbiddenError</a></li><li><a href="module-Utils_Errors-InvalidIdError.html">InvalidIdError</a></li><li><a href="module-Utils_Errors-InvalidTokenError.html">InvalidTokenError</a></li><li><a href="module-Utils_Errors-MissingApiKeyError.html">MissingApiKeyError</a></li><li><a href="module-Utils_Errors-NotFoundError.html">NotFoundError</a></li><li><a href="module-Utils_Errors-UserAlreadyExistsError.html">UserAlreadyExistsError</a></li><li><a href="module-Utils_Errors-UserNotFoundOrInvalidPasswordError.html">UserNotFoundOrInvalidPasswordError</a></li></ul><h3>Global</h3><ul><li><a href="global.html#createVehicle">createVehicle</a></li><li><a href="global.html#getAllVehicles">getAllVehicles</a></li><li><a href="global.html#getOccupancyController">getOccupancyController</a></li><li><a href="global.html#handleScan">handleScan</a></li><li><a href="global.html#packageConfig">packageConfig</a></li><li><a href="global.html#radicadoConfig">radicadoConfig</a></li><li><a href="global.html#registerEntry">registerEntry</a></li><li><a href="global.html#registerExit">registerExit</a></li><li><a href="global.html#updateVehicle">updateVehicle</a></li><li><a href="global.html#vehicleConfig">vehicleConfig</a></li><li><a href="global.html#visitConfig">visitConfig</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Tue Nov 04 2025 16:47:25 GMT-0500 (hora estándar de Colombia)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

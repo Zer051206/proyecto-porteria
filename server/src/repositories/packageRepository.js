@@ -87,3 +87,14 @@ export const create = async (packageData, options = {}) => {
   return Package.create(packageData, options);
 };
 
+/**
+ * @async
+ * @function findFiles
+ * @description Busca y devuelve todos los registros de paquetes marcados como radicados.
+ * Es un alias de findAll, ya que el servicio proporciona el filtro 'where'.
+ * @param {object} [options={}] - Opciones de Sequelize (ej. where: { es_radicado: true }).
+ * @returns {Promise<Array<Package>>} Un array de los paquetes (radicados) encontrados.
+ */
+export const findFiles = async (options = {}) => {
+  return findAll(options);
+};
