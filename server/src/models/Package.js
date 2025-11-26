@@ -32,6 +32,10 @@ export default (sequelize) => {
    * @property {Date|null} fecha_recibido - Timestamp de recepción.
    * @property {Date|null} fecha_envio - Timestamp de envío.
    * @property {string|null} observaciones - Observaciones generales.
+   * @property {string|null} proveedor - Nombre del proveedor (NUEVO).
+   * @property {number|null} op - Número de Orden de Producción (NUEVO).
+   * @property {string|null} referencia - Número de referencia/SKU (NUEVO).
+   * @property {number|null} cantidad - Cantidad de ítems (NUEVO).
    * @property {number|null} id_usuario_recibir - FK (Usuarios) Portero que recibió.
    * @property {number|null} id_usuario_enviar - FK (Usuarios) Portero que envió.
    * @property {boolean} es_radicado - TRUE si es un radicado.
@@ -66,6 +70,10 @@ export default (sequelize) => {
       fecha_recibido: { type: DataTypes.DATE, allowNull: true },
       fecha_envio: { type: DataTypes.DATE, allowNull: true },
       observaciones: { type: DataTypes.TEXT, allowNull: true },
+      proveedor: { type: DataTypes.STRING(150), allowNull: true },
+      op: { type: DataTypes.INTEGER, allowNull: true },
+      referencia: { type: DataTypes.STRING(100), allowNull: true },
+      cantidad: { type: DataTypes.INTEGER, allowNull: true },
       id_usuario_recibir: { type: DataTypes.INTEGER, allowNull: true },
       id_usuario_enviar: { type: DataTypes.INTEGER, allowNull: true },
       es_radicado: {

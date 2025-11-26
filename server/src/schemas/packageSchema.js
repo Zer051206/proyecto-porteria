@@ -38,6 +38,10 @@ export const receivePackageSchema = z
     empresa_transporte: z.string().trim().max(100).nullable().optional(),
     mensajero_nombre: z.string().trim().max(255).nullable().optional(),
     observaciones: z.string().trim().nullable().optional(),
+    proveedor: z.string().trim().max(150).nullable().optional(),
+    op: z.coerce.number().int().positive().nullable().optional(),
+    referencia: z.string().trim().max(100).nullable().optional(),
+    cantidad: z.coerce.number().int().positive().nullable().optional(),
 
     // --- Campos Condicionales (Documento / Radicado) ---
     es_radicado: z.boolean().optional().default(false),
@@ -138,6 +142,10 @@ export const sendPackageSchema = z.object({
   empresa_transporte: z.string().trim().max(100).nullable().optional(),
   mensajero_nombre: z.string().trim().max(255).nullable().optional(),
   observaciones: z.string().trim().nullable().optional(),
+  proveedor: z.string().trim().max(150).nullable().optional(),
+  op: z.coerce.number().int().positive().nullable().optional(),
+  referencia: z.string().trim().max(100).nullable().optional(),
+  cantidad: z.coerce.number().int().positive().nullable().optional(),
 
   // --- Firmas de Envío (Base64) ---
   path_firma_validador_envio: z

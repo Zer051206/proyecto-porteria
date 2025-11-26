@@ -324,6 +324,88 @@ export default function PackagesRecibirForm({
                   </div>
                 )}
 
+                <div className="md:col-span-2 mt-4 border-t border-neutral-300 pt-4">
+                  <legend className="px-2 font-semibold text-primary text-lg">
+                    Detalles de Mercancía / Producción
+                  </legend>
+                </div>
+
+                {/* Campo: Proveedor (Obligatorio) */}
+                <label className="block">
+                  <span className="text-text-main text-sm font-medium">
+                    Proveedor:
+                  </span>
+                  <Field
+                    type="text"
+                    name="proveedor"
+                    placeholder="Nombre del proveedor"
+                    autoComplete="off"
+                    className={inputClasses}
+                  />
+                  {formik.touched.proveedor && formik.errors.proveedor && (
+                    <div className="text-error text-sm mt-1">
+                      {formik.errors.proveedor}
+                    </div>
+                  )}
+                </label>
+
+                {/* Campo: OP (Orden de Producción) (Obligatorio) */}
+                <label className="block">
+                  <span className="text-text-main text-sm font-medium">
+                    OP:
+                  </span>
+                  <Field
+                    type="number"
+                    name="op"
+                    placeholder="Número de Orden de Producción"
+                    autoComplete="off"
+                    className={inputClasses}
+                  />
+                  {formik.touched.op && formik.errors.op && (
+                    <div className="text-error text-sm mt-1">
+                      {formik.errors.op}
+                    </div>
+                  )}
+                </label>
+
+                {/* Campo: Referencia (Obligatorio) */}
+                <label className="block">
+                  <span className="text-text-main text-sm font-medium">
+                    Referencia:
+                  </span>
+                  <Field
+                    type="text" // Cambié a text para permitir alfanumérico si es necesario
+                    name="referencia"
+                    placeholder="Número o clave de referencia"
+                    autoComplete="off"
+                    className={inputClasses}
+                  />
+                  {formik.touched.referencia && formik.errors.referencia && (
+                    <div className="text-error text-sm mt-1">
+                      {formik.errors.referencia}
+                    </div>
+                  )}
+                </label>
+
+                {/* Campo: Cantidad (Obligatorio) */}
+                <label className="block">
+                  <span className="text-text-main text-sm font-medium">
+                    Cantidad:
+                  </span>
+                  <Field
+                    type="number"
+                    name="cantidad"
+                    placeholder="Cantidad de ítems"
+                    autoComplete="off"
+                    className={inputClasses}
+                  />
+                  {formik.touched.cantidad && formik.errors.cantidad && (
+                    <div className="text-error text-sm mt-1">
+                      {formik.errors.cantidad}
+                    </div>
+                  )}
+                </label>
+
                 {/* Observaciones */}
                 <div className="col-span-1 md:col-span-2">
                   <label className="block">
@@ -340,6 +422,48 @@ export default function PackagesRecibirForm({
                     />
                   </label>
                 </div>
+
+                {/* Campo Nombre Quien Recibe (Documento) */}
+                <label className="block md:col-span-2 animate-fade-in">
+                  <span className="text-text-main text-sm font-medium">
+                    Nombre Quien Recibe (Empleado):
+                  </span>
+                  <Field
+                    type="text"
+                    name="nombre_recibe_documento"
+                    placeholder="Nombre completo..."
+                    onKeyDown={handleKeyTextDown}
+                    autoComplete="off"
+                    className={inputClasses}
+                  />
+                  {formik.touched.nombre_recibe_documento &&
+                    formik.errors.nombre_recibe_documento && (
+                      <div className="text-error text-sm mt-1">
+                        {formik.errors.nombre_recibe_documento}
+                      </div>
+                    )}
+                </label>
+
+                <SignatureField
+                  label="Firma Receptor (Empleado)"
+                  sigRef={recibeSigPadRef}
+                  onClear={() => recibeSigPadRef.current?.clear()}
+                  error={
+                    formik.touched.path_firma_recibe_documento &&
+                    formik.errors.path_firma_recibe_documento
+                  }
+                />
+
+                <SignatureField
+                  label="Firma Validador (Portero)"
+                  sigRef={validadorSigPadRef}
+                  onClear={() => validadorSigPadRef.current?.clear()}
+                  error={
+                    formik.touched.path_firma_validador &&
+                    formik.errors.path_firma_validador
+                  }
+                />
+
                 {isDocumento && (
                   <>
                     <div className="md:col-span-2 mt-4 border-t border-neutral-300 pt-4">
@@ -360,29 +484,8 @@ export default function PackagesRecibirForm({
                       </span>
                     </label>
 
-                    {/* Campo Nombre Quien Recibe (Documento) */}
-                    <label className="block md:col-span-2 animate-fade-in">
-                      <span className="text-text-main text-sm font-medium">
-                        Nombre Quien Recibe (Empleado):
-                      </span>
-                      <Field
-                        type="text"
-                        name="nombre_recibe_documento"
-                        placeholder="Nombre completo..."
-                        onKeyDown={handleKeyTextDown}
-                        autoComplete="off"
-                        className={inputClasses}
-                      />
-                      {formik.touched.nombre_recibe_documento &&
-                        formik.errors.nombre_recibe_documento && (
-                          <div className="text-error text-sm mt-1">
-                            {formik.errors.nombre_recibe_documento}
-                          </div>
-                        )}
-                    </label>
-
                     {/* --- Lógica Condicional Solo para Radicados --- */}
-                    {isRadicado ? (
+                    {isRadicado && (
                       <>
                         {/* Campo Referencia Radicado */}
                         <label className="block md:col-span-2 animate-fade-in">
@@ -404,51 +507,15 @@ export default function PackagesRecibirForm({
                             )}
                         </label>
 
-                        {/* Firmas de Radicado (3) */}
-                        <SignatureField
-                          label="Firma Validador (Portero)"
-                          sigRef={validadorSigPadRef}
-                          onClear={() => validadorSigPadRef.current?.clear()}
-                          error={
-                            formik.touched.path_firma_validador &&
-                            formik.errors.path_firma_validador
-                          }
-                        />
-
-                        <SignatureField
-                          label="Firma Entregador (Mensajero)"
-                          sigRef={entregadorSigPadRef}
-                          onClear={() => entregadorSigPadRef.current?.clear()}
-                          error={
-                            formik.touched.path_firma_entregador &&
-                            formik.errors.path_firma_entregador
-                          }
-                        />
+                        {/* Firma de Radicado */}
                         <div className="block md:col-span-2 animate-fade-in">
                           <SignatureField
-                            label="Firma Receptor (Empleado)"
-                            sigRef={recibeSigPadRef}
-                            onClear={() => recibeSigPadRef.current?.clear()}
+                            label="Firma Entregador (Mensajero)"
+                            sigRef={entregadorSigPadRef}
+                            onClear={() => entregadorSigPadRef.current?.clear()}
                             error={
-                              formik.touched.path_firma_recibe_documento &&
-                              formik.errors.path_firma_recibe_documento
-                            }
-                          />
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="hidden md:block"></div>
-
-                        {/* Firma Receptor (Solo Documento) */}
-                        <div className="block md:col-span-2 animate-fade-in">
-                          <SignatureField
-                            label="Firma Receptor (Empleado)"
-                            sigRef={recibeSigPadRef}
-                            onClear={() => recibeSigPadRef.current?.clear()}
-                            error={
-                              formik.touched.path_firma_recibe_documento &&
-                              formik.errors.path_firma_recibe_documento
+                              formik.touched.path_firma_entregador &&
+                              formik.errors.path_firma_entregador
                             }
                           />
                         </div>

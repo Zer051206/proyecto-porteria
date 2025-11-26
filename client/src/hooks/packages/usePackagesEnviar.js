@@ -111,6 +111,22 @@ const usePackagesEnviar = (onSuccess) => {
     observaciones: Yup.string()
       .nullable()
       .max(500, "Las observaciones no pueden exceder los 500 caracteres."),
+    proveedor: Yup.string()
+      .required("El proveedor es obligatorio para el envío de mercancía.")
+      .max(150, "Máximo 150 caracteres."),
+    op: Yup.number()
+      .typeError("La OP debe ser un número válido.")
+      .required("El número de OP es obligatorio para el envío.")
+      .integer("Debe ser un número entero")
+      .min(1, "Debe ser un número positivo."),
+    referencia: Yup.string()
+      .required("La referencia de la mercancía es obligatoria.")
+      .max(100, "Máximo 100 caracteres."),
+    cantidad: Yup.number()
+      .typeError("La cantidad debe ser un número válido.")
+      .required("La cantidad es obligatoria para el envío.")
+      .integer("Debe ser un número entero")
+      .min(1, "Debe ser un número positivo."),
     path_firma_validador_envio: Yup.string().nullable().optional(),
     path_firma_remitente: Yup.string().nullable().optional(),
   });
@@ -132,6 +148,10 @@ const usePackagesEnviar = (onSuccess) => {
       mensajero_nombre: "",
       observaciones: "",
       conGuia: false,
+      proveedor: "",
+      op: "",
+      referencia: "",
+      cantidad: "",
       path_firma_validador_envio: "",
       path_firma_remitente: "",
     },
@@ -230,7 +250,7 @@ const usePackagesEnviar = (onSuccess) => {
           onSuccess();
         }
       } catch (error) {
-        // ... (Manejo de errores para Formik y errores de API)
+        // Manejo de errores para Formik y errores de API
         if (error.response?.data?.errors) {
           const formikErrors = {};
           const zodErrors = error.response.data.errors.fieldErrors;

@@ -325,9 +325,9 @@ export default function PackagesEnviarForm({
                       id="conGuia"
                       type="checkbox"
                       name="conGuia"
-                      className="rounded text-primary" // Color primario
+                      className="rounded text-primary"
                     />
-                    <span className="text-text-main text-sm font-medium">
+                    <span className="text-text-main text-md font-medium">
                       El paquete tiene número de guía
                     </span>
                   </label>
@@ -355,6 +355,93 @@ export default function PackagesEnviarForm({
                   )}
                 </div>
 
+                <div className="md:col-span-2 mt-4 border-t border-neutral-300 pt-4">
+                  <legend className="px-2 font-semibold text-secondary">
+                    Detalles de Mercancía (Producción)
+                  </legend>
+                </div>
+
+                {/* Campo: Proveedor */}
+                <label className="block" htmlFor="proveedor">
+                  <span className="text-text-main text-sm font-medium">
+                    Proveedor:
+                  </span>
+                  <Field
+                    id="proveedor"
+                    type="text"
+                    autoComplete="off"
+                    onKeyDown={handleKeyTextDown}
+                    placeholder="Nombre del proveedor"
+                    name="proveedor"
+                    className={inputClasses}
+                  />
+                  {formik.touched.proveedor && formik.errors.proveedor && (
+                    <div className="text-error text-sm mt-1">
+                      {formik.errors.proveedor}
+                    </div>
+                  )}
+                </label>
+
+                {/* Campo: OP (Orden de Producción) */}
+                <label className="block" htmlFor="op">
+                  <span className="text-text-main text-sm font-medium">
+                    OP (Orden de Producción):
+                  </span>
+                  <Field
+                    id="op"
+                    type="number"
+                    autoComplete="off"
+                    placeholder="Ej: 123456"
+                    name="op"
+                    className={inputClasses}
+                  />
+                  {formik.touched.op && formik.errors.op && (
+                    <div className="text-error text-sm mt-1">
+                      {formik.errors.op}
+                    </div>
+                  )}
+                </label>
+
+                {/* Campo: Referencia */}
+                <label className="block" htmlFor="referencia">
+                  <span className="text-text-main text-sm font-medium">
+                    Referencia:
+                  </span>
+                  <Field
+                    id="referencia"
+                    type="text"
+                    autoComplete="off"
+                    placeholder="Referencia o ID del producto"
+                    name="referencia"
+                    className={inputClasses}
+                  />
+                  {formik.touched.referencia && formik.errors.referencia && (
+                    <div className="text-error text-sm mt-1">
+                      {formik.errors.referencia}
+                    </div>
+                  )}
+                </label>
+
+                {/* Campo: Cantidad */}
+                <label className="block" htmlFor="cantidad">
+                  <span className="text-text-main text-sm font-medium">
+                    Cantidad:
+                  </span>
+                  <Field
+                    id="cantidad"
+                    type="number"
+                    autoComplete="off"
+                    placeholder="Número de unidades"
+                    name="cantidad"
+                    className={inputClasses}
+                  />
+                  {formik.touched.cantidad && formik.errors.cantidad && (
+                    <div className="text-error text-sm mt-1">
+                      {formik.errors.cantidad}
+                    </div>
+                  )}
+                </label>
+
                 {/* Campo: Observaciones (Colspan 2) */}
                 <div className="col-span-1 md:col-span-2">
                   <label className="block" htmlFor="observaciones">
@@ -373,7 +460,6 @@ export default function PackagesEnviarForm({
                   </label>
                 </div>
 
-                {/* --- AÑADIDO: Sección de Firmas --- */}
                 <div className="md:col-span-2 mt-4 border-t border-neutral-300 pt-4">
                   <legend className="px-2 font-semibold text-secondary text-base">
                     Firmas de Envío
@@ -398,7 +484,6 @@ export default function PackagesEnviarForm({
                     formik.errors.path_firma_remitente
                   }
                 />
-                {/* --- FIN FIRMAS --- */}
               </fieldset>
             )}
 

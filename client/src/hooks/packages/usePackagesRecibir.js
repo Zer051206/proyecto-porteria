@@ -137,7 +137,6 @@ const usePackagesRecibir = (onSuccess) => {
     mensajero_nombre: Yup.string().trim().max(255).nullable().optional(),
     observaciones: Yup.string().trim().nullable().optional(),
     es_radicado: Yup.boolean().default(false),
-
     referencia_radicado: Yup.string().when("es_radicado", {
       is: true,
       then: (schema) =>
@@ -147,19 +146,26 @@ const usePackagesRecibir = (onSuccess) => {
           .required('El N° de Referencia es obligatorio para "radicados".'),
       otherwise: (schema) => schema.nullable().optional(),
     }),
-
-    nombre_recibe_documento: Yup.string().when("id_tipo_paquete", {
-      is: ID_TIPO_DOCUMENTO,
-      then: (schema) =>
-        schema
-          .trim()
-          .min(3, "Debe tener al menos 3 caracteres.")
-          .required("El nombre de quien recibe es obligatorio."),
-      otherwise: (schema) => schema.nullable().optional(),
-    }),
+    proveedor: Yup.string()
+      .required("El proveedor es obligatorio para registrar la mercancía.")
+      .max(150, "Máximo 150 caracteres"),
+    op: Yup.number()
+      .typeError("Debe ser un número válido.")
+      .required("El número de OP es obligatorio.")
+      .integer("Debe ser un número entero")
+      .min(1, "Debe ser positivo"),
+    referencia: Yup.string()
+      .required("La referencia es obligatoria para la mercancía.")
+      .max(100, "Máximo 100 caracteres"),
+    cantidad: Yup.number()
+      .typeError("Debe ser un número válido.")
+      .required("La cantidad es obligatoria.")
+      .integer("Debe ser un número entero")
+      .min(1, "Debe ser positivo"),
+    nombre_recibe_documento: Yup.string().trim().max(100),
     path_firma_recibe_documento: Yup.string().nullable().optional(),
     path_firma_validador: Yup.string().nullable().optional(),
-    path_firma_entregador: Yup.string().nullable().optional(),
+    path_firma_entregador: Yup.string().optional().nullable(),
   });
 
   /**
@@ -177,6 +183,10 @@ const usePackagesRecibir = (onSuccess) => {
       mensajero_nombre: "",
       observaciones: "",
       conGuia: false,
+      proveedor: "",
+      op: "",
+      referencia: "",
+      cantidad: "",
       es_radicado: false,
       referencia_radicado: "",
       nombre_recibe_documento: "",
