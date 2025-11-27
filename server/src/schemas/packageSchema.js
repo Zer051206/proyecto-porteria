@@ -18,7 +18,6 @@ const ID_AREA_CONTABILIDAD = 3;
  */
 export const receivePackageSchema = z
   .object({
-    // --- Campos Estándar ---
     id_tipo_paquete: z.coerce
       .number({ required_error: "El tipo de paquete es obligatorio." })
       .int()
@@ -38,10 +37,32 @@ export const receivePackageSchema = z
     empresa_transporte: z.string().trim().max(100).nullable().optional(),
     mensajero_nombre: z.string().trim().max(255).nullable().optional(),
     observaciones: z.string().trim().nullable().optional(),
-    proveedor: z.string().trim().max(150).nullable().optional(),
-    op: z.coerce.number().int().positive().nullable().optional(),
-    referencia: z.string().trim().max(100).nullable().optional(),
-    cantidad: z.coerce.number().int().positive().nullable().optional(),
+    proveedor: z.preprocess(
+      (val) => (val === "" ? null : val), // Si es "", lo vuelve null
+      z.string().trim().max(150).nullable().optional() // Valida el resultado
+    ),
+    op: z.preprocess(
+      (val) => (val === "" ? undefined : val),
+      z.coerce
+        .number()
+        .int("La OP debe ser un entero.")
+        .positive("La OP debe ser positiva.")
+        .nullable()
+        .optional()
+    ),
+    referencia: z.preprocess(
+      (val) => (val === "" ? undefined : val),
+      z.coerce
+        .number()
+        .int("La Referencia debe ser un entero.")
+        .positive("La Referencia debe ser positiva.")
+        .nullable()
+        .optional()
+    ),
+    cantidad: z.preprocess(
+      (val) => (val === "" ? undefined : val),
+      z.coerce.number().int().positive().nullable().optional()
+    ),
 
     // --- Campos Condicionales (Documento / Radicado) ---
     es_radicado: z.boolean().optional().default(false),
@@ -142,10 +163,32 @@ export const sendPackageSchema = z.object({
   empresa_transporte: z.string().trim().max(100).nullable().optional(),
   mensajero_nombre: z.string().trim().max(255).nullable().optional(),
   observaciones: z.string().trim().nullable().optional(),
-  proveedor: z.string().trim().max(150).nullable().optional(),
-  op: z.coerce.number().int().positive().nullable().optional(),
-  referencia: z.string().trim().max(100).nullable().optional(),
-  cantidad: z.coerce.number().int().positive().nullable().optional(),
+  proveedor: z.preprocess(
+    (val) => (val === "" ? null : val), // Si es "", lo vuelve null
+    z.string().trim().max(150).nullable().optional() // Valida el resultado
+  ),
+  op: z.preprocess(
+    (val) => (val === "" ? undefined : val),
+    z.coerce
+      .number()
+      .int("La OP debe ser un entero.")
+      .positive("La OP debe ser positiva.")
+      .nullable()
+      .optional()
+  ),
+  referencia: z.preprocess(
+    (val) => (val === "" ? undefined : val),
+    z.coerce
+      .number()
+      .int("La Referencia debe ser un entero.")
+      .positive("La Referencia debe ser positiva.")
+      .nullable()
+      .optional()
+  ),
+  cantidad: z.preprocess(
+    (val) => (val === "" ? undefined : val),
+    z.coerce.number().int().positive().nullable().optional()
+  ),
 
   // --- Firmas de Envío (Base64) ---
   path_firma_validador_envio: z

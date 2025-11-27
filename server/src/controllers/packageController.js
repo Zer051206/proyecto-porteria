@@ -24,6 +24,7 @@ import {
 export const receivePackage = async (req, res, next) => {
   try {
     const validateData = receivePackageSchema.safeParse(req.body);
+    console.log("🚀 ~ receivePackage ~ validateData:", validateData)
     
     const userId = req.user.id_usuario;
     const userIp = req.ip;
@@ -61,6 +62,7 @@ export const receivePackage = async (req, res, next) => {
 export const sendPackage = async (req, res, next) => {
   try {
     const validateData = sendPackageSchema.safeParse(req.body);
+    console.log("🚀 ~ sendPackage ~ validateData:", validateData)
 
     const userId = req.user.id_usuario;
     const userIp = req.ip;

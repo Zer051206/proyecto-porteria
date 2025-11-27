@@ -409,7 +409,7 @@ export default function PackagesEnviarForm({
                   </span>
                   <Field
                     id="referencia"
-                    type="text"
+                    type="number"
                     autoComplete="off"
                     placeholder="Referencia o ID del producto"
                     name="referencia"

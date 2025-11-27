@@ -493,7 +493,7 @@ export default function PackagesRecibirForm({
                             N° Referencia Radicado:
                           </span>
                           <Field
-                            type="text"
+                            type="number"
                             name="referencia_radicado"
                             placeholder="Ingrese el número de referencia único"
                             autoComplete="off"

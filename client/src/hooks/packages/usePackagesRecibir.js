@@ -147,19 +147,23 @@ const usePackagesRecibir = (onSuccess) => {
       otherwise: (schema) => schema.nullable().optional(),
     }),
     proveedor: Yup.string()
-      .required("El proveedor es obligatorio para registrar la mercancía.")
+      .optional()
+      .nullable()
       .max(150, "Máximo 150 caracteres"),
     op: Yup.number()
       .typeError("Debe ser un número válido.")
-      .required("El número de OP es obligatorio.")
+      .optional()
+      .nullable()
       .integer("Debe ser un número entero")
       .min(1, "Debe ser positivo"),
     referencia: Yup.string()
-      .required("La referencia es obligatoria para la mercancía.")
+      .optional()
+      .nullable()
       .max(100, "Máximo 100 caracteres"),
     cantidad: Yup.number()
       .typeError("Debe ser un número válido.")
-      .required("La cantidad es obligatoria.")
+      .optional()
+      .nullable()
       .integer("Debe ser un número entero")
       .min(1, "Debe ser positivo"),
     nombre_recibe_documento: Yup.string().trim().max(100),
