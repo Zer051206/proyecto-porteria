@@ -374,7 +374,7 @@ export default function PackagesRecibirForm({
                     Referencia:
                   </span>
                   <Field
-                    type="text" // Cambié a text para permitir alfanumérico si es necesario
+                    type="number"
                     name="referencia"
                     placeholder="Número o clave de referencia"
                     autoComplete="off"
@@ -493,7 +493,7 @@ export default function PackagesRecibirForm({
                             N° Referencia Radicado:
                           </span>
                           <Field
-                            type="number"
+                            type="text"
                             name="referencia_radicado"
                             placeholder="Ingrese el número de referencia único"
                             autoComplete="off"
