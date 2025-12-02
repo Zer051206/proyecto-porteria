@@ -209,7 +209,6 @@ export default function PackagesEnviarForm({
                     type="text"
                     autoComplete="off"
                     onKeyDown={handleKeyTextDown}
-                    placeholder="Pepito perez..."
                     name="nombre_remitente"
                     className={inputClasses}
                   />
@@ -258,7 +257,6 @@ export default function PackagesEnviarForm({
                     type="text"
                     autoComplete="off"
                     name="empresa_transporte"
-                    placeholder="En caso de ser necesario"
                     className={inputClasses}
                   />
                   {/* Opcional: mostrar error si existe */}
@@ -280,7 +278,6 @@ export default function PackagesEnviarForm({
                     type="text"
                     autoComplete="off"
                     name="mensajero_nombre"
-                    placeholder="Juan esteban"
                     onKeyDown={handleKeyTextDown}
                     className={inputClasses}
                   />
@@ -303,7 +300,6 @@ export default function PackagesEnviarForm({
                     type="text"
                     autoComplete="off"
                     onKeyDown={handleAddressKeyDown}
-                    placeholder="Calle 123 # 45 - 6"
                     name="destino_salida"
                     className={inputClasses}
                   />
@@ -341,7 +337,6 @@ export default function PackagesEnviarForm({
                           id="guia"
                           type="text"
                           name="guia"
-                          placeholder="Ingrese el numero de guia del paquete"
                           autoComplete="off"
                           className={inputClasses}
                         />
@@ -371,7 +366,6 @@ export default function PackagesEnviarForm({
                     type="text"
                     autoComplete="off"
                     onKeyDown={handleKeyTextDown}
-                    placeholder="Nombre del proveedor"
                     name="proveedor"
                     className={inputClasses}
                   />
@@ -391,7 +385,6 @@ export default function PackagesEnviarForm({
                     id="op"
                     type="number"
                     autoComplete="off"
-                    placeholder="Ej: 123456"
                     name="op"
                     className={inputClasses}
                   />
@@ -411,7 +404,6 @@ export default function PackagesEnviarForm({
                     id="referencia"
                     type="number"
                     autoComplete="off"
-                    placeholder="Referencia o ID del producto"
                     name="referencia"
                     className={inputClasses}
                   />
@@ -431,7 +423,6 @@ export default function PackagesEnviarForm({
                     id="cantidad"
                     type="number"
                     autoComplete="off"
-                    placeholder="Número de unidades"
                     name="cantidad"
                     className={inputClasses}
                   />
@@ -452,7 +443,6 @@ export default function PackagesEnviarForm({
                       as="textarea"
                       id="observaciones"
                       name="observaciones"
-                      placeholder="El paquete se encuentra en las mejores condiciones."
                       autoComplete="off"
                       className={inputClasses}
                       rows="3"

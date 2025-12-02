@@ -255,7 +255,6 @@ export default function DashboardPackage() {
         <div className="relative w-full md:w-1/2">
           <input
             type="text"
-            placeholder="Buscar en actividad reciente..."
             value={searchTerm} // Controlado
             onChange={handleSearchChange} // Conectado al hook
             className="w-full p-3 pl-10 border text-text-main border-neutral-300 rounded-lg bg-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none"

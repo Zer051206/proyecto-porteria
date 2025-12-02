@@ -196,7 +196,6 @@ export default function PackagesRecibirForm({
                   <Field
                     type="text"
                     name="nombre_destinatario"
-                    placeholder="Pepito Perez..."
                     onKeyDown={handleKeyTextDown}
                     autoComplete="off"
                     className={inputClasses}
@@ -265,7 +264,6 @@ export default function PackagesRecibirForm({
                   </span>
                   <Field
                     type="text"
-                    placeholder="Servientrega, Inter..."
                     name="empresa_transporte"
                     autoComplete="off"
                     className={inputClasses}
@@ -279,7 +277,6 @@ export default function PackagesRecibirForm({
                   </span>
                   <Field
                     type="text"
-                    placeholder="Juan Perez..."
                     name="mensajero_nombre"
                     onKeyDown={handleKeyTextDown}
                     autoComplete="off"
@@ -310,7 +307,6 @@ export default function PackagesRecibirForm({
                       </span>
                       <Field
                         type="text"
-                        placeholder="Ingrese la guia del paquete"
                         name="guia"
                         autoComplete="off"
                         className={`${inputClasses} w-full`}
@@ -338,7 +334,6 @@ export default function PackagesRecibirForm({
                   <Field
                     type="text"
                     name="proveedor"
-                    placeholder="Nombre del proveedor"
                     autoComplete="off"
                     className={inputClasses}
                   />
@@ -357,7 +352,6 @@ export default function PackagesRecibirForm({
                   <Field
                     type="number"
                     name="op"
-                    placeholder="Número de Orden de Producción"
                     autoComplete="off"
                     className={inputClasses}
                   />
@@ -376,7 +370,6 @@ export default function PackagesRecibirForm({
                   <Field
                     type="number"
                     name="referencia"
-                    placeholder="Número o clave de referencia"
                     autoComplete="off"
                     className={inputClasses}
                   />
@@ -395,7 +388,6 @@ export default function PackagesRecibirForm({
                   <Field
                     type="number"
                     name="cantidad"
-                    placeholder="Cantidad de ítems"
                     autoComplete="off"
                     className={inputClasses}
                   />
@@ -415,7 +407,6 @@ export default function PackagesRecibirForm({
                     <Field
                       as="textarea"
                       name="observaciones"
-                      placeholder="El paquete se encuentra en buenas condiciones..."
                       autoComplete="off"
                       className={inputClasses}
                       rows="3"
@@ -431,7 +422,6 @@ export default function PackagesRecibirForm({
                   <Field
                     type="text"
                     name="nombre_recibe_documento"
-                    placeholder="Nombre completo..."
                     onKeyDown={handleKeyTextDown}
                     autoComplete="off"
                     className={inputClasses}
@@ -495,7 +485,6 @@ export default function PackagesRecibirForm({
                           <Field
                             type="text"
                             name="referencia_radicado"
-                            placeholder="Ingrese el número de referencia único"
                             autoComplete="off"
                             className={inputClasses}
                           />

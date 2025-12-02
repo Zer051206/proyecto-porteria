@@ -111,7 +111,6 @@ const VehicleSubForm = ({ formik, index, onRemove }) => {
             <Field
               type="text"
               name={`vehicles[${index}].placa`}
-              placeholder="AAA123"
               autoComplete="off"
               className={`${inputClasses} uppercase`}
               onInput={(e) => (e.target.value = e.target.value.toUpperCase())}
@@ -129,7 +128,6 @@ const VehicleSubForm = ({ formik, index, onRemove }) => {
           <Field
             type="text"
             name={`vehicles[${index}].codigo_sensor`}
-            placeholder="ID del tag NFC/Barras"
             autoComplete="off"
             className={inputClasses}
           />
@@ -145,7 +143,6 @@ const VehicleSubForm = ({ formik, index, onRemove }) => {
           <Field
             type="text"
             name={`vehicles[${index}].nombre_dueno`}
-            placeholder="Nombre Apellido"
             autoComplete="off"
             className={inputClasses}
             onKeyDown={handleKeyTextDown}
@@ -162,7 +159,6 @@ const VehicleSubForm = ({ formik, index, onRemove }) => {
           <Field
             type="number"
             name={`vehicles[${index}].identificacion_dueno`}
-            placeholder="Número de documento"
             autoComplete="off"
             className={inputClasses}
             onKeyDown={handleKeyNumberDown}
@@ -200,7 +196,6 @@ const VehicleSubForm = ({ formik, index, onRemove }) => {
           <Field
             type="text"
             name={`vehicles[${index}].modelo_descripcion`}
-            placeholder="Ej: Bici roja, Patineta"
             autoComplete="off"
             className={inputClasses}
           />
@@ -218,7 +213,6 @@ const VehicleSubForm = ({ formik, index, onRemove }) => {
           <Field
             type="text"
             name={`vehicles[${index}].lugar_asignado_default`}
-            placeholder="Ej: Gerencia, E-05"
             autoComplete="off"
             className={inputClasses}
           />

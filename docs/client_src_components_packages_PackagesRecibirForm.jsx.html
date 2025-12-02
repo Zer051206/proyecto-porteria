@@ -224,7 +224,6 @@ export default function PackagesRecibirForm({
                   &lt;Field
                     type="text"
                     name="nombre_destinatario"
-                    placeholder="Pepito Perez..."
                     onKeyDown={handleKeyTextDown}
                     autoComplete="off"
                     className={inputClasses}
@@ -293,7 +292,6 @@ export default function PackagesRecibirForm({
                   &lt;/span>
                   &lt;Field
                     type="text"
-                    placeholder="Servientrega, Inter..."
                     name="empresa_transporte"
                     autoComplete="off"
                     className={inputClasses}
@@ -307,7 +305,6 @@ export default function PackagesRecibirForm({
                   &lt;/span>
                   &lt;Field
                     type="text"
-                    placeholder="Juan Perez..."
                     name="mensajero_nombre"
                     onKeyDown={handleKeyTextDown}
                     autoComplete="off"
@@ -338,7 +335,6 @@ export default function PackagesRecibirForm({
                       &lt;/span>
                       &lt;Field
                         type="text"
-                        placeholder="Ingrese la guia del paquete"
                         name="guia"
                         autoComplete="off"
                         className={`${inputClasses} w-full`}
@@ -352,6 +348,84 @@ export default function PackagesRecibirForm({
                   &lt;/div>
                 )}
 
+                &lt;div className="md:col-span-2 mt-4 border-t border-neutral-300 pt-4">
+                  &lt;legend className="px-2 font-semibold text-primary text-lg">
+                    Detalles de Mercancía / Producción
+                  &lt;/legend>
+                &lt;/div>
+
+                {/* Campo: Proveedor (Obligatorio) */}
+                &lt;label className="block">
+                  &lt;span className="text-text-main text-sm font-medium">
+                    Proveedor:
+                  &lt;/span>
+                  &lt;Field
+                    type="text"
+                    name="proveedor"
+                    autoComplete="off"
+                    className={inputClasses}
+                  />
+                  {formik.touched.proveedor &amp;&amp; formik.errors.proveedor &amp;&amp; (
+                    &lt;div className="text-error text-sm mt-1">
+                      {formik.errors.proveedor}
+                    &lt;/div>
+                  )}
+                &lt;/label>
+
+                {/* Campo: OP (Orden de Producción) (Obligatorio) */}
+                &lt;label className="block">
+                  &lt;span className="text-text-main text-sm font-medium">
+                    OP:
+                  &lt;/span>
+                  &lt;Field
+                    type="number"
+                    name="op"
+                    autoComplete="off"
+                    className={inputClasses}
+                  />
+                  {formik.touched.op &amp;&amp; formik.errors.op &amp;&amp; (
+                    &lt;div className="text-error text-sm mt-1">
+                      {formik.errors.op}
+                    &lt;/div>
+                  )}
+                &lt;/label>
+
+                {/* Campo: Referencia (Obligatorio) */}
+                &lt;label className="block">
+                  &lt;span className="text-text-main text-sm font-medium">
+                    Referencia:
+                  &lt;/span>
+                  &lt;Field
+                    type="number"
+                    name="referencia"
+                    autoComplete="off"
+                    className={inputClasses}
+                  />
+                  {formik.touched.referencia &amp;&amp; formik.errors.referencia &amp;&amp; (
+                    &lt;div className="text-error text-sm mt-1">
+                      {formik.errors.referencia}
+                    &lt;/div>
+                  )}
+                &lt;/label>
+
+                {/* Campo: Cantidad (Obligatorio) */}
+                &lt;label className="block">
+                  &lt;span className="text-text-main text-sm font-medium">
+                    Cantidad:
+                  &lt;/span>
+                  &lt;Field
+                    type="number"
+                    name="cantidad"
+                    autoComplete="off"
+                    className={inputClasses}
+                  />
+                  {formik.touched.cantidad &amp;&amp; formik.errors.cantidad &amp;&amp; (
+                    &lt;div className="text-error text-sm mt-1">
+                      {formik.errors.cantidad}
+                    &lt;/div>
+                  )}
+                &lt;/label>
+
                 {/* Observaciones */}
                 &lt;div className="col-span-1 md:col-span-2">
                   &lt;label className="block">
@@ -361,13 +435,53 @@ export default function PackagesRecibirForm({
                     &lt;Field
                       as="textarea"
                       name="observaciones"
-                      placeholder="El paquete se encuentra en buenas condiciones..."
                       autoComplete="off"
                       className={inputClasses}
                       rows="3"
                     />
                   &lt;/label>
                 &lt;/div>
+
+                {/* Campo Nombre Quien Recibe (Documento) */}
+                &lt;label className="block md:col-span-2 animate-fade-in">
+                  &lt;span className="text-text-main text-sm font-medium">
+                    Nombre Quien Recibe (Empleado):
+                  &lt;/span>
+                  &lt;Field
+                    type="text"
+                    name="nombre_recibe_documento"
+                    onKeyDown={handleKeyTextDown}
+                    autoComplete="off"
+                    className={inputClasses}
+                  />
+                  {formik.touched.nombre_recibe_documento &amp;&amp;
+                    formik.errors.nombre_recibe_documento &amp;&amp; (
+                      &lt;div className="text-error text-sm mt-1">
+                        {formik.errors.nombre_recibe_documento}
+                      &lt;/div>
+                    )}
+                &lt;/label>
+
+                &lt;SignatureField
+                  label="Firma Receptor (Empleado)"
+                  sigRef={recibeSigPadRef}
+                  onClear={() => recibeSigPadRef.current?.clear()}
+                  error={
+                    formik.touched.path_firma_recibe_documento &amp;&amp;
+                    formik.errors.path_firma_recibe_documento
+                  }
+                />
+
+                &lt;SignatureField
+                  label="Firma Validador (Portero)"
+                  sigRef={validadorSigPadRef}
+                  onClear={() => validadorSigPadRef.current?.clear()}
+                  error={
+                    formik.touched.path_firma_validador &amp;&amp;
+                    formik.errors.path_firma_validador
+                  }
+                />
+
                 {isDocumento &amp;&amp; (
                   &lt;>
                     &lt;div className="md:col-span-2 mt-4 border-t border-neutral-300 pt-4">
@@ -388,29 +502,8 @@ export default function PackagesRecibirForm({
                       &lt;/span>
                     &lt;/label>
 
-                    {/* Campo Nombre Quien Recibe (Documento) */}
-                    &lt;label className="block md:col-span-2 animate-fade-in">
-                      &lt;span className="text-text-main text-sm font-medium">
-                        Nombre Quien Recibe (Empleado):
-                      &lt;/span>
-                      &lt;Field
-                        type="text"
-                        name="nombre_recibe_documento"
-                        placeholder="Nombre completo..."
-                        onKeyDown={handleKeyTextDown}
-                        autoComplete="off"
-                        className={inputClasses}
-                      />
-                      {formik.touched.nombre_recibe_documento &amp;&amp;
-                        formik.errors.nombre_recibe_documento &amp;&amp; (
-                          &lt;div className="text-error text-sm mt-1">
-                            {formik.errors.nombre_recibe_documento}
-                          &lt;/div>
-                        )}
-                    &lt;/label>
-
                     {/* --- Lógica Condicional Solo para Radicados --- */}
-                    {isRadicado ? (
+                    {isRadicado &amp;&amp; (
                       &lt;>
                         {/* Campo Referencia Radicado */}
                         &lt;label className="block md:col-span-2 animate-fade-in">
@@ -420,7 +513,6 @@ export default function PackagesRecibirForm({
                           &lt;Field
                             type="text"
                             name="referencia_radicado"
-                            placeholder="Ingrese el número de referencia único"
                             autoComplete="off"
                             className={inputClasses}
                           />
@@ -432,51 +524,15 @@ export default function PackagesRecibirForm({
                             )}
                         &lt;/label>
 
-                        {/* Firmas de Radicado (3) */}
-                        &lt;SignatureField
-                          label="Firma Validador (Portero)"
-                          sigRef={validadorSigPadRef}
-                          onClear={() => validadorSigPadRef.current?.clear()}
-                          error={
-                            formik.touched.path_firma_validador &amp;&amp;
-                            formik.errors.path_firma_validador
-                          }
-                        />
-
-                        &lt;SignatureField
-                          label="Firma Entregador (Mensajero)"
-                          sigRef={entregadorSigPadRef}
-                          onClear={() => entregadorSigPadRef.current?.clear()}
-                          error={
-                            formik.touched.path_firma_entregador &amp;&amp;
-                            formik.errors.path_firma_entregador
-                          }
-                        />
+                        {/* Firma de Radicado */}
                         &lt;div className="block md:col-span-2 animate-fade-in">
                           &lt;SignatureField
-                            label="Firma Receptor (Empleado)"
-                            sigRef={recibeSigPadRef}
-                            onClear={() => recibeSigPadRef.current?.clear()}
+                            label="Firma Entregador (Mensajero)"
+                            sigRef={entregadorSigPadRef}
+                            onClear={() => entregadorSigPadRef.current?.clear()}
                             error={
-                              formik.touched.path_firma_recibe_documento &amp;&amp;
-                              formik.errors.path_firma_recibe_documento
-                            }
-                          />
-                        &lt;/div>
-                      &lt;/>
-                    ) : (
-                      &lt;>
-                        &lt;div className="hidden md:block">&lt;/div>
-
-                        {/* Firma Receptor (Solo Documento) */}
-                        &lt;div className="block md:col-span-2 animate-fade-in">
-                          &lt;SignatureField
-                            label="Firma Receptor (Empleado)"
-                            sigRef={recibeSigPadRef}
-                            onClear={() => recibeSigPadRef.current?.clear()}
-                            error={
-                              formik.touched.path_firma_recibe_documento &amp;&amp;
-                              formik.errors.path_firma_recibe_documento
+                              formik.touched.path_firma_entregador &amp;&amp;
+                              formik.errors.path_firma_entregador
                             }
                           />
                         &lt;/div>
@@ -544,7 +600,7 @@ export default function PackagesRecibirForm({
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Tue Nov 04 2025 16:47:25 GMT-0500 (hora estándar de Colombia)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Tue Dec 02 2025 10:27:58 GMT-0500 (hora estándar de Colombia)
 </footer>
 
 <script> prettyPrint(); </script>
