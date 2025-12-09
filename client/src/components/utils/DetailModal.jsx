@@ -65,6 +65,8 @@ export default function DetailModal({
 }) {
   if (!item) return null;
 
+  console.log(item);
+
   // Clases dinámicas para el tema
   const titleColor = `text-${themeColor}`; // ej. text-primary
   const buttonClass = `bg-${themeColor} text-surface hover:bg-${themeColor}-hover`; // ej. bg-primary...

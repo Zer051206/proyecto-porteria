@@ -189,7 +189,7 @@ const PackagesTable = ({ packages, onAction, formatDate }) => {
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-center">
                 <button
-                  onClick={() => onAction("paquete", pkg)} // Llama al handler del padre
+                  onClick={() => onAction(pkg)}
                   className="text-primary p-2 rounded-lg hover:bg-primary-light transition-colors duration-200 shadow-md shadow-neutral-400"
                   aria-label={`Ver detalles del paquete`}
                 >
@@ -315,7 +315,6 @@ const ParkingHistoryTable = ({ parkingLogs, onAction, formatDate }) => {
  * @returns {JSX.Element}
  */
 const RadicadosTable = ({ radicados, onAction, formatDate }) => {
-  console.log("🚀 ~ RadicadosTable ~ radicados:", radicados);
   if (radicados.length === 0) {
     return (
       <div className="text-center bg-surface text-text-main py-6 rounded-lg shadow-lg">

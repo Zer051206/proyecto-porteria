@@ -192,7 +192,7 @@ const usePackagesRecibir = (onSuccess) => {
       referencia: "",
       cantidad: "",
       es_radicado: false,
-      referencia_radicado: "",
+      referencia_radicado: null,
       nombre_recibe_documento: "",
       path_firma_recibe_documento: "",
       path_firma_validador: "",

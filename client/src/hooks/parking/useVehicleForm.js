@@ -21,8 +21,8 @@ import api from "../../config/axios.js";
  * Se utiliza para inicializar el formulario y para añadir nuevas filas en el FieldArray.
  */
 export const initialVehicleValues = {
-  placa: "",
-  codigo_sensor: "",
+  placa: null,
+  codigo_sensor: null,
   tipo_vehiculo: "",
   modelo_descripcion: "",
   nombre_dueno: "",
