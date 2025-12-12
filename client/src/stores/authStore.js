@@ -18,7 +18,7 @@ const getInitialState = () => {
   try {
     const user = localStorage.getItem("user");
     if (user) {
-      return { isAuthenticated: true, user: JSON.parse(user), isLoading: true };
+      return { isAuthenticated: true, user: JSON.parse(user), isLoading: false };
     }
   } catch (error) {
     localStorage.clear();
