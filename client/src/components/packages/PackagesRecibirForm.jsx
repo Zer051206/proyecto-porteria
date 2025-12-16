@@ -38,17 +38,15 @@ import SignatureCanvas from "react-signature-canvas";
  */
 const SignatureField = ({ label, sigRef, error, onClear }) => (
   <div className="md:col-span-1 flex flex-col">
-    <label className="block text-text-main text-sm font-medium mb-1">
+    <label className="block text-text-main font-semibold mb-1">
       {label}:
     </label>
-    <div className="relative border-2 border-dashed border-neutral-300 rounded-md h-32">
-      {" "}
-      {/* Altura fija */}
+    <div className="relative border-2 border-dashed border-black rounded-md h-32">
       <SignatureCanvas
         ref={sigRef}
         penColor="black"
         canvasProps={{
-          className: "w-full h-full rounded-md", // Ocupa todo el div
+          className: "w-full h-full rounded-md", 
         }}
       />
       <button
@@ -154,13 +152,13 @@ export default function PackagesRecibirForm({
             {/* Campos del Formulario (se muestran solo si no hay carga ni error) */}
             {!isLoading && !errorCarga && (
               <fieldset className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-                <legend className="px-2 font-semibold text-primary mb-4 md:col-span-2 text-lg">
+                <legend className="px-2 font-semibold text-primary mb-4 md:col-span-2 text-xl">
                   Datos del Paquete
                 </legend>
 
                 {/* Campo Tipo de Paquete */}
                 <label className="block">
-                  <span className="text-text-main text-sm font-medium">
+                  <span className="text-text-main font-semibold">
                     Tipo de Paquete:
                   </span>
                   <Field
@@ -190,8 +188,8 @@ export default function PackagesRecibirForm({
 
                 {/* Campo Nombre del Destinatario */}
                 <label className="block">
-                  <span className="text-text-main text-sm font-medium">
-                    Nombre Destinatario (Interno):
+                  <span className="text-text-main font-semibold">
+                    Nombre Destinatario (Empresa):
                   </span>
                   <Field
                     type="text"
@@ -213,7 +211,7 @@ export default function PackagesRecibirForm({
                 {/* Campo Área */}
                 {isDocumento && isRadicado ? (
                   <label className="block animate-fade-in">
-                    <span className="text-text-main text-sm font-medium">
+                    <span className="text-text-main font-semibold">
                       Área Destino (Automático):
                     </span>
                     <input
@@ -232,8 +230,8 @@ export default function PackagesRecibirForm({
                   </label>
                 ) : (
                   <label className="block">
-                    <span className="text-text-main text-sm font-medium">
-                      Área Destino:
+                    <span className="text-text-main font-semibold">
+                      Área Destino (Empresa):
                     </span>
                     <Field
                       as="select"
@@ -259,12 +257,13 @@ export default function PackagesRecibirForm({
                 )}
                 {/* Empresa de Transporte */}
                 <label className="block">
-                  <span className="text-text-main text-sm font-medium">
-                    Empresa Transporte (Opcional):
+                  <span className="text-text-main font-semibold">
+                    Empresa Que Trae El Paquete (Opcional):
                   </span>
                   <Field
                     type="text"
                     name="empresa_transporte"
+                    placeholder="EJEMPLO: coordinadora."
                     autoComplete="off"
                     className={inputClasses}
                   />
@@ -272,8 +271,8 @@ export default function PackagesRecibirForm({
 
                 {/* Nombre del Mensajero */}
                 <label className="block">
-                  <span className="text-text-main text-sm font-medium">
-                    Nombre Mensajero (Opcional):
+                  <span className="text-text-main font-semibold">
+                    Nombre Del Mensajero (Opcional):
                   </span>
                   <Field
                     type="text"
@@ -292,8 +291,8 @@ export default function PackagesRecibirForm({
                       name="conGuia"
                       className="rounded text-primary focus:ring-primary"
                     />
-                    <span className="text-text-main text-sm font-medium">
-                      El paquete tiene número de guía
+                    <span className="text-text-main font-semibold">
+                      El paquete tiene número de guía?
                     </span>
                   </label>
                 </div>
@@ -302,7 +301,7 @@ export default function PackagesRecibirForm({
                 {formik.values.conGuia && (
                   <div className="col-span-1 md:col-span-2">
                     <label className="block">
-                      <span className="text-text-main text-sm font-medium">
+                      <span className="text-text-main text-lg font-semibold">
                         Número de Guía:
                       </span>
                       <Field
@@ -328,7 +327,7 @@ export default function PackagesRecibirForm({
 
                 {/* Campo: Proveedor (Obligatorio) */}
                 <label className="block">
-                  <span className="text-text-main text-sm font-medium">
+                  <span className="text-text-main font-semibold">
                     Proveedor:
                   </span>
                   <Field
@@ -346,7 +345,7 @@ export default function PackagesRecibirForm({
 
                 {/* Campo: OP (Orden de Producción) (Obligatorio) */}
                 <label className="block">
-                  <span className="text-text-main text-sm font-medium">
+                  <span className="text-text-main font-semibold">
                     OP:
                   </span>
                   <Field
@@ -364,7 +363,7 @@ export default function PackagesRecibirForm({
 
                 {/* Campo: Referencia (Obligatorio) */}
                 <label className="block">
-                  <span className="text-text-main text-sm font-medium">
+                  <span className="text-text-main font-semibold">
                     Referencia:
                   </span>
                   <Field
@@ -382,7 +381,7 @@ export default function PackagesRecibirForm({
 
                 {/* Campo: Cantidad (Obligatorio) */}
                 <label className="block">
-                  <span className="text-text-main text-sm font-medium">
+                  <span className="text-text-main font-semibold">
                     Cantidad:
                   </span>
                   <Field
@@ -401,12 +400,13 @@ export default function PackagesRecibirForm({
                 {/* Observaciones */}
                 <div className="col-span-1 md:col-span-2">
                   <label className="block">
-                    <span className="text-text-main text-sm font-medium">
-                      Observaciones (Opcional):
+                    <span className="text-text-main font-semibold">
+                      Observaciones Sobre El Paquete o Los Paquetes (Opcional):
                     </span>
                     <Field
                       as="textarea"
                       name="observaciones"
+                      placeholder="EJEMPLO: Paquete recibido en buen estado, sin daños."
                       autoComplete="off"
                       className={inputClasses}
                       rows="3"
@@ -416,7 +416,7 @@ export default function PackagesRecibirForm({
 
                 {/* Campo Nombre Quien Recibe (Documento) */}
                 <label className="block md:col-span-2 animate-fade-in">
-                  <span className="text-text-main text-sm font-medium">
+                  <span className="text-text-main font-semibold">
                     Nombre Quien Recibe (Empleado):
                   </span>
                   <Field
@@ -435,7 +435,7 @@ export default function PackagesRecibirForm({
                 </label>
 
                 <SignatureField
-                  label="Firma Receptor (Empleado)"
+                  label="Firma Del Empleado (Recibe)"
                   sigRef={recibeSigPadRef}
                   onClear={() => recibeSigPadRef.current?.clear()}
                   error={
@@ -445,7 +445,7 @@ export default function PackagesRecibirForm({
                 />
 
                 <SignatureField
-                  label="Firma Validador (Portero)"
+                  label="Firma Del Portero (Validador)"
                   sigRef={validadorSigPadRef}
                   onClear={() => validadorSigPadRef.current?.clear()}
                   error={
@@ -469,7 +469,7 @@ export default function PackagesRecibirForm({
                         name="es_radicado"
                         className="rounded text-primary focus:ring-primary"
                       />
-                      <span className="text-text-main text-lg font-medium">
+                      <span className="text-text-main font-semibold">
                         ¿Es un Radicado?
                       </span>
                     </label>
@@ -479,7 +479,7 @@ export default function PackagesRecibirForm({
                       <>
                         {/* Campo Referencia Radicado */}
                         <label className="block md:col-span-2 animate-fade-in">
-                          <span className="text-text-main font-medium">
+                          <span className="text-text-main font-semibold">
                             N° Referencia Radicado:
                           </span>
                           <Field

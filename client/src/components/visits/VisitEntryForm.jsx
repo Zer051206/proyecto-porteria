@@ -84,7 +84,7 @@ export default function VisitEntryForm() {
           {/* Columna Izquierda */}
           <div className="space-y-6">
             <label className="block">
-              <span className="text-text-main font-semibold">Nombre:</span>
+              <span className="text-text-main font-semibold">Nombre Del Visitante:</span>
               <input
                 type="text"
                 autoComplete="off"
@@ -99,7 +99,7 @@ export default function VisitEntryForm() {
                 )}
             </label>
             <label className="block">
-              <span className="text-text-main font-semibold">Apellido:</span>
+              <span className="text-text-main font-semibold">Apellido Del Visitante:</span>
               <input
                 type="text"
                 autoComplete="off"
@@ -113,7 +113,7 @@ export default function VisitEntryForm() {
               )}
             </label>
             <label className="block">
-              <span className="text-text-main font-semibold">Teléfono:</span>
+              <span className="text-text-main font-semibold">Teléfono Del Visitante:</span>
               <input
                 type="tel"
                 autoComplete="off"
@@ -128,7 +128,7 @@ export default function VisitEntryForm() {
             </label>
             <label className="block">
               <span className="text-text-main font-semibold">
-                Empresa (Opcional):
+                Empresa Del Visitante (Opcional):
               </span>
               <input
                 type="text"
@@ -143,7 +143,7 @@ export default function VisitEntryForm() {
           <div className="space-y-6">
             <label className="block">
               <span className="text-text-main font-semibold">
-                Tipo de Identificación:
+                Tipo de Identificación Del Visitante:
               </span>
               <select
                 className={inputClasses}
@@ -170,7 +170,7 @@ export default function VisitEntryForm() {
             </label>
             <label className="block">
               <span className="text-text-main font-semibold">
-                Número de Identificación:
+                Número de Identificación Del Visitante:
               </span>
               <input
                 type="text"
@@ -187,7 +187,7 @@ export default function VisitEntryForm() {
             </label>
             <label className="block">
               <span className="text-text-main font-semibold">
-                Persona a Visitar:
+                Persona a Visitar (Empresa):
               </span>
               <input
                 type="text"
@@ -204,7 +204,7 @@ export default function VisitEntryForm() {
             </label>
             <label className="block">
               <span className="text-text-main font-semibold">
-                Área de Destino:
+                Área de Destino (Empresa):
               </span>
               <select
                 className={inputClasses}
@@ -235,6 +235,7 @@ export default function VisitEntryForm() {
               </span>
               <textarea
                 className={inputClasses}
+                placeholder="EJEMPLO: Entregar Paquete, etc."
                 rows="3"
                 {...formik.getFieldProps("motivo")}
               ></textarea>
@@ -248,10 +249,11 @@ export default function VisitEntryForm() {
           <div className="md:col-span-2">
             <label className="block">
               <span className="text-text-main font-semibold">
-                Observaciones (Opcional):
+                Observaciones  De La Visita (Opcional):
               </span>
               <textarea
                 className={inputClasses}
+                placeholder="EJEMPLO: Entra con 3 maletas, etc."
                 rows="3"
                 {...formik.getFieldProps("observaciones")}
               ></textarea>
@@ -263,7 +265,7 @@ export default function VisitEntryForm() {
           <label className="block mb-2 text-text-main font-semibold">
             Firma del Visitante (Obligatoria):
           </label>
-          <div className="w-full border-2 border-dashed border-gray-300 rounded-md bg-gray-50">
+          <div className="w-full border-2 border-dashed border-black rounded-md bg-gray-50">
             <SignatureCanvas
               ref={sigCanvas}
               penColor="black"

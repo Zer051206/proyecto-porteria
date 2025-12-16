@@ -34,10 +34,10 @@ import SignatureCanvas from "react-signature-canvas";
  */
 const SignatureField = ({ label, sigRef, error, onClear }) => (
   <div className="md:col-span-1 flex flex-col">
-    <label className="block text-text-main text-sm font-medium mb-1">
+    <label className="block text-text-main font-semibold mb-2">
       {label}:
     </label>
-    <div className="relative border-2 border-dashed border-neutral-300 rounded-md h-32">
+    <div className="relative border-2 border-dashed border-black rounded-md h-32">
       <SignatureCanvas
         ref={sigRef}
         penColor="black"
@@ -164,13 +164,13 @@ export default function PackagesEnviarForm({
             {/* Campos del formulario (solo se muestran si no hay carga ni error de carga) */}
             {!isLoading && !errorCarga && (
               <fieldset className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 p-4 rounded-md border border-neutral-200 shadow-neutral-200 shadow-sm">
-                <legend className="px-2 font-semibold text-secondary">
+                <legend className="px-2 font-semibold text-secondary text-lg">
                   Datos del Paquete
                 </legend>
 
                 {/* Campo: Tipo de Paquete */}
                 <label className="block" htmlFor="tipo_paquete">
-                  <span className="text-text-main text-sm font-medium">
+                  <span className="text-text-main font-semibold">
                     Tipo de Paquete:
                   </span>
                   <Field
@@ -201,8 +201,8 @@ export default function PackagesEnviarForm({
 
                 {/* Campo: Nombre del Remitente */}
                 <label className="block" htmlFor="nombre_remitente">
-                  <span className="text-text-main text-sm font-medium">
-                    Nombre del remitente:
+                  <span className="text-text-main font-semibold">
+                    Nombre De Quien Envía (Empleado):
                   </span>
                   <Field
                     id="nombre_remitente"
@@ -222,8 +222,8 @@ export default function PackagesEnviarForm({
 
                 {/* Campo: Área */}
                 <label className="block" htmlFor="id_area">
-                  <span className="text-text-main text-sm font-medium">
-                    Área:
+                  <span className="text-text-main font-semibold">
+                    Área De Donde Viene El Paquete (Empresa):
                   </span>
                   <Field
                     as="select"
@@ -249,12 +249,13 @@ export default function PackagesEnviarForm({
 
                 {/* Campo: Empresa de Transporte */}
                 <label className="block" htmlFor="empresa_transporte">
-                  <span className="text-text-main text-sm font-medium">
-                    Empresa de Transporte (Opcional):
+                  <span className="text-text-main text-sm font-semibold">
+                    Empresa De Transporte Que Lleva El Paquete (Opcional):
                   </span>
                   <Field
                     id="empresa_transporte"
                     type="text"
+                    placeholder="EJEMPLO: ServiEntrega."
                     autoComplete="off"
                     name="empresa_transporte"
                     className={inputClasses}
@@ -270,7 +271,7 @@ export default function PackagesEnviarForm({
 
                 {/* Campo: Nombre del Mensajero */}
                 <label className="block" htmlFor="mensajero_nombre">
-                  <span className="text-text-main text-sm font-medium">
+                  <span className="text-text-main font-semibold">
                     Nombre del Mensajero (Opcional):
                   </span>
                   <Field
@@ -292,13 +293,14 @@ export default function PackagesEnviarForm({
 
                 {/* Campo: Destino de Salida */}
                 <label className="block" htmlFor="destino_salida">
-                  <span className="text-text-main text-sm font-medium">
+                  <span className="text-text-main font-semibold">
                     Destino del paquete:
                   </span>
                   <Field
                     id="destino_salida"
                     type="text"
                     autoComplete="off"
+                    placeholder="EJEMPLO: Septima - cali."
                     onKeyDown={handleAddressKeyDown}
                     name="destino_salida"
                     className={inputClasses}
@@ -323,14 +325,14 @@ export default function PackagesEnviarForm({
                       name="conGuia"
                       className="rounded text-primary"
                     />
-                    <span className="text-text-main text-md font-medium">
-                      El paquete tiene número de guía
+                    <span className="text-text-main font-semibold">
+                      El paquete tiene número de guía?
                     </span>
                   </label>
                   {formik.values.conGuia && (
                     <div className="mt-2">
                       <label className="block" htmlFor="guia">
-                        <span className="text-text-main text-sm font-medium">
+                        <span className="text-text-main font-semibold">
                           Número de Guía:
                         </span>
                         <Field
@@ -351,14 +353,14 @@ export default function PackagesEnviarForm({
                 </div>
 
                 <div className="md:col-span-2 mt-4 border-t border-neutral-300 pt-4">
-                  <legend className="px-2 font-semibold text-secondary">
+                  <legend className="px-2 font-semibold text-secondary text-lg">
                     Detalles de Mercancía (Producción)
                   </legend>
                 </div>
 
                 {/* Campo: Proveedor */}
                 <label className="block" htmlFor="proveedor">
-                  <span className="text-text-main text-sm font-medium">
+                  <span className="text-text-main font-semibold">
                     Proveedor:
                   </span>
                   <Field
@@ -378,7 +380,7 @@ export default function PackagesEnviarForm({
 
                 {/* Campo: OP (Orden de Producción) */}
                 <label className="block" htmlFor="op">
-                  <span className="text-text-main text-sm font-medium">
+                  <span className="text-text-main font-semibold">
                     OP (Orden de Producción):
                   </span>
                   <Field
@@ -397,7 +399,7 @@ export default function PackagesEnviarForm({
 
                 {/* Campo: Referencia */}
                 <label className="block" htmlFor="referencia">
-                  <span className="text-text-main text-sm font-medium">
+                  <span className="text-text-main font-semibold">
                     Referencia:
                   </span>
                   <Field
@@ -416,7 +418,7 @@ export default function PackagesEnviarForm({
 
                 {/* Campo: Cantidad */}
                 <label className="block" htmlFor="cantidad">
-                  <span className="text-text-main text-sm font-medium">
+                  <span className="text-text-main font-semibold">
                     Cantidad:
                   </span>
                   <Field
@@ -436,13 +438,14 @@ export default function PackagesEnviarForm({
                 {/* Campo: Observaciones (Colspan 2) */}
                 <div className="col-span-1 md:col-span-2">
                   <label className="block" htmlFor="observaciones">
-                    <span className="text-text-main text-sm font-medium">
-                      Observaciones (Opcional):
+                    <span className="text-text-main font-semibold">
+                      Observaciones Del Paquete o Los Paquetes (Opcional):
                     </span>
                     <Field
                       as="textarea"
                       id="observaciones"
                       name="observaciones"
+                      placeholder="EJEMPLO: Paquetes En Buenas Condiciones."
                       autoComplete="off"
                       className={inputClasses}
                       rows="3"
@@ -451,7 +454,7 @@ export default function PackagesEnviarForm({
                 </div>
 
                 <div className="md:col-span-2 mt-4 border-t border-neutral-300 pt-4">
-                  <legend className="px-2 font-semibold text-secondary text-base">
+                  <legend className="px-2 font-semibold text-secondary text-lg">
                     Firmas de Envío
                   </legend>
                 </div>
