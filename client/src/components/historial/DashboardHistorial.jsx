@@ -221,8 +221,7 @@ const ParkingHistoryTable = ({ parkingLogs, onAction, formatDate }) => {
           No hay registros de parquedero para mostrar
         </p>
         <p className="text-sm mt-1">
-          Navega hacia el módulo de "parqueadero" y registra una entrada y
-          salida de un vehiculo.
+          Navega hacia el módulo de "parqueadero" y registra una entrada.
         </p>
       </div>
     );

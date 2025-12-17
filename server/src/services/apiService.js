@@ -167,9 +167,6 @@ export const getVisitsHistory = async (user) => {
 
 export const getParkingLogs = async () => {
   const options = {
-    where: {
-      fecha_salida: { [Op.ne]: null },
-    },
     order: [["fecha_salida", "DESC"]],
   };
 
