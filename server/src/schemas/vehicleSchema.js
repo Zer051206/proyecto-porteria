@@ -19,9 +19,6 @@ const vehicleBaseSchema = z
     placa: z
       .string()
       .max(10, { message: "La placa no debe exceder los 10 caracteres." })
-      .regex(/^(|[A-Z0-9]{1,10})$/, {
-        message: "Placa inválida. Use mayúsculas y números.",
-      })
       .nullable() // Permite null
       .optional(), // Permite undefined o no incluirlo
     tipo_vehiculo: z.enum(["Carro", "Moto", "Bicicleta", "Otros"], {
