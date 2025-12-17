@@ -53,10 +53,6 @@ export const useVehicleForm = (onSuccess) => {
       then: (schema) =>
         schema
           .trim()
-          .matches(
-            /^[A-Z0-9]{1,10}$/,
-            "Placa inválida. Use 1-10 caracteres (mayúsculas y números)."
-          )
           .required("La placa es obligatoria para Carros y Motos."),
       otherwise: (schema) => schema.nullable().transform(() => null), // Transforma a null si es Bici/Otros
     }),

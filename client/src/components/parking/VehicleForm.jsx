@@ -107,7 +107,7 @@ const VehicleSubForm = ({ formik, index, onRemove }) => {
         {/* Solo se muestra si es Carro o Moto */}
         {(tipoVehiculo === "Carro" || tipoVehiculo === "Moto") && (
           <label className="block animate-fade-in">
-            <span className="text-text-main font-semibold">Placa:</span>
+            <span className="text-text-main font-semibold">Placa (SIN ESPACIOS):</span>
             <Field
               type="text"
               name={`vehicles[${index}].placa`}
