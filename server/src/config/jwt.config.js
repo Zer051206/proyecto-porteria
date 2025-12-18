@@ -24,7 +24,7 @@ const jwtConfig = {
    * @property {string} accessExpiresIn - El tiempo de vida para un Access Token.
    * Formato: una cadena de texto que describe un lapso de tiempo (ej. "15m", "1h", "2 days").
    */
-  accessExpiresIn: "15m",
+  accessExpiresIn: "8h",
 
   /**
    * @property {string} refreshSecret - El secreto utilizado para firmar y verificar los Refresh Tokens.
