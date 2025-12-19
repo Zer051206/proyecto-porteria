@@ -189,7 +189,7 @@ export default function PackagesRecibirForm({
                 {/* Campo Nombre del Destinatario */}
                 <label className="block">
                   <span className="text-text-main font-semibold">
-                    Nombre Destinatario (Empresa):
+                    Nombre De A Quien Está Dirigido (Empleado):
                   </span>
                   <Field
                     type="text"

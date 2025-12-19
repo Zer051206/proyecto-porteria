@@ -24,6 +24,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FormikProvider, Field } from "formik";
 import SignatureCanvas from "react-signature-canvas";
+import { handleKeyNumberDown } from "../../utils/inputUtilities.js";
 
 /**
  * @function SignatureField
@@ -427,6 +428,7 @@ export default function PackagesEnviarForm({
                     autoComplete="off"
                     name="cantidad"
                     className={inputClasses}
+                    onKeyDown={handleKeyNumberDown}
                   />
                   {formik.touched.cantidad && formik.errors.cantidad && (
                     <div className="text-error text-sm mt-1">
