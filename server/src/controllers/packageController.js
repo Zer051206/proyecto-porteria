@@ -23,7 +23,7 @@ import {
  */
 export const receivePackage = async (req, res, next) => {
   try {
-    const validateData = receivePackageSchema.safeParse(req.body);
+    const validateData = receivePackageSchema.parse(req.body);
     console.log("🚀 ~ receivePackage ~ validateData:", validateData)
     
     const userId = req.user.id_usuario;
@@ -33,7 +33,7 @@ export const receivePackage = async (req, res, next) => {
      * @const {object} packageData - Datos del paquete validados más metadatos de auditoría.
      */
     const packageData = {
-      ...validateData.data,
+      ...validateData,
       id_usuario: userId,
       ip_usuario: userIp,
     };
@@ -61,8 +61,7 @@ export const receivePackage = async (req, res, next) => {
  */
 export const sendPackage = async (req, res, next) => {
   try {
-    const validateData = sendPackageSchema.safeParse(req.body);
-    console.log("🚀 ~ sendPackage ~ validateData:", validateData)
+    const validateData = sendPackageSchema.parse(req.body);
 
     const userId = req.user.id_usuario;
     const userIp = req.ip;
@@ -71,7 +70,7 @@ export const sendPackage = async (req, res, next) => {
      * @const {object} packageData - Datos del paquete validados más metadatos de auditoría.
      */
     const packageData = {
-      ...validateData.data,
+      ...validateData,
       id_usuario: userId,
       ip_usuario: userIp,
     };

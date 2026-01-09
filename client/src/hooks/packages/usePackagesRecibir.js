@@ -334,26 +334,40 @@ const usePackagesRecibir = (onSuccess) => {
         if (onSuccess) {
           onSuccess();
         }
-      } catch (error) {
-        if (error.response?.data?.errors) {
-          const formikErrors = {};
-          error.response.data.errors.forEach((e) => {
-            const path = e.path[0];
-            formikErrors[path] = e.message;
-          });
-          setErrors(formikErrors);
-          toast.error("Por favor, corrige los errores en el formulario.");
-        } else {
-          toast.error(
-            error.response?.data?.message ||
-              "Ha ocurrido un error inesperado al registrar el paquete."
-          );
+     } catch (err) {
+      // LOG 1: ¿Es un error de Axios?
+      console.error("DEBUG TOTAL ERROR:", err);
+      
+      // LOG 2: ¿Qué respondió el servidor específicamente?
+      if (err.response) {
+        console.log("SERVER DATA:", err.response.data);
+        console.log("SERVER STATUS:", err.response.status);
+        
+        // Aquí es donde extraemos el mensaje para el usuario
+        const mensajeParaUsuario = err.response.data.message || "Error desconocido";
+        setError(mensajeParaUsuario); 
+        
+        if (err.response.data.errors) {
+          // Mapeo de errores de campos...
         }
-      } finally {
-        setSubmitting(false);
+      } else if (err.request) {
+        // La petición se hizo pero no hubo respuesta (Server caído o timeout)
+        console.log("NO RESPONSE FROM SERVER:", err.request);
+        setError("No se pudo conectar con el servidor.");
+      } else {
+        // Error al configurar la petición
+        console.log("ERROR CONFIG:", err.message);
+        setError("Error al procesar la solicitud.");
       }
-    },
-  });
+    } finally {
+            setSubmitting(false);
+          }
+        },
+      });
+
+      // Dentro de tu componente, antes del return
+console.log("🟡 ¿Formik está enviando?:", formik.isSubmitting);
+console.log("🔴 Errores actuales que bloquean el envío:", formik.errors);
 
   useEffect(() => {
     if (formik.values) {
