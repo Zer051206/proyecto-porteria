@@ -195,7 +195,7 @@ export const updateVehicle = async (updateData) => {
 
     const vehicleDb = await vehicleRepository.findById(updateData.id_vehiculo, {
       transaction: t,
-      attibutes: ["id_vehiculo", "placa", "identificacion_dueño"],
+      attributes: ["id_vehiculo", "placa", "identificacion_dueño"],
     });
 
     if (!vehicleDb) {
@@ -232,11 +232,11 @@ export const updateVehicle = async (updateData) => {
       { transaction: t }
     );
 
-    const updatedVehicle = await vehicleRepository.findById(id_vehiculo, {
+    const updatedVehicle = await vehicleRepository.findById(updateData.id_vehiculo, {
       transaction: t,
     });
     logger.info(
-      `Vehículo ID ${id_vehiculo} actualizado por usuario ID ${user.id_usuario}.`
+      `Vehículo ID ${updateData.id_vehiculo} actualizado por usuario ID ${user.id_usuario}.`
     );
     return updatedVehicle;
   });
@@ -281,7 +281,7 @@ export const registerEntry = async (entryData) => {
         isFull = true;
       }
     } else if (vehicleDb.tipo_vehiculo === "Moto") {
-      vehicleTypeKey = vehicleDb.genero_dueno === "motos";
+      vehicleTypeKey = "motos";
       if (currentOccupancy.motos.actual >= currentOccupancy.motos.limite) {
         isFull = true;
       }

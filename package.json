@@ -13,6 +13,7 @@
   "license": "ISC",
   "packageManager": "pnpm@10.14.0",
   "dependencies": {
+    "node-global-key-listener": "^0.3.0",
     "vite": "^7.1.7"
   },
   "devDependencies": {
@@ -20,7 +21,7 @@
     "@babel/plugin-syntax-import-meta": "^7.10.4",
     "@babel/preset-env": "^7.28.3",
     "@babel/preset-react": "^7.27.1",
-    "documentation": "^6.2.0",
+    "documentation": "^14.0.3",
     "jsdoc": "^4.0.4",
     "terser": "^5.44.0"
   }

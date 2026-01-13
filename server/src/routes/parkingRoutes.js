@@ -77,7 +77,7 @@ router.get("/ocupacion", parkingController.getOccupancy);
  * @route POST /api/parqueadero/scan
  * @description Endpoint para recibir el código de un sensor y registrar entrada/salida automáticamente.
  * Llama a un controlador `handleScan` (a crear).
- * @access Private - Requiere autenticación (del sensor o sistema intermedio).  // O un middleware específico para sensores
+ * @access Private - Requiere autenticación (del sensor o sistema intermedio). 
  * @body {{ codigo_sensor: string }} - El código leído por el sensor.
  */
 router.post("/scan", apiKeyAuth, parkingController.handleScan);
