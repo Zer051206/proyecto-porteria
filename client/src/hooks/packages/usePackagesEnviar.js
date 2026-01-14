@@ -250,31 +250,16 @@ const usePackagesEnviar = (onSuccess) => {
           onSuccess();
         }
       } catch (error) {
-        // Manejo de errores para Formik y errores de API
-        if (error.response?.data?.errors) {
-          const formikErrors = {};
-          const zodErrors = error.response.data.errors.fieldErrors;
-          if (zodErrors) {
-            for (const key in zodErrors) {
-              if (Object.hasOwnProperty.call(zodErrors, key)) {
-                formikErrors[key] = zodErrors[key][0];
-              }
-            }
-          } else if (error.response.data.errors.forEach) {
-            // Soporte para errores de Yup
-            error.response.data.errors.forEach((e) => {
-              const path = e.path[0];
-              formikErrors[path] = e.message;
-            });
-          }
-          setErrors(formikErrors);
-          toast.error("Por favor, corrige los errores en el formulario.");
-        } else {
-          const apiError =
-            error.response?.data?.message || "Ha ocurrido un error inesperado.";
-          setFieldError("apiError", apiError);
-          toast.error(apiError);
-        }
+       const serverMessage = err.response?.data?.message || "Error al procesar la solicitud.";
+      
+        // Seteamos el error en un campo especial de Formik llamado 'apiError'
+        // Y además, si el backend manda errores por campo, los mapeamos
+        const backendErrors = err.response?.data?.errors || {};
+        
+        setErrors({
+          ...backendErrors,
+          apiError: serverMessage 
+        });
       } finally {
         setSubmitting(false);
       }

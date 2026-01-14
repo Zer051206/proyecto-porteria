@@ -146,26 +146,22 @@ const usePackagesRecibir = (onSuccess) => {
           .required('El N° de Referencia es obligatorio para "radicados".'),
       otherwise: (schema) => schema.nullable().optional(),
     }),
-    proveedor: Yup.string()
-      .optional()
-      .nullable()
-      .max(150, "Máximo 150 caracteres"),
+   proveedor: Yup.string()
+      .required("El proveedor es obligatorio para recibir paquetes.")
+      .max(150, "Máximo 150 caracteres."),
     op: Yup.number()
-      .typeError("Debe ser un número válido.")
-      .optional()
-      .nullable()
+      .typeError("La OP debe ser un número válido.")
+      .required("El número de OP es obligatorio para recibir paquetes.")
       .integer("Debe ser un número entero")
-      .min(1, "Debe ser positivo"),
+      .min(1, "Debe ser un número positivo."),
     referencia: Yup.string()
-      .optional()
-      .nullable()
-      .max(100, "Máximo 100 caracteres"),
+      .required("La referencia de la mercancía es obligatoria.")
+      .max(100, "Máximo 100 caracteres."),
     cantidad: Yup.number()
-      .typeError("Debe ser un número válido.")
-      .optional()
-      .nullable()
+      .typeError("La cantidad debe ser un número válido.")
+      .required("La cantidad es obligatoria para recibir paquetes.")
       .integer("Debe ser un número entero")
-      .min(1, "Debe ser positivo"),
+      .min(1, "Debe ser un número positivo."),
     nombre_recibe_documento: Yup.string().trim().max(100),
     path_firma_recibe_documento: Yup.string().nullable().optional(),
     path_firma_validador: Yup.string().nullable().optional(),
@@ -335,39 +331,21 @@ const usePackagesRecibir = (onSuccess) => {
           onSuccess();
         }
      } catch (err) {
-      // LOG 1: ¿Es un error de Axios?
-      console.error("DEBUG TOTAL ERROR:", err);
+        const serverMessage = err.response?.data?.message || "Error al procesar la solicitud.";
       
-      // LOG 2: ¿Qué respondió el servidor específicamente?
-      if (err.response) {
-        console.log("SERVER DATA:", err.response.data);
-        console.log("SERVER STATUS:", err.response.status);
+        // Seteamos el error en un campo especial de Formik llamado 'apiError'
+        // Y además, si el backend manda errores por campo, los mapeamos
+        const backendErrors = err.response?.data?.errors || {};
         
-        // Aquí es donde extraemos el mensaje para el usuario
-        const mensajeParaUsuario = err.response.data.message || "Error desconocido";
-        setError(mensajeParaUsuario); 
-        
-        if (err.response.data.errors) {
-          // Mapeo de errores de campos...
-        }
-      } else if (err.request) {
-        // La petición se hizo pero no hubo respuesta (Server caído o timeout)
-        console.log("NO RESPONSE FROM SERVER:", err.request);
-        setError("No se pudo conectar con el servidor.");
-      } else {
-        // Error al configurar la petición
-        console.log("ERROR CONFIG:", err.message);
-        setError("Error al procesar la solicitud.");
-      }
+        setErrors({
+          ...backendErrors,
+          apiError: serverMessage 
+        });
     } finally {
             setSubmitting(false);
           }
         },
       });
-
-      // Dentro de tu componente, antes del return
-console.log("🟡 ¿Formik está enviando?:", formik.isSubmitting);
-console.log("🔴 Errores actuales que bloquean el envío:", formik.errors);
 
   useEffect(() => {
     if (formik.values) {

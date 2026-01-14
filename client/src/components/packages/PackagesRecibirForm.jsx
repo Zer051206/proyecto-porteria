@@ -516,11 +516,19 @@ export default function PackagesRecibirForm({
             )}
 
             {/* Mensaje de error general de la API */}
-            {formik.errors.apiError && (
-              <div className="bg-red-100 border border-red-400 text-error px-4 py-3 rounded-md relative text-center mt-6">
-                <span className="block sm:inline">
-                  {formik.errors.apiError}
-                </span>
+            {(submitError || formik.errors.apiError || (!formik.isValid && formik.submitCount > 0)) && (
+              <div className="mb-4 mt-4 ">
+                <div className="bg-red-50 border-l-4 border-error p-4 rounded shadow-sm">
+                  <div className="flex items-center justify-center">
+                    <FontAwesomeIcon icon={faExclamationTriangle} className="text-error mr-10 text-lg" />
+                    <div>
+                      <p className="text-error-hover font-bold">No se puede enviar el formulario</p>
+                      <p className="text-error text-sm">
+                        {formik.errors.apiError || "Por favor, revisa los campos obligatorios y las firmas."}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -538,6 +546,13 @@ export default function PackagesRecibirForm({
               <button
                 type="submit"
                 className="flex items-center px-6 py-2 bg-primary text-white font-bold rounded-md hover:bg-primary-hover transition-colors duration-200"
+                onClick={() => {
+                    if (!formik.isValid) {
+                      formik.setTouched(
+                        Object.keys(formik.initialValues).reduce((acc, key) => ({ ...acc, [key]: true }), {})
+                      );
+                    }
+                  }}
                 disabled={formik.isSubmitting || isLoading || !!errorCarga}
               >
                 {formik.isSubmitting ? (

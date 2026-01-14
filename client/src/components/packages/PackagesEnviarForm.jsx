@@ -482,11 +482,21 @@ export default function PackagesEnviarForm({
               </fieldset>
             )}
 
-            {submitError && formik.submitCount > 0 && (
-              <div className="bg-red-100 border border-red-400 text-error px-4 py-3 rounded-md relative text-center mt-[30px] mb-[5px]">
-                <span className="block sm:inline">{submitError}</span>
+            {(submitError || formik.errors.apiError || (!formik.isValid && formik.submitCount > 0)) && (
+              <div className="mb-4 mt-4 ">
+                <div className="bg-red-50 border-l-4 border-error p-4 rounded shadow-sm">
+                  <div className="flex items-center justify-center">
+                    <FontAwesomeIcon icon={faExclamationTriangle} className="text-error mr-10 text-lg" />
+                    <div>
+                      <p className="text-error-hover font-bold">No se puede enviar el formulario</p>
+                      <p className="text-error text-sm">
+                        {formik.errors.apiError || "Por favor, revisa los campos obligatorios y las firmas."}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
-            )}
+            )} 
 
             {/* Botones de acción */}
             <div className="mt-6 flex justify-center space-x-4">
